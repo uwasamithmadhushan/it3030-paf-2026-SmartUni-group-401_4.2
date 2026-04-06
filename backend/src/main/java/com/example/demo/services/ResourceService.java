@@ -3,9 +3,10 @@ package com.example.demo.services;
 import com.example.demo.models.Resource;
 import com.example.demo.models.ResourceType;
 import com.example.demo.repositories.ResourceRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -13,44 +14,45 @@ public class ResourceService {
 
     private final ResourceRepository resourceRepository;
 
-    public Resource addResource(Resource resource) {
-        return resourceRepository.save(resource);
-    }
-
     public List<Resource> getAllResources(ResourceType type, Integer minCapacity, String location) {
-        if (type != null && minCapacity != null && location != null && !location.isBlank()) {
-            return resourceRepository.findByTypeAndCapacityGreaterThanEqualAndLocation(type, minCapacity, location);
+        if (type != null && minCapacity != null) {
+            return resourceRepository.findByTypeAndCapacityGreaterThanEqual(type, minCapacity);
         }
-
-        return resourceRepository.findAll().stream()
-            .filter(resource -> type == null || resource.getType() == type)
-            .filter(resource -> minCapacity == null || resource.getCapacity() >= minCapacity)
-            .filter(resource -> location == null || location.isBlank() || location.equalsIgnoreCase(resource.getLocation()))
-            .toList();
+        if (type != null) {
+            return resourceRepository.findByType(type);
+        }
+        if (minCapacity != null) {
+            return resourceRepository.findByCapacityGreaterThanEqual(minCapacity);
+        }
+        if (location != null && !location.isBlank()) {
+            return resourceRepository.findByLocation(location);
+        }
+        return resourceRepository.findAll();
     }
 
     public Resource getResourceById(String id) {
         return resourceRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Resource not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Resource not found with id: " + id));
     }
 
-    public Resource updateResource(String id, Resource updatedResource) {
+    public Resource addResource(Resource resource) {
+        return resourceRepository.save(resource);
+    }
+
+    public Resource updateResource(String id, Resource updated) {
         Resource existing = getResourceById(id);
-
-        existing.setName(updatedResource.getName());
-        existing.setType(updatedResource.getType());
-        existing.setCapacity(updatedResource.getCapacity());
-        existing.setLocation(updatedResource.getLocation());
-        existing.setStatus(updatedResource.getStatus());
-        existing.setAvailabilityWindows(updatedResource.getAvailabilityWindows());
-
+        existing.setName(updated.getName());
+        existing.setDescription(updated.getDescription());
+        existing.setType(updated.getType());
+        existing.setLocation(updated.getLocation());
+        existing.setCapacity(updated.getCapacity());
+        existing.setStatus(updated.getStatus());
+        existing.setAvailabilityWindows(updated.getAvailabilityWindows());
         return resourceRepository.save(existing);
     }
 
     public void deleteResource(String id) {
-        if (!resourceRepository.existsById(id)) {
-            throw new IllegalArgumentException("Resource not found with id: " + id);
-        }
+        getResourceById(id); // throws if not found
         resourceRepository.deleteById(id);
     }
 }

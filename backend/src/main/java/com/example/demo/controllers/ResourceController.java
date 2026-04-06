@@ -4,19 +4,13 @@ import com.example.demo.models.Resource;
 import com.example.demo.models.ResourceType;
 import com.example.demo.services.ResourceService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/assets")
@@ -25,39 +19,36 @@ public class ResourceController {
 
     private final ResourceService resourceService;
 
-    @PostMapping
-    public ResponseEntity<Resource> createResource(@Valid @RequestBody Resource resource) {
-        Resource createdResource = resourceService.addResource(resource);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdResource);
+    @GetMapping
+    public ResponseEntity<List<Resource>> getAllAssets(
+            @RequestParam(required = false) ResourceType type,
+            @RequestParam(required = false) Integer minCapacity,
+            @RequestParam(required = false) String location) {
+        return ResponseEntity.ok(resourceService.getAllResources(type, minCapacity, location));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Resource>> getResources(
-        @RequestParam(required = false) ResourceType type,
-        @RequestParam(required = false) Integer capacity,
-        @RequestParam(required = false) String location
-    ) {
-        List<Resource> resources = resourceService.getAllResources(type, capacity, location);
-        return ResponseEntity.ok(resources);
+    @GetMapping("/{id}")
+    public ResponseEntity<Resource> getAssetById(@PathVariable String id) {
+        return ResponseEntity.ok(resourceService.getResourceById(id));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Resource> createAsset(@Valid @RequestBody Resource resource) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(resourceService.addResource(resource));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Resource> updateResource(@PathVariable String id, @Valid @RequestBody Resource resource) {
-        try {
-            Resource updatedResource = resourceService.updateResource(id, resource);
-            return ResponseEntity.ok(updatedResource);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Resource> updateAsset(@PathVariable String id,
+                                                @Valid @RequestBody Resource resource) {
+        return ResponseEntity.ok(resourceService.updateResource(id, resource));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteResource(@PathVariable String id) {
-        try {
-            resourceService.deleteResource(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAsset(@PathVariable String id) {
+        resourceService.deleteResource(id);
+        return ResponseEntity.noContent().build();
     }
 }
