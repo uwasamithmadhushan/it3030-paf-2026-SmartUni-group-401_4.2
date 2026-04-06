@@ -123,7 +123,7 @@ export default function AssetForm() {
       } else {
         await createAsset(payload);
       }
-      navigate('/');
+      navigate('/facilities');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to save asset. Please try again.';
       setApiError(msg);
@@ -298,7 +298,7 @@ export default function AssetForm() {
         <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/facilities')}
             className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-5 py-2 rounded-lg transition-colors"
           >
             Cancel
