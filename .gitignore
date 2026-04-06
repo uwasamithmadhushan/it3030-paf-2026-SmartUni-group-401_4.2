@@ -1,0 +1,40 @@
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editors ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+application-secret.properties
+application-local.properties
+
+# ── Backend (Maven / Spring Boot) ─────────────────────────────────────────────
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/mvnw
+backend/mvnw.cmd
+backend/HELP.md
+
+# ── Frontend (React / Node) ───────────────────────────────────────────────────
+campus-client/node_modules/
+campus-client/build/
+campus-client/coverage/
+campus-client/.pnp
+campus-client/.pnp.js
+campus-client/npm-debug.log*
+campus-client/yarn-debug.log*
+campus-client/yarn-error.log*
