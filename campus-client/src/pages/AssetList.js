@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { getAllAssets, deleteAsset } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 
@@ -14,6 +15,8 @@ const TYPE_LABELS = {
 
 export default function AssetList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -76,12 +79,14 @@ export default function AssetList() {
           <h2 className="text-2xl font-bold text-gray-800">Facilities & Assets</h2>
           <p className="text-sm text-gray-500 mt-1">Manage campus resources and facilities</p>
         </div>
-        <button
-          onClick={() => navigate('/add')}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow"
-        >
-          + Add New Asset
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/facilities/add')}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow"
+          >
+            + Add New Asset
+          </button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -180,19 +185,31 @@ export default function AssetList() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => navigate(`/edit/${asset.id}`)}
-                        className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(asset.id)}
-                        disabled={deleting === asset.id}
-                        className="text-xs bg-red-50 hover:bg-red-100 text-red-700 font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {deleting === asset.id ? 'Deleting…' : 'Delete'}
-                      </button>
+                      {isAdmin ? (
+                        <>
+                          <button
+                            onClick={() => navigate(`/facilities/edit/${asset.id}`)}
+                            className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(asset.id)}
+                            disabled={deleting === asset.id}
+                            className="text-xs bg-red-50 hover:bg-red-100 text-red-700 font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {deleting === asset.id ? 'Deleting…' : 'Delete'}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
+                          title="Booking coming soon"
+                          disabled
+                        >
+                          📅 Book
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
