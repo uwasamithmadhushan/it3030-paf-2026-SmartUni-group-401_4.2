@@ -23,7 +23,6 @@ export default function AssetList() {
   const [deleting, setDeleting] = useState(null);
 
   const [filters, setFilters] = useState({ type: '', capacity: '', location: '' });
-  const [applied, setApplied] = useState({});
 
   const fetchAssets = useCallback(async (params) => {
     setLoading(true);
@@ -47,14 +46,12 @@ export default function AssetList() {
   };
 
   const handleApplyFilter = () => {
-    setApplied(filters);
     fetchAssets(filters);
   };
 
   const handleClearFilter = () => {
     const empty = { type: '', capacity: '', location: '' };
     setFilters(empty);
-    setApplied(empty);
     fetchAssets({});
   };
 
@@ -203,9 +200,10 @@ export default function AssetList() {
                         </>
                       ) : (
                         <button
-                          className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
-                          title="Booking coming soon"
-                          disabled
+                          onClick={() => navigate(`/bookings/new?resourceId=${asset.id}`)}
+                          disabled={asset.status !== 'ACTIVE'}
+                          className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={asset.status !== 'ACTIVE' ? 'Resource not available' : 'Book this resource'}
                         >
                           📅 Book
                         </button>
