@@ -30,4 +30,12 @@ export const createAsset = (data) => api.post('/assets', data);
 export const updateAsset = (id, data) => api.put(`/assets/${id}`, data);
 export const deleteAsset = (id) => api.delete(`/assets/${id}`);
 
+// Bookings
+export const createBooking = (data) => api.post('/bookings', data);
+export const getMyBookings = () => api.get('/bookings/my');
+export const getAllBookings = (status) => api.get('/bookings', { params: status ? { status } : {} });
+export const getBookingById = (id) => api.get(`/bookings/${id}`);
+export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
+export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
+
 export default api;

@@ -8,6 +8,9 @@ import DashboardPage from './pages/DashboardPage';
 import UserListPage from './pages/UserListPage';
 import AssetList from './pages/AssetList';
 import AssetForm from './pages/AssetForm';
+import BookingForm from './pages/BookingForm';
+import MyBookings from './pages/MyBookings';
+import AdminBookings from './pages/AdminBookings';
 
 function App() {
   return (
@@ -54,7 +57,33 @@ function App() {
             }
           />
 
+          {/* Bookings */}
+          <Route
+            path="/bookings/new"
+            element={
+              <ProtectedRoute>
+                <MainLayout><BookingForm /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings/my"
+            element={
+              <ProtectedRoute>
+                <MainLayout><MyBookings /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Admin only */}
+          <Route
+            path="/admin/bookings"
+            element={
+              <ProtectedRoute adminOnly>
+                <MainLayout><AdminBookings /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/users"
             element={
