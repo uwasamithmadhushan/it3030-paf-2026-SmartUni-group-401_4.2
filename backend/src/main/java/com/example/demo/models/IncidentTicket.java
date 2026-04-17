@@ -24,6 +24,9 @@ public class IncidentTicket {
     private String title;
     private String description;
     private String category;
+    private String resourceId;
+    private String location;
+    private String contactDetails;
     private TicketPriority priority;
     private TicketStatus status;
 
@@ -32,6 +35,7 @@ public class IncidentTicket {
 
     private List<Attachment> attachments = new ArrayList<>();
     private List<TechnicianUpdate> updates = new ArrayList<>();
+    private List<Comment> comments = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;
