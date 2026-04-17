@@ -22,6 +22,7 @@ export const updateMe = (data) => api.put('/users/me', data);
 export const getAllUsers = () => api.get('/users');
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/users/${id}`);
+export const approveUser = (id) => api.put(`/users/${id}/approve`);
 
 // Assets / Facilities
 export const getAllAssets = (params) => api.get('/assets', { params });

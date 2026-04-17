@@ -25,4 +25,7 @@ public class User {
     private String password;
 
     private UserRole role;
+
+    // null or true = approved; false = pending admin approval
+    private Boolean approved;
 }

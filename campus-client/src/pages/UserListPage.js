@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllUsers, deleteUser } from '../services/api';
+import { getAllUsers, deleteUser, approveUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const ROLE_COLORS = {
@@ -18,6 +18,7 @@ export default function UserListPage() {
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [approving, setApproving] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -54,11 +55,27 @@ export default function UserListPage() {
     }
   };
 
+  const handleApprove = async (u) => {
+    setApproving(u.id);
+    try {
+      await approveUser(u.id);
+      setUsers((prev) =>
+        prev.map((x) => x.id === u.id ? { ...x, approved: true } : x)
+      );
+    } catch {
+      setError('Failed to approve user.');
+    } finally {
+      setApproving(null);
+    }
+  };
+
+  const pendingAdmins = users.filter((u) => u.role === 'ADMIN' && u.approved === false);
   const filtered = users.filter(
     (u) =>
-      u.username?.toLowerCase().includes(search.toLowerCase()) ||
+      (u.approved !== false) &&
+      (u.username?.toLowerCase().includes(search.toLowerCase()) ||
       u.email?.toLowerCase().includes(search.toLowerCase()) ||
-      u.role?.toLowerCase().includes(search.toLowerCase())
+      u.role?.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -119,6 +136,49 @@ export default function UserListPage() {
           </div>
         )}
 
+        {/* Pending Admin Approvals */}
+        {pendingAdmins.length > 0 && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl overflow-hidden">
+            <div className="px-6 py-3 border-b border-yellow-200 flex items-center gap-2">
+              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-semibold text-yellow-800">Pending Admin Approvals ({pendingAdmins.length})</span>
+            </div>
+            <div className="divide-y divide-yellow-100">
+              {pendingAdmins.map((u) => (
+                <div key={u.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-yellow-200 flex items-center justify-center text-yellow-800 text-xs font-bold flex-shrink-0">
+                      {u.username?.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{u.username}</p>
+                      <p className="text-xs text-gray-500">{u.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full font-semibold">PENDING</span>
+                    <button
+                      onClick={() => handleApprove(u)}
+                      disabled={approving === u.id}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 transition"
+                    >
+                      {approving === u.id ? 'Approving…' : '✓ Approve'}
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget(u)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Table Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {loading ? (
@@ -165,15 +225,6 @@ export default function UserListPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => navigate(`/admin/users/edit/${u.id}`)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit
-                          </button>
                           <button
                             onClick={() => setDeleteTarget(u)}
                             disabled={u.id === user?.id}
