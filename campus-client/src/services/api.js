@@ -38,4 +38,11 @@ export const getBookingById = (id) => api.get(`/bookings/${id}`);
 export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
 export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
 
+// Incident Tickets
+export const getAllTickets = () => api.get('/tickets');
+export const getTicketById = (id) => api.get(`/tickets/${id}`);
+export const createTicket = (data) => api.post('/tickets', data);
+export const assignTechnician = (id, data) => api.put(`/tickets/${id}/assign`, data);
+export const updateTicketStatus = (id, data) => api.put(`/tickets/${id}/status`, data);
+
 export default api;
