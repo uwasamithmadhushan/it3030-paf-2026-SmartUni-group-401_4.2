@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTicketById, assignTechnician, updateTicketStatus, getAllUsers } from '../services/api';
+import { getTicketById, assignTechnician, updateTicketStatus, getAllUsers, addComment, deleteComment, deleteTicket } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -25,6 +25,8 @@ const TicketDetailsPage = () => {
   });
   
   const [selectedTech, setSelectedTech] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [commenting, setCommenting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -68,8 +70,19 @@ const TicketDetailsPage = () => {
       isOpen: true,
       type: 'status',
       title: 'Update Ticket Status',
-      message: `Move this ticket to ${newStatus.replace('_', ' ')}?`,
-      data: newStatus
+      message: newStatus === 'REJECTED' ? 'Reason for rejection?' : `Move this ticket to ${newStatus.replace('_', ' ')}?`,
+      data: newStatus,
+      isInput: newStatus === 'REJECTED'
+    });
+  };
+
+  const handleDeleteAction = () => {
+    setModalState({
+      isOpen: true,
+      type: 'delete_ticket',
+      title: 'Delete Ticket',
+      message: 'Are you sure you want to permanently remove this ticket?',
+      data: null
     });
   };
 
@@ -81,13 +94,44 @@ const TicketDetailsPage = () => {
       } else if (modalState.type === 'status') {
         await updateTicketStatus(id, { 
           status: modalState.data,
-          note: `Status explicitly updated to ${modalState.data} by ${user.username}` 
+          note: modalState.reason || `Status updated to ${modalState.data} by ${user.username}` 
         });
         addToast(`Ticket status updated to ${modalState.data}`, 'success');
+      } else if (modalState.type === 'delete_ticket') {
+        await deleteTicket(id);
+        addToast('Ticket deleted successfully', 'success');
+        navigate('/tickets');
+        return;
       }
       fetchData();
     } catch (error) {
-      addToast('Requested action failed. Please try again.', 'error');
+      addToast('Requested action failed', 'error');
+    }
+  };
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setCommenting(true);
+    try {
+      await addComment(id, newComment);
+      setNewComment('');
+      fetchData();
+      addToast('Comment added', 'success');
+    } catch (error) {
+      addToast('Failed to add comment', 'error');
+    } finally {
+      setCommenting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deleteComment(id, commentId);
+      fetchData();
+      addToast('Comment removed', 'success');
+    } catch (error) {
+      addToast('Failed to delete comment', 'error');
     }
   };
 
@@ -139,15 +183,74 @@ const TicketDetailsPage = () => {
                "{ticket.description}"
              </p>
 
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 p-8 bg-gray-50/30 rounded-3xl border border-gray-50">
-                <DetailItem label="Category" value={ticket.category.replace('_', ' ')} />
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 bg-gray-50/30 rounded-3xl border border-gray-50">
+                <DetailItem label="Category" value={ticket.category} />
+                <DetailItem label="Location" value={ticket.location || 'Not Specified'} />
+                <DetailItem label="Contact" value={ticket.contactDetails || 'None'} />
                 <DetailItem 
                   label="Priority" 
                   value={ticket.priority} 
                   valueClass={`font-black tracking-tighter ${getPriorityColor(ticket.priority)}`} 
                 />
-                <DetailItem label="Reporter" value={ticket.createdByUsername || 'Anonymous'} isUser />
              </div>
+             <div className="mt-8 flex items-center justify-between px-8">
+                <DetailItem label="Reporter" value={ticket.createdByUsername || 'Anonymous'} isUser />
+                {ticket.resourceId && <DetailItem label="Facility Linked" value={`Resource #${ticket.resourceId.substring(0,8)}`} />}
+             </div>
+          </div>
+
+          <div className="bg-white rounded-[2rem] p-10 shadow-xl shadow-gray-100 border border-gray-50">
+             <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
+               <span className="bg-indigo-50 p-2 rounded-xl">💬</span>
+               Discussion & Internal Notes
+             </h3>
+             <div className="space-y-6 mb-10">
+               {ticket.comments && ticket.comments.length > 0 ? (
+                 ticket.comments.map((comment, i) => (
+                   <div key={i} className="flex gap-4 items-start group">
+                     <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center font-black text-indigo-400 text-sm italic">
+                       {comment.username.charAt(0).toUpperCase()}
+                     </div>
+                     <div className="flex-1 bg-gray-50/50 p-5 rounded-2xl border border-gray-50 group-hover:bg-white group-hover:shadow-md transition-all relative">
+                       <div className="flex justify-between items-center mb-1">
+                         <span className="text-sm font-black text-gray-900">{comment.username}</span>
+                         <span className="text-[10px] font-bold text-gray-400">{new Date(comment.timestamp).toLocaleString()}</span>
+                       </div>
+                       <p className="text-gray-600 text-sm leading-relaxed">{comment.text}</p>
+                       
+                       {(user.role === 'ADMIN' || comment.userId === user.id) && (
+                         <button 
+                           onClick={() => handleDeleteComment(comment.id)}
+                           className="absolute -right-3 -top-3 w-8 h-8 bg-white text-red-400 rounded-full border border-gray-100 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-md hover:text-red-600"
+                         >
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                         </button>
+                       )}
+                     </div>
+                   </div>
+                 ))
+               ) : (
+                 <p className="text-gray-400 italic text-sm text-center py-4">No comments yet. Start the conversation!</p>
+               )}
+             </div>
+
+             <form onSubmit={handleAddComment} className="relative">
+               <textarea
+                 value={newComment}
+                 onChange={(e) => setNewComment(e.target.value)}
+                 placeholder="Ask a question or provide internal staff notes..."
+                 className="w-full p-6 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-3xl min-h-[120px] transition-all text-sm font-medium resize-none shadow-inner"
+               ></textarea>
+               <div className="absolute right-4 bottom-4">
+                 <button 
+                   type="submit"
+                   disabled={commenting || !newComment.trim()}
+                   className="px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-30 shadow-xl shadow-indigo-100 transition-all"
+                 >
+                   Post Comment
+                 </button>
+               </div>
+             </form>
           </div>
 
           <div className="bg-white rounded-[2rem] p-10 shadow-xl shadow-gray-100 border border-gray-50">
@@ -231,7 +334,7 @@ const TicketDetailsPage = () => {
                   </div>
                 )}
 
-                {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id)) && (
+                 {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id)) && (
                   <div className="pt-6 border-t border-gray-50">
                      <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-4">Status Directives</label>
                      <div className="grid grid-cols-1 gap-3">
@@ -251,6 +354,14 @@ const TicketDetailsPage = () => {
                            Resolve Issue
                          </button>
                        )}
+                       {user.role === 'ADMIN' && ticket.status !== 'CLOSED' && ticket.status !== 'REJECTED' && (
+                         <button 
+                            onClick={() => handleStatusAction('REJECTED')}
+                            className="w-full py-4 bg-orange-50 text-orange-700 border border-orange-100 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-orange-100 transition-all active:scale-95"
+                          >
+                            Reject Ticket
+                          </button>
+                       )}
                        {ticket.status !== 'CLOSED' && (
                          <button 
                            onClick={() => handleStatusAction('CLOSED')}
@@ -260,6 +371,17 @@ const TicketDetailsPage = () => {
                          </button>
                        )}
                      </div>
+                  </div>
+                )}
+
+                {(user.role === 'ADMIN' || ticket.createdById === user.id) && (
+                  <div className="pt-6 border-t border-gray-50">
+                    <button 
+                      onClick={handleDeleteAction}
+                      className="w-full py-4 bg-white text-red-600 border border-red-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all active:scale-95"
+                    >
+                      Delete Request
+                    </button>
                   </div>
                 )}
               </div>
