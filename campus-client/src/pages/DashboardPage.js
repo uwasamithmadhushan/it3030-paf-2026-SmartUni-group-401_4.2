@@ -80,6 +80,16 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-400 mt-0.5">Browse and manage campus resources</p>
               </div>
             </button>
+            <button
+              onClick={() => navigate('/tickets')}
+              className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-orange-200 transition text-left"
+            >
+              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-xl">🎫</div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Incident Tickets</p>
+                <p className="text-xs text-gray-400 mt-0.5">Report issues and track incidents</p>
+              </div>
+            </button>
             {user?.role === 'ADMIN' && (
               <button
                 onClick={() => navigate('/admin/users')}
