@@ -1,6 +1,7 @@
 package com.example.demo.dto;
 
 import com.example.demo.models.Attachment;
+import com.example.demo.models.Comment;
 import com.example.demo.models.TechnicianUpdate;
 import com.example.demo.models.TicketPriority;
 import com.example.demo.models.TicketStatus;
@@ -19,6 +20,9 @@ public class TicketResponse {
     private String title;
     private String description;
     private String category;
+    private String resourceId;
+    private String location;
+    private String contactDetails;
     private TicketPriority priority;
     private TicketStatus status;
     private String createdById;
@@ -27,6 +31,7 @@ public class TicketResponse {
     private String assignedTechnicianName;
     private List<Attachment> attachments;
     private List<TechnicianUpdate> updates;
+    private List<Comment> comments;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

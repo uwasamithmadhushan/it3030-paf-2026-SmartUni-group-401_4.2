@@ -20,16 +20,66 @@ public class IncidentTicketService {
     private final UserRepository userRepository;
 
     public TicketResponse createTicket(TicketRequest request, String userId) {
+        if (request.getAttachments() != null && request.getAttachments().size() > 3) {
+            throw new RuntimeException("Maximum 3 attachments allowed");
+        }
+
         IncidentTicket ticket = new IncidentTicket();
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
         ticket.setCategory(request.getCategory());
+        ticket.setResourceId(request.getResourceId());
+        ticket.setLocation(request.getLocation());
+        ticket.setContactDetails(request.getContactDetails());
         ticket.setPriority(request.getPriority());
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setCreatedBy(userId);
         
+        if (request.getAttachments() != null) {
+            ticket.setAttachments(request.getAttachments());
+        }
+        
         IncidentTicket saved = ticketRepository.save(ticket);
         return mapToResponse(saved);
+    }
+
+    public void deleteTicket(String id, User user) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        
+        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
+            throw new AccessDeniedException("You don't have permission to delete this ticket");
+        }
+        
+        ticketRepository.delete(ticket);
+    }
+
+    public TicketResponse addComment(String ticketId, String text, User user) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        
+        Comment comment = new Comment();
+        comment.setUserId(user.getId());
+        comment.setUsername(user.getUsername());
+        comment.setText(text);
+        
+        ticket.getComments().add(comment);
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
+    public TicketResponse deleteComment(String ticketId, String commentId, User user) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        
+        boolean removed = ticket.getComments().removeIf(c -> 
+            c.getId().equals(commentId) && (user.getRole() == UserRole.ADMIN || c.getUserId().equals(user.getId()))
+        );
+        
+        if (!removed) {
+            throw new RuntimeException("Comment not found or access denied");
+        }
+        
+        return mapToResponse(ticketRepository.save(ticket));
     }
 
     public List<TicketResponse> getTickets(User user) {
@@ -97,6 +147,10 @@ public class IncidentTicketService {
         response.setStatus(ticket.getStatus());
         response.setCreatedById(ticket.getCreatedBy());
         response.setAssignedTechnicianId(ticket.getAssignedTechnician());
+        response.setResourceId(ticket.getResourceId());
+        response.setLocation(ticket.getLocation());
+        response.setContactDetails(ticket.getContactDetails());
+        response.setComments(ticket.getComments());
         response.setAttachments(ticket.getAttachments());
         response.setUpdates(ticket.getUpdates());
         response.setCreatedAt(ticket.getCreatedAt());
