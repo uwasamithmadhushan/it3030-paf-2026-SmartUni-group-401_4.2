@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createTicket } from '../services/api';
+import { createTicket, getAllAssets } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useEffect } from 'react';
 
 const CreateTicketPage = () => {
   const navigate = useNavigate();
@@ -12,8 +13,25 @@ const CreateTicketPage = () => {
     title: '',
     description: '',
     category: 'IT_SUPPORT',
-    priority: 'MEDIUM'
+    priority: 'MEDIUM',
+    resourceId: '',
+    location: '',
+    contactDetails: '',
+    attachments: []
   });
+  const [assets, setAssets] = useState([]);
+
+  useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        const { data } = await getAllAssets();
+        setAssets(data);
+      } catch (err) {
+        addToast('Could not load assets list', 'error');
+      }
+    };
+    fetchAssets();
+  }, [addToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,13 +47,32 @@ const CreateTicketPage = () => {
     setLoading(true);
     try {
       await createTicket(formData);
-      addToast('Ticket submitted successfully! We will look into it.', 'success');
+      addToast('Ticket submitted successfully!', 'success');
       navigate('/tickets');
     } catch (error) {
-      addToast('Failed to submit ticket. Please check your connection.', 'error');
+      const msg = error.response?.data?.message || 'Failed to submit ticket.';
+      addToast(msg, 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 3) {
+      addToast('Maximum 3 attachments allowed', 'error');
+      return;
+    }
+    
+    // In a real app, you'd upload these to S3/Cloudinary and get URLs
+    // For this simulation, we'll store mock attachment objects
+    const mockAttachments = files.map(file => ({
+      filename: file.name,
+      fileType: file.type,
+      url: URL.createObjectURL(file) // Local preview URL
+    }));
+
+    setFormData({ ...formData, attachments: mockAttachments });
   };
 
   const handleChange = (e) => {
@@ -110,6 +147,63 @@ const CreateTicketPage = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Resource (Optional)</label>
+              <select
+                name="resourceId"
+                value={formData.resourceId}
+                onChange={handleChange}
+                className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all font-medium text-gray-700 bg-white"
+              >
+                <option value="">Select a resource...</option>
+                {assets.map(asset => (
+                  <option key={asset.id} value={asset.id}>{asset.name} ({asset.location})</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-3">
+              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Location</label>
+              <input
+                required
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="Room number, floor, or area"
+                className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Contact Details</label>
+              <input
+                required
+                name="contactDetails"
+                value={formData.contactDetails}
+                onChange={handleChange}
+                placeholder="Phone or extension number"
+                className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all text-gray-800 font-medium"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Attachments (Max 3)</label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 bg-white"
+              />
+              {formData.attachments.length > 0 && (
+                <p className="text-xs text-indigo-600 font-bold">{formData.attachments.length} files selected</p>
+              )}
             </div>
           </div>
 
