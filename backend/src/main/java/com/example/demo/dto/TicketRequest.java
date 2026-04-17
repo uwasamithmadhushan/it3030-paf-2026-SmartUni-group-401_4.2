@@ -12,5 +12,8 @@ public class TicketRequest {
     private String title;
     private String description;
     private String category;
+    private String resourceId;
+    private String location;
+    private String contactDetails;
     private TicketPriority priority;
 }
