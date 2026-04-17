@@ -39,6 +39,19 @@ export default function Header() {
             🏛️ Facility
           </NavLink>
 
+          <NavLink
+            to="/tickets"
+            className={({ isActive }) =>
+              `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`
+            }
+          >
+            🎫 Tickets
+          </NavLink>
+
           {user?.role !== 'ADMIN' && (
             <NavLink
               to="/bookings/my"
