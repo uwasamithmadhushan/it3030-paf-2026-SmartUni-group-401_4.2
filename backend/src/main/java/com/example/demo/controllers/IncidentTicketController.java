@@ -38,6 +38,13 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.getTicketById(id, user));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable String id, Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        ticketService.deleteTicket(id, user);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/assign")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TicketResponse> assignTechnician(
@@ -54,5 +61,23 @@ public class IncidentTicketController {
             Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
         return ResponseEntity.ok(ticketService.updateStatus(id, request, user.getId()));
+    }
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<TicketResponse> addComment(
+            @PathVariable String id,
+            @RequestBody String text,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.addComment(id, text, user));
+    }
+
+    @DeleteMapping("/{id}/comments/{commentId}")
+    public ResponseEntity<TicketResponse> deleteComment(
+            @PathVariable String id,
+            @PathVariable String commentId,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.deleteComment(id, commentId, user));
     }
 }
