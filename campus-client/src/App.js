@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 import LoginPage from './pages/LoginPage';
@@ -11,10 +12,15 @@ import AssetForm from './pages/AssetForm';
 import BookingForm from './pages/BookingForm';
 import MyBookings from './pages/MyBookings';
 import AdminBookings from './pages/AdminBookings';
+import CreateTicketPage from './pages/CreateTicketPage';
+import TicketListPage from './pages/TicketListPage';
+import TicketDetailsPage from './pages/TicketDetailsPage';
+import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
 
 function App() {
   return (
-    <AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
       <BrowserRouter>
         <Routes>
           {/* Public */}
@@ -93,11 +99,46 @@ function App() {
             }
           />
 
+          {/* Incident Tickets */}
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute>
+                <MainLayout><TicketListPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets/new"
+            element={
+              <ProtectedRoute>
+                <MainLayout><CreateTicketPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets/:id"
+            element={
+              <ProtectedRoute>
+                <MainLayout><TicketDetailsPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/technician/dashboard"
+            element={
+              <ProtectedRoute>
+                <MainLayout><TechnicianDashboardPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 
