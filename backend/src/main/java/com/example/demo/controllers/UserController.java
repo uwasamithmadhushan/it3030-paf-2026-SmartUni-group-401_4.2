@@ -63,4 +63,12 @@ public class UserController {
         userService.deleteUser(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserProfileResponse> approveUser(@PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserProfileResponse approved = userService.approveUser(id, userDetails.getUsername());
+        return ResponseEntity.ok(approved);
+    }
 }
