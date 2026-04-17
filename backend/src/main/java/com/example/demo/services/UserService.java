@@ -16,6 +16,11 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    public User findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
