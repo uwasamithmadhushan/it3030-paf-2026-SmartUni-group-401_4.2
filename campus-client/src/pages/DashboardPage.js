@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import MainLayout from '../components/MainLayout';
-import { updateMe } from '../services/api';
+import { updateMe, getAllTickets } from '../services/api';
+import { useEffect } from 'react';
 
 const ROLE_COLORS = {
   ADMIN: 'bg-purple-100 text-purple-700',
@@ -13,6 +14,33 @@ export default function DashboardPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const { data } = await getAllTickets();
+        setTickets(data);
+      } catch (err) {
+        console.error('Failed to fetch tickets');
+      } finally {
+        setLoadingTickets(false);
+      }
+    };
+    fetchTickets();
+  }, []);
+
+  const stats = {
+    open: tickets.filter(t => t.status === 'OPEN').length,
+    inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+    resolved: tickets.filter(t => t.status === 'RESOLVED').length,
+  };
+
+  const recentUpdates = tickets
+    .flatMap(t => t.updates.map(u => ({ ...u, ticketTitle: t.title, ticketId: t.id })))
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 3);
 
   const initials = user?.username
     ? user.username.slice(0, 2).toUpperCase()
@@ -90,7 +118,53 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-400 mt-0.5">Report issues and track incidents</p>
               </div>
             </button>
-            {user?.role === 'ADMIN' && (
+          </div>
+        </div>
+
+        {/* User Dashboard Metrics */}
+        <div className="mt-12">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Support Overview</h3>
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-center">
+              <p className="text-2xl font-black text-blue-600">{stats.open}</p>
+              <p className="text-[10px] font-black uppercase text-gray-400 mt-1">Open</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-center">
+              <p className="text-2xl font-black text-amber-500">{stats.inProgress}</p>
+              <p className="text-[10px] font-black uppercase text-gray-400 mt-1">In Progress</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-center">
+              <p className="text-2xl font-black text-emerald-500">{stats.resolved}</p>
+              <p className="text-[10px] font-black uppercase text-gray-400 mt-1">Resolved</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+             <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                <h4 className="font-bold text-gray-800 text-sm">Recent Activity</h4>
+                <button onClick={() => navigate('/tickets')} className="text-[10px] font-black text-indigo-600 uppercase hover:underline">View All</button>
+             </div>
+             <div className="divide-y divide-gray-50">
+                {recentUpdates.length > 0 ? recentUpdates.map((update, i) => (
+                  <div key={i} className="px-6 py-4 flex gap-4 hover:bg-gray-50 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">💬</div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800 line-clamp-1">{update.ticketTitle}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{update.note}</p>
+                      <p className="text-[9px] text-gray-400 mt-1 font-medium">{new Date(update.timestamp).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="py-8 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">No recent updates</div>
+                )}
+             </div>
+          </div>
+        </div>
+
+        {user?.role === 'ADMIN' && (
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Administration</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 onClick={() => navigate('/admin/users')}
                 className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-purple-200 transition text-left"
@@ -101,9 +175,9 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-400 mt-0.5">View and manage all users</p>
                 </div>
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Update Profile Modal */}

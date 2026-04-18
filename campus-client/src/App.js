@@ -16,6 +16,7 @@ import CreateTicketPage from './pages/CreateTicketPage';
 import TicketListPage from './pages/TicketListPage';
 import TicketDetailsPage from './pages/TicketDetailsPage';
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
 function App() {
   return (
@@ -95,6 +96,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <UserListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminDashboardPage />
               </ProtectedRoute>
             }
           />
