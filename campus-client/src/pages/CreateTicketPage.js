@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createTicket, getAllAssets } from '../services/api';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { createTicket, getAllAssets, uploadAttachment } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useEffect } from 'react';
 
 const CreateTicketPage = () => {
   const navigate = useNavigate();
+  const { refreshTickets } = useOutletContext() || {};
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const CreateTicketPage = () => {
     contactDetails: '',
     attachments: []
   });
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
 
   useEffect(() => {
@@ -46,8 +48,22 @@ const CreateTicketPage = () => {
 
     setLoading(true);
     try {
-      await createTicket(formData);
+      const { data: newTicket } = await createTicket({ ...formData, attachments: [] });
+      
+      // Upload files if any
+      if (selectedFiles.length > 0) {
+        addToast(`Uploading ${selectedFiles.length} attachments...`, 'info');
+        for (const file of selectedFiles) {
+          try {
+            await uploadAttachment(newTicket.id, file);
+          } catch (uploadErr) {
+            console.error('File upload failed', uploadErr);
+          }
+        }
+      }
+
       addToast('Ticket submitted successfully!', 'success');
+      if (refreshTickets) refreshTickets();
       navigate('/tickets');
     } catch (error) {
       const msg = error.response?.data?.message || 'Failed to submit ticket.';
@@ -59,20 +75,19 @@ const CreateTicketPage = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 3) {
+    if (formData.attachments.length + files.length > 3) {
       addToast('Maximum 3 attachments allowed', 'error');
       return;
     }
     
-    // In a real app, you'd upload these to S3/Cloudinary and get URLs
-    // For this simulation, we'll store mock attachment objects
-    const mockAttachments = files.map(file => ({
+    const newAttachments = files.map(file => ({
       filename: file.name,
       fileType: file.type,
-      url: URL.createObjectURL(file) // Local preview URL
+      url: URL.createObjectURL(file)
     }));
 
-    setFormData({ ...formData, attachments: mockAttachments });
+    setFormData({ ...formData, attachments: [...formData.attachments, ...newAttachments] });
+    setSelectedFiles([...selectedFiles, ...files]);
   };
 
   const handleChange = (e) => {
@@ -82,155 +97,167 @@ const CreateTicketPage = () => {
   if (loading) return <LoadingSpinner fullScreen message="Submitting your request..." />;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200 overflow-hidden border border-gray-50">
-        <div className="bg-indigo-600 px-10 py-16 text-white relative overflow-hidden">
-          <div className="relative z-10">
-            <h1 className="text-4xl font-black mb-3 tracking-tight">Report an Issue</h1>
-            <p className="text-indigo-100 text-lg opacity-90 max-w-md">Help us keep the campus running smoothly. Tell us what went wrong.</p>
+    <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex justify-center items-start pt-10 pb-10 overflow-y-auto custom-scrollbar px-4">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-gray-100 overflow-hidden relative my-auto animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Header Banner */}
+        <div className="bg-[#5B5CE6] px-8 py-6 text-white flex justify-between items-start">
+          <div>
+            <h1 className="text-xl font-bold mb-1">New Incident Report</h1>
+            <p className="text-indigo-100 text-sm">Please provide details about the issue.</p>
           </div>
-          {/* Abstract background shapes */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 ml-10 mb-10 w-40 h-40 bg-indigo-400 rounded-full opacity-10 blur-2xl"></div>
+          <button 
+            type="button"
+            onClick={() => navigate('/tickets')}
+            className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+            title="Cancel"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-10 md:p-14 space-y-8">
-          <div className="space-y-3">
-            <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Issue Title</label>
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {/* Issue Title */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Issue Title</label>
             <input
               required
               name="title"
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Wi-Fi disconnected in Library Block B"
-              className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all text-gray-800 font-medium placeholder:text-gray-300 shadow-sm"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Category</label>
-              <div className="relative">
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all appearance-none cursor-pointer font-medium text-gray-700 bg-white"
-                >
-                  <option value="IT_SUPPORT">💻 IT Support</option>
-                  <option value="MAINTENANCE">🔧 Facility Maintenance</option>
-                  <option value="SECURITY">🛡️ Security Incident</option>
-                  <option value="LAB_EQUIPMENT">🔬 Lab Equipment</option>
-                  <option value="OTHER">📁 Other</option>
-                </select>
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium appearance-none cursor-pointer"
+              >
+                <option value="IT_SUPPORT">💻 IT Support</option>
+                <option value="MAINTENANCE">🔧 Facility Maintenance</option>
+                <option value="SECURITY">🛡️ Security Incident</option>
+                <option value="LAB_EQUIPMENT">🔬 Lab Equipment</option>
+                <option value="OTHER">📁 Other</option>
+              </select>
             </div>
             
-            <div className="space-y-3">
-              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Priority</label>
-              <div className="relative">
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all appearance-none cursor-pointer font-medium text-gray-700 bg-white"
-                >
-                  <option value="LOW">🌴 Low (Minor)</option>
-                  <option value="MEDIUM">⚖️ Medium (Normal)</option>
-                  <option value="HIGH">🔥 High (Urgent)</option>
-                  <option value="CRITICAL">🚨 Critical (Emergency)</option>
-                </select>
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
+            {/* Priority */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Priority</label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium appearance-none cursor-pointer"
+              >
+                <option value="LOW">🌴 Low</option>
+                <option value="MEDIUM">⚖️ Medium</option>
+                <option value="HIGH">🔥 High</option>
+                <option value="CRITICAL">🚨 Critical</option>
+              </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Resource (Optional)</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Resource Mapping */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Related Asset (Optional)</label>
               <select
                 name="resourceId"
                 value={formData.resourceId}
                 onChange={handleChange}
-                className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all font-medium text-gray-700 bg-white"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium appearance-none cursor-pointer"
               >
-                <option value="">Select a resource...</option>
+                <option value="">-- No specific asset --</option>
                 {assets.map(asset => (
-                  <option key={asset.id} value={asset.id}>{asset.name} ({asset.location})</option>
+                  <option key={asset.id} value={asset.id}>{asset.name} ({asset.location.substring(0, 15)})</option>
                 ))}
               </select>
             </div>
             
-            <div className="space-y-3">
-              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Location</label>
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
               <input
                 required
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
                 placeholder="Room number, floor, or area"
-                className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Contact Details</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Contact Details */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Contact Details</label>
               <input
                 required
                 name="contactDetails"
                 value={formData.contactDetails}
                 onChange={handleChange}
                 placeholder="Phone or extension number"
-                className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all text-gray-800 font-medium"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium"
               />
             </div>
 
-            <div className="space-y-3">
-              <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Attachments (Max 3)</label>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 bg-white"
-              />
-              {formData.attachments.length > 0 && (
-                <p className="text-xs text-indigo-600 font-bold">{formData.attachments.length} files selected</p>
-              )}
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Attachments (Max 3)</label>
+              <div className="relative group cursor-pointer h-[44px]">
+                <div className={`absolute inset-0 rounded-xl border-2 border-dashed ${formData.attachments.length > 0 ? 'border-[#5B5CE6] bg-indigo-50/50' : 'border-gray-200 bg-gray-50 group-hover:border-[#5B5CE6]'} transition-all pointer-events-none`}></div>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  title="Click to upload images"
+                  className="w-full h-full opacity-0 cursor-pointer object-cover z-20 relative"
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 px-4">
+                  <span className={`text-sm font-bold ${formData.attachments.length > 0 ? 'text-[#5B5CE6]' : 'text-gray-400'}`}>
+                    {formData.attachments.length > 0 ? `${formData.attachments.length} files attached` : 'Click to attach photos'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-sm font-black text-gray-700 uppercase tracking-widest">Detailed Description</label>
+          {/* Detailed Description */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Detailed Description</label>
             <textarea
               required
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows="6"
-              placeholder="Provide as much detail as possible to help us reach a faster resolution..."
-              className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 focus:ring-0 transition-all text-gray-800 font-medium placeholder:text-gray-300 shadow-sm resize-none"
+              rows="4"
+              placeholder="Provide as much detail as possible..."
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#5B5CE6] text-gray-900 text-sm font-medium resize-none"
             ></textarea>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+          {/* Submit Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={() => navigate('/tickets')}
-              className="flex-1 px-8 py-4 bg-gray-50 text-gray-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition"
+              className="px-6 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-[2] px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 hover:shadow-indigo-200 active:scale-95"
+              className="px-8 py-2.5 bg-[#5B5CE6] text-white rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors"
             >
               Submit Ticket
             </button>
