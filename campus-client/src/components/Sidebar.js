@@ -19,7 +19,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   // Role-based Nav Items
   if (user?.role === 'TECHNICIAN') {
-    navItems.push({ to: '/technician/dashboard', label: 'Technician Hub', icon: '⚡' });
+    navItems.push({ to: '/technician/dashboard', label: 'Technician Dashboard', icon: '⚡' });
   }
 
   if (user?.role === 'ADMIN') {
@@ -76,28 +76,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             ))}
           </nav>
 
-          {/* User Section */}
-          <div className="p-4 mt-auto border-t border-slate-50">
-            <div className="bg-slate-50/80 rounded-[2rem] p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center font-black text-slate-800 shadow-sm">
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-900 truncate">{user?.username}</p>
-                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{user?.role}</p>
-                </div>
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50 transition-all active:scale-95"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {/* Bottom Actions */}
+          <div className="p-4 mt-auto border-t border-slate-50 space-y-1.5">
+            <button 
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
+            >
+              <span className="text-xl opacity-80">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              Help & Support
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+            >
+              <span className="text-xl opacity-80">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Sign Out
-              </button>
-            </div>
+              </span>
+              Sign Out
+            </button>
           </div>
         </div>
       </aside>
