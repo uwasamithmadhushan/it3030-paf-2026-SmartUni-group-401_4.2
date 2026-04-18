@@ -49,7 +49,11 @@ const TechnicianDashboardPage = () => {
     total: tickets.length,
     open: tickets.filter(t => t.status === 'OPEN').length,
     inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
-    resolved: tickets.filter(t => t.status === 'RESOLVED').length,
+    highPriority: tickets.filter(t => t.priority === 'HIGH' || t.priority === 'CRITICAL').length,
+    completedToday: tickets.filter(t => 
+      t.status === 'RESOLVED' && 
+      new Date(t.updatedAt).toDateString() === new Date().toDateString()
+    ).length
   };
 
   return (
@@ -74,9 +78,9 @@ const TechnicianDashboardPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <StatCard title="My Workload" value={stats.total} icon="📋" color="indigo" />
-        <StatCard title="Pending" value={stats.open} icon="🔵" color="blue" />
+        <StatCard title="High Priority" value={stats.highPriority} icon="🔥" color="rose" />
         <StatCard title="Active" value={stats.inProgress} icon="🟡" color="yellow" />
-        <StatCard title="Resolved" value={stats.resolved} icon="🟢" color="green" />
+        <StatCard title="Done Today" value={stats.completedToday} icon="✅" color="emerald" />
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100 border border-gray-50 overflow-hidden">
