@@ -17,13 +17,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { to: '/tickets', label: 'Incident Tickets', icon: '🎫' },
   ];
 
-  // Role-based Nav Items
-  if (user?.role === 'TECHNICIAN') {
-    navItems.push({ to: '/technician/dashboard', label: 'Technician Dashboard', icon: '⚡' });
-  }
-
   if (user?.role === 'ADMIN') {
-    navItems.push({ to: '/admin/dashboard', label: 'Support Monitor', icon: '📊' });
     navItems.push({ to: '/admin/users', label: 'User Management', icon: '👥' });
     navItems.push({ to: '/admin/bookings', label: 'Manage Bookings', icon: '📅' });
   } else {
