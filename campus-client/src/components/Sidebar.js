@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 className={({ isActive }) => `
                   flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all
                   ${isActive 
-                    ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100/50' 
+                    ? 'bg-[#5B5CE6] text-white shadow-md' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}
                 `}
               >
