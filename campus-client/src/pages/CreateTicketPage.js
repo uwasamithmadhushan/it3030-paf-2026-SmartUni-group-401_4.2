@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { createTicket, getAllAssets, uploadAttachment } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 
 const CreateTicketPage = () => {
   const navigate = useNavigate();
+  const { refreshTickets } = useOutletContext() || {};
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -62,6 +63,7 @@ const CreateTicketPage = () => {
       }
 
       addToast('Ticket submitted successfully!', 'success');
+      if (refreshTickets) refreshTickets();
       navigate('/tickets');
     } catch (error) {
       const msg = error.response?.data?.message || 'Failed to submit ticket.';
@@ -94,11 +96,9 @@ const CreateTicketPage = () => {
 
   if (loading) return <LoadingSpinner fullScreen message="Submitting your request..." />;
 
-  if (loading) return <LoadingSpinner fullScreen message="Submitting your request..." />;
-
   return (
-    <div className="py-8 flex justify-center px-4">
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex justify-center items-start pt-10 pb-10 overflow-y-auto custom-scrollbar px-4">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-gray-100 overflow-hidden relative my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header Banner */}
         <div className="bg-[#5B5CE6] px-8 py-6 text-white flex justify-between items-start">

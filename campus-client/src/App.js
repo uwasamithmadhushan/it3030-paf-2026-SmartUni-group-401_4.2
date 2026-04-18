@@ -116,15 +116,9 @@ function App() {
                 <MainLayout><TicketListPage /></MainLayout>
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/tickets/new"
-            element={
-              <ProtectedRoute>
-                <MainLayout><CreateTicketPage /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="new" element={<CreateTicketPage />} />
+          </Route>
           <Route
             path="/tickets/:id"
             element={
