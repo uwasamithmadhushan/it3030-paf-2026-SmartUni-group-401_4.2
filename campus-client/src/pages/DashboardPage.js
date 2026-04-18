@@ -6,8 +6,9 @@ import { updateMe, getAllTickets } from '../services/api';
 import { useEffect } from 'react';
 
 const ROLE_COLORS = {
-  ADMIN: 'bg-purple-100 text-purple-700',
-  USER: 'bg-blue-100 text-blue-700',
+  ADMIN: 'bg-purple-100 text-purple-700 font-bold border border-purple-200',
+  TECHNICIAN: 'bg-indigo-100 text-indigo-700 font-bold border border-indigo-200',
+  USER: 'bg-blue-100 text-blue-700 font-bold border border-blue-200',
 };
 
 export default function DashboardPage() {
@@ -31,10 +32,16 @@ export default function DashboardPage() {
     fetchTickets();
   }, []);
 
+  const myTickets = user?.role === 'TECHNICIAN' 
+    ? tickets.filter(t => t.assignedTechnicianId === user?.id)
+    : user?.role === 'USER'
+      ? tickets.filter(t => t.createdById === user?.id)
+      : tickets;
+
   const stats = {
-    open: tickets.filter(t => t.status === 'OPEN').length,
-    inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
-    resolved: tickets.filter(t => t.status === 'RESOLVED').length,
+    open: myTickets.filter(t => t.status === 'OPEN').length,
+    inProgress: myTickets.filter(t => t.status === 'IN_PROGRESS').length,
+    resolved: myTickets.filter(t => t.status === 'RESOLVED').length,
   };
 
   const recentUpdates = tickets
@@ -123,7 +130,9 @@ export default function DashboardPage() {
 
         {/* User Dashboard Metrics */}
         <div className="mt-12">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Support Overview</h3>
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            {user?.role === 'TECHNICIAN' ? 'My Assigned Focus' : user?.role === 'ADMIN' ? 'Global Support Pulse' : 'My Support Requests'}
+          </h3>
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-center">
               <p className="text-2xl font-black text-blue-600">{stats.open}</p>
@@ -161,30 +170,50 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {user?.role === 'ADMIN' && (
+        {(user?.role === 'ADMIN' || user?.role === 'TECHNICIAN') && (
           <div className="mt-8">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Administration</h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+              {user?.role === 'TECHNICIAN' ? 'Staff Operations' : 'Administration'}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button
-                onClick={() => navigate('/admin/users')}
-                className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-purple-200 transition text-left"
-              >
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-xl">👥</div>
-                <div>
-                  <p className="font-semibold text-gray-800 text-sm">User Management</p>
-                  <p className="text-xs text-gray-400 mt-0.5">View and manage all users</p>
-                </div>
-              </button>
-              <button
-                onClick={() => navigate('/admin/dashboard')}
-                className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-blue-200 transition text-left"
-              >
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl">📊</div>
-                <div>
-                  <p className="font-semibold text-gray-800 text-sm">Support Monitor</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Admin Analytics & Workload</p>
-                </div>
-              </button>
+              {user?.role === 'ADMIN' && (
+                <button
+                  onClick={() => navigate('/admin/users')}
+                  className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-purple-200 transition text-left"
+                >
+                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-xl">👥</div>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">User Management</p>
+                    <p className="text-xs text-gray-400 mt-0.5">View and manage all users</p>
+                  </div>
+                </button>
+              )}
+              
+              {user?.role === 'TECHNICIAN' && (
+                <button
+                  onClick={() => navigate('/technician/dashboard')}
+                  className="flex items-center gap-4 bg-white border border-indigo-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-indigo-400 transition text-left ring-2 ring-indigo-50 ring-offset-2"
+                >
+                  <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-xl text-white">⚡</div>
+                  <div>
+                    <p className="font-black text-indigo-700 text-sm">Enter Technician Hub</p>
+                    <p className="text-xs text-indigo-400 mt-0.5 font-medium">Manage your assigned queue and updates</p>
+                  </div>
+                </button>
+              )}
+
+              {user?.role === 'ADMIN' && (
+                <button
+                  onClick={() => navigate('/admin/dashboard')}
+                  className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-blue-200 transition text-left"
+                >
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl">📊</div>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">Support Monitor</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Admin Analytics & Workload</p>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         )}
