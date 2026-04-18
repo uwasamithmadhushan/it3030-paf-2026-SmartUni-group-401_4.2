@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTicketById, assignTechnician, updateTicketStatus, getAllUsers, addComment, deleteComment, deleteTicket } from '../services/api';
+import { getTicketById, assignTechnician, updateTicketStatus, getAllUsers, addComment, deleteComment, updateComment, deleteTicket, uploadAttachment, deleteAttachment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -97,6 +97,9 @@ const TicketDetailsPage = () => {
           note: modalState.reason || `Status updated to ${modalState.data} by ${user.username}` 
         });
         addToast(`Ticket status updated to ${modalState.data}`, 'success');
+      } else if (modalState.type === 'edit_comment') {
+        await updateComment(id, modalState.data.id, modalState.reason);
+        addToast('Comment updated successfully', 'success');
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
         addToast('Ticket deleted successfully', 'success');
@@ -125,13 +128,41 @@ const TicketDetailsPage = () => {
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
+  const handleEditCommentAction = (comment) => {
+    setModalState({
+      isOpen: true,
+      type: 'edit_comment',
+      title: 'Edit Comment',
+      message: 'Modify your comment below:',
+      data: comment,
+      isInput: true,
+      initialValue: comment.text
+    });
+  };
+
+  const handleDeleteAttachment = async (filename) => {
     try {
-      await deleteComment(id, commentId);
+      const actualFilename = filename.split('/').pop();
+      await deleteAttachment(id, actualFilename);
       fetchData();
-      addToast('Comment removed', 'success');
+      addToast('Attachment removed', 'success');
     } catch (error) {
-      addToast('Failed to delete comment', 'error');
+      addToast('Failed to delete attachment', 'error');
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      await uploadAttachment(id, file);
+      fetchData();
+      addToast('File uploaded successfully', 'success');
+    } catch (error) {
+      addToast(error.response?.data?.message || 'Upload failed', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
