@@ -46,7 +46,16 @@ export const createTicket = (data) => api.post('/tickets', data);
 export const deleteTicket = (id) => api.delete(`/tickets/${id}`);
 export const assignTechnician = (id, data) => api.put(`/tickets/${id}/assign`, data);
 export const updateTicketStatus = (id, data) => api.put(`/tickets/${id}/status`, data);
-export const addComment = (id, text) => api.post(`/tickets/${id}/comments`, text);
+export const addComment = (id, text) => api.post(`/tickets/${id}/comments`, text, { headers: { 'Content-Type': 'text/plain' } });
+export const updateComment = (id, commentId, text) => api.put(`/tickets/${id}/comments/${commentId}`, text, { headers: { 'Content-Type': 'text/plain' } });
 export const deleteComment = (id, commentId) => api.delete(`/tickets/${id}/comments/${commentId}`);
+export const uploadAttachment = (id, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post(`/tickets/${id}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+};
+export const deleteAttachment = (id, filename) => api.delete(`/tickets/${id}/attachments/${filename}`);
 
 export default api;

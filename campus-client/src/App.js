@@ -1,11 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
+import UserDashboardPage from './pages/UserDashboardPage';
 import UserListPage from './pages/UserListPage';
 import AssetList from './pages/AssetList';
 import AssetForm from './pages/AssetForm';
@@ -16,6 +17,14 @@ import CreateTicketPage from './pages/CreateTicketPage';
 import TicketListPage from './pages/TicketListPage';
 import TicketDetailsPage from './pages/TicketDetailsPage';
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+
+function DashboardRouter() {
+  const { user } = useAuth();
+  if (user?.role === 'ADMIN') return <AdminDashboardPage />;
+  if (user?.role === 'TECHNICIAN') return <TechnicianDashboardPage />;
+  return <UserDashboardPage />;
+}
 
 function App() {
   return (
@@ -32,7 +41,15 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <MainLayout><DashboardRouter /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <MainLayout><ProfilePage /></MainLayout>
               </ProtectedRoute>
             }
           />
@@ -94,7 +111,15 @@ function App() {
             path="/admin/users"
             element={
               <ProtectedRoute adminOnly>
-                <UserListPage />
+                <MainLayout><UserListPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute adminOnly>
+                <MainLayout><AdminDashboardPage /></MainLayout>
               </ProtectedRoute>
             }
           />
@@ -107,15 +132,9 @@ function App() {
                 <MainLayout><TicketListPage /></MainLayout>
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/tickets/new"
-            element={
-              <ProtectedRoute>
-                <MainLayout><CreateTicketPage /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="new" element={<CreateTicketPage />} />
+          </Route>
           <Route
             path="/tickets/:id"
             element={
@@ -124,14 +143,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/technician/dashboard"
-            element={
-              <ProtectedRoute>
-                <MainLayout><TechnicianDashboardPage /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
