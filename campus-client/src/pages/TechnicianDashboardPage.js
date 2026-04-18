@@ -57,63 +57,64 @@ const TechnicianDashboardPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-none mb-4">Technician Workspace</h1>
-          <p className="text-gray-500 font-medium flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Technician Dashboard</h1>
+          <p className="text-sm text-slate-500 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             Online: {user.username} (Staff ID: {user.id.substring(0, 8)})
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
            <button 
              onClick={fetchTickets}
-             className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition shadow-sm active:scale-95"
+             className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm flex items-center gap-2"
            >
+             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
              Refresh Queue
            </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="My Workload" value={stats.total} icon="📋" color="indigo" />
         <StatCard title="High Priority" value={stats.highPriority} icon="🔥" color="rose" />
-        <StatCard title="Active" value={stats.inProgress} icon="🟡" color="yellow" />
+        <StatCard title="Active" value={stats.inProgress} icon="⚡" color="amber" />
         <StatCard title="Done Today" value={stats.completedToday} icon="✅" color="emerald" />
       </div>
 
-      <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100 border border-gray-50 overflow-hidden">
-        <div className="px-10 py-8 border-b border-gray-50 bg-gray-50/20 flex justify-between items-center">
-          <h2 className="font-black text-xl text-gray-900">Primary Queue</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h2 className="font-bold text-slate-900">Primary Queue</h2>
           <div className="flex gap-2">
-            <span className="text-[10px] font-black uppercase text-gray-400">Items: {tickets.length}</span>
+            <span className="text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">{tickets.length} Items</span>
           </div>
         </div>
         
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-slate-100">
           {tickets.length > 0 ? (
             tickets.map((ticket) => (
-              <div key={ticket.id} className="p-10 hover:bg-indigo-50/10 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-8 group">
-                <div className="space-y-4 flex-1">
+              <div key={ticket.id} className="p-6 hover:bg-slate-50 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-6 group">
+                <div className="space-y-3 flex-1">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border ${getPriorityStyles(ticket.priority)}`}>
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${getPriorityStyles(ticket.priority)}`}>
                       {ticket.priority} Priority
                     </span>
-                    <span className="text-[10px] font-black text-gray-300 tracking-widest uppercase">#{ticket.id.substring(0, 8)}</span>
+                    <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">#{ticket.id.substring(0, 8)}</span>
                   </div>
                   
                   <div>
-                    <h3 className="font-black text-gray-900 text-2xl group-hover:text-indigo-600 transition-colors cursor-pointer mb-2" onClick={() => navigate(`/tickets/${ticket.id}`)}>
+                    <h3 className="font-bold text-slate-900 text-lg group-hover:text-[#5B5CE6] transition-colors cursor-pointer mb-1" onClick={() => navigate(`/tickets/${ticket.id}`)}>
                       {ticket.title}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 font-medium">
-                      <span className="flex items-center gap-2 bg-gray-100/50 px-3 py-1 rounded-xl">
-                        <span className="opacity-50">Reporter:</span>
-                        <span className="text-gray-900 font-bold">{ticket.createdByUsername}</span>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-slate-400">Reporter:</span>
+                        <span className="text-slate-700 font-bold">{ticket.createdByUsername}</span>
                       </span>
-                      <span className="flex items-center gap-2">
-                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                         {ticket.category.replace('_', ' ')}
                       </span>
                     </div>
@@ -121,7 +122,7 @@ const TechnicianDashboardPage = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <span className={`px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest border w-full sm:w-auto text-center ${getStatusStyles(ticket.status)}`}>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border text-center ${getStatusStyles(ticket.status)}`}>
                     {ticket.status.replace('_', ' ')}
                   </span>
                   
@@ -129,7 +130,7 @@ const TechnicianDashboardPage = () => {
                     {ticket.status === 'OPEN' && (
                       <button 
                         onClick={() => handleQuickUpdate(ticket.id, 'IN_PROGRESS')}
-                        className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition shadow-lg shadow-indigo-100"
+                        className="flex-1 px-4 py-2 bg-[#5B5CE6] text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
                       >
                         Accept
                       </button>
@@ -137,14 +138,14 @@ const TechnicianDashboardPage = () => {
                     {ticket.status === 'IN_PROGRESS' && (
                       <button 
                         onClick={() => handleQuickUpdate(ticket.id, 'RESOLVED')}
-                        className="flex-1 px-6 py-3 bg-green-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition shadow-lg shadow-green-100"
+                        className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors shadow-sm"
                       >
                         Resolve
                       </button>
                     )}
                     <button 
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
-                      className="flex-1 px-6 py-3 bg-white border-2 border-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-indigo-600 hover:border-indigo-100 rounded-2xl transition"
+                      className="flex-1 px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
                     >
                       Inspect
                     </button>
@@ -153,11 +154,13 @@ const TechnicianDashboardPage = () => {
               </div>
             ))
           ) : (
-            <EmptyState 
-              title="Zero Active Issues" 
-              message="Congratulations! Your queue is completely clear. You're all caught up on your assigned tickets."
-              icon="🚀"
-            />
+            <div className="p-12">
+              <EmptyState 
+                title="Zero Active Issues" 
+                message="Your queue is completely clear. You're all caught up on your assigned tickets."
+                icon="🎉"
+              />
+            </div>
           )}
         </div>
       </div>
@@ -165,37 +168,43 @@ const TechnicianDashboardPage = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, color }) => (
-  <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-gray-100 border border-gray-50 flex items-center gap-6 relative overflow-hidden group">
-    {/* Background accent */}
-    <div className={`absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 bg-${color}-500 rounded-full opacity-0 group-hover:opacity-5 transition-opacity blur-2xl`}></div>
-    
-    <div className={`w-16 h-16 rounded-2xl bg-${color}-50 flex items-center justify-center text-3xl shadow-inner`}>
-      {icon}
+const StatCard = ({ title, value, icon, color }) => {
+  const colorMap = {
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    rose: 'bg-rose-50 text-rose-600 border-rose-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100'
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl border ${colorMap[color] || 'bg-slate-50 text-slate-600 border-slate-100'}`}>
+        {icon}
+      </div>
+      <div>
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{title}</div>
+        <div className="text-2xl font-bold text-slate-900">{value}</div>
+      </div>
     </div>
-    <div>
-      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{title}</div>
-      <div className="text-4xl font-black text-gray-900 tracking-tighter">{value}</div>
-    </div>
-  </div>
-);
+  );
+};
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
-    case 'CRITICAL': return 'text-red-600 border-red-100 bg-red-50';
-    case 'HIGH': return 'text-orange-600 border-orange-100 bg-orange-50';
-    case 'MEDIUM': return 'text-yellow-600 border-yellow-100 bg-yellow-50';
-    case 'LOW': return 'text-green-600 border-green-100 bg-green-50';
-    default: return 'text-gray-400 border-gray-50 bg-gray-50';
+    case 'CRITICAL': return 'text-rose-600 border-rose-200 bg-rose-50';
+    case 'HIGH': return 'text-orange-600 border-orange-200 bg-orange-50';
+    case 'MEDIUM': return 'text-amber-600 border-amber-200 bg-amber-50';
+    case 'LOW': return 'text-emerald-600 border-emerald-200 bg-emerald-50';
+    default: return 'text-slate-500 border-slate-200 bg-slate-50';
   }
 };
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-blue-50 text-blue-700 border-blue-100';
-    case 'IN_PROGRESS': return 'bg-yellow-50 text-yellow-700 border-yellow-100';
-    case 'RESOLVED': return 'bg-green-50 text-green-700 border-green-100';
-    default: return 'bg-gray-50 text-gray-700 border-gray-100';
+    case 'OPEN': return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'IN_PROGRESS': return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'RESOLVED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    default: return 'bg-slate-50 text-slate-600 border-slate-200';
   }
 };
 
