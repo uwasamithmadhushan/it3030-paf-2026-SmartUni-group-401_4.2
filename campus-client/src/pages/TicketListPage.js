@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { getAllTickets } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
@@ -256,6 +256,9 @@ const TicketListPage = () => {
           />
         </div>
       )}
+      
+      {/* Modal Outlet for Nested Routes (like CreateTicketPage) */}
+      <Outlet context={{ refreshTickets: fetchTickets }} />
     </div>
   );
 };

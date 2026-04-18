@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 
 export default function MainLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -41,17 +44,51 @@ export default function MainLayout({ children }) {
               </svg>
               <span className="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="w-10 h-10 rounded-xl bg-[#22C55E] flex items-center justify-center font-bold text-white text-sm shadow-sm group-hover:shadow-md transition-shadow">
-                {user?.username?.substring(0, 2).toUpperCase() || 'U'}
+            <div className="relative">
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#22C55E] flex items-center justify-center font-bold text-white text-sm shadow-sm group-hover:shadow-md transition-shadow">
+                  {user?.username?.substring(0, 2).toUpperCase() || 'U'}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-800">{user?.username || 'User'}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.role || 'USER'}</span>
+                </div>
+                <svg className={`w-4 h-4 text-gray-400 ml-1 group-hover:text-slate-600 transition-all ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-800">{user?.username || 'User'}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.role || 'USER'}</span>
-              </div>
-              <svg className="w-4 h-4 text-gray-400 ml-1 group-hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+
+              {/* Dropdown Menu */}
+              {isProfileOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsProfileOpen(false)}
+                  ></div>
+                  <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden py-1">
+                    <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                      <p className="text-xs text-gray-500 font-medium">Signed in as</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{user?.username}</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        logout();
+                        navigate('/login');
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
