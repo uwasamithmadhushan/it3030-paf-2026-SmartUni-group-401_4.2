@@ -73,20 +73,19 @@ const CreateTicketPage = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 3) {
+    if (formData.attachments.length + files.length > 3) {
       addToast('Maximum 3 attachments allowed', 'error');
       return;
     }
     
-    // In a real app, you'd upload these to S3/Cloudinary and get URLs
-    // For this simulation, we'll store mock attachment objects
-    const mockAttachments = files.map(file => ({
+    const newAttachments = files.map(file => ({
       filename: file.name,
       fileType: file.type,
-      url: URL.createObjectURL(file) // Local preview URL
+      url: URL.createObjectURL(file)
     }));
 
-    setFormData({ ...formData, attachments: mockAttachments });
+    setFormData({ ...formData, attachments: [...formData.attachments, ...newAttachments] });
+    setSelectedFiles([...selectedFiles, ...files]);
   };
 
   const handleChange = (e) => {
