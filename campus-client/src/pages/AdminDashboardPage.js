@@ -43,7 +43,7 @@ const AdminDashboardPage = () => {
   })).sort((a, b) => b.count - a.count);
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-7xl mx-auto py-8 px-4">
         <h1 className="text-3xl font-black text-slate-900 mb-8">Admin Support Monitor</h1>
 
@@ -103,7 +103,7 @@ const AdminDashboardPage = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 
