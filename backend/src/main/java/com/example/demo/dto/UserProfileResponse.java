@@ -12,4 +12,5 @@ public class UserProfileResponse {
     private String username;
     private String email;
     private UserRole role;
+    private Boolean approved;
 }
