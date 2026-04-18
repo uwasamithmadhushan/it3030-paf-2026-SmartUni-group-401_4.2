@@ -34,136 +34,144 @@ export default function UserDashboardPage() {
   const recentUpdates = tickets
     .flatMap(t => t.updates.map(u => ({ ...u, ticketTitle: t.title, ticketId: t.id })))
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 3);
+    .slice(0, 5);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      {/* Quick Links */}
-      <div className="mb-12">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Modules</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => navigate('/facilities')}
-            className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition text-left"
-          >
-            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl">🏛️</div>
-            <div>
-              <p className="font-semibold text-gray-800 text-sm">Facilities &amp; Assets</p>
-              <p className="text-xs text-gray-400 mt-0.5">Browse and manage campus resources</p>
-            </div>
-          </button>
-          <button
-            onClick={() => navigate('/tickets')}
-            className="group relative flex items-center gap-4 bg-white/60 backdrop-blur-md border border-white/40 rounded-2xl px-6 py-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(249,115,22,0.15)] hover:border-orange-200/60 transition-all duration-300 hover:-translate-y-1 text-left overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-              </svg>
-            </div>
-            <div className="relative">
-              <p className="font-bold text-gray-800 text-sm group-hover:text-orange-700 transition-colors">Incident Tickets</p>
-              <p className="text-xs text-gray-500 mt-0.5 font-medium">Report issues and track incidents</p>
-            </div>
-          </button>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Header section */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Student Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-500">Welcome back, {user?.username}. Here is an overview of your campus activity.</p>
       </div>
 
-      {/* User Dashboard Metrics */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            MY SUPPORT REQUESTS
-          </h3>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-8">
-          <div className="relative group bg-white/70 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-transform duration-300 hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-              </div>
-            </div>
-            <p className="text-3xl font-black text-gray-900 tracking-tight">{stats.open}</p>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 mt-1">Open Tickets</p>
-          </div>
+        {/* Left Column: Quick Actions & Metrics */}
+        <div className="lg:col-span-2 space-y-8">
           
-          <div className="relative group bg-white/70 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-transform duration-300 hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/30">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-            </div>
-            <p className="text-3xl font-black text-gray-900 tracking-tight">{stats.inProgress}</p>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600 mt-1">In Progress</p>
+          {/* Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <MetricCard 
+              title="Open Requests" 
+              value={stats.open} 
+              icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" 
+              colorClass="text-blue-600 bg-blue-50 border-blue-200" 
+            />
+            <MetricCard 
+              title="In Progress" 
+              value={stats.inProgress} 
+              icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+              colorClass="text-amber-600 bg-amber-50 border-amber-200" 
+            />
+            <MetricCard 
+              title="Resolved" 
+              value={stats.resolved} 
+              icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+              colorClass="text-emerald-600 bg-emerald-50 border-emerald-200" 
+            />
           </div>
-          
-          <div className="relative group bg-white/70 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-transform duration-300 hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-400/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-            </div>
-            <p className="text-3xl font-black text-gray-900 tracking-tight">{stats.resolved}</p>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mt-1">Resolved</p>
-          </div>
-        </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500" />
-            <div className="px-8 py-5 border-b border-gray-100/50 flex justify-between items-center bg-gray-50/30">
+          {/* Ticket Timeline */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 border border-indigo-100">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
-                <h4 className="font-bold text-gray-900">Ticket Timeline</h4>
+                <h2 className="font-semibold text-slate-900">Recent Updates</h2>
               </div>
-              <button onClick={() => navigate('/tickets')} className="text-xs font-bold text-indigo-600 uppercase tracking-wider hover:text-indigo-800 transition-colors flex items-center gap-1 group">
+              <button onClick={() => navigate('/tickets')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1 transition-colors">
                 View All
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </button>
             </div>
-            <div className="p-2">
+            
+            <div className="divide-y divide-slate-100">
               {recentUpdates.length > 0 ? recentUpdates.map((update, i) => (
-                <div key={i} className="group relative px-6 py-5 hover:bg-gray-50/80 rounded-2xl transition-all duration-300">
-                  <div className="flex gap-4 items-start relative z-10">
-                    <div className="relative mt-1">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-lg">💬</span>
-                      </div>
-                      {i !== recentUpdates.length - 1 && (
-                        <div className="absolute top-10 left-1/2 -ml-px w-[2px] h-12 bg-gray-100 group-hover:bg-indigo-100 transition-colors" />
-                      )}
-                    </div>
+                <div key={i} className="p-6 hover:bg-slate-50 transition-colors">
+                  <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
-                      <div className="flex justify-between items-start gap-4">
-                        <div>
-                          <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{update.ticketTitle}</p>
-                          <p className="text-sm text-gray-600 mt-1 font-medium leading-relaxed">{update.note}</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">
-                          {new Date(update.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
+                      <p className="text-sm font-medium text-slate-900">{update.ticketTitle}</p>
+                      <p className="mt-1 text-sm text-slate-500">{update.note}</p>
                     </div>
+                    <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 whitespace-nowrap">
+                      {new Date(update.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                 </div>
               )) : (
-                <div className="py-12 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-                  </div>
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No Recent Activity</p>
-                  <p className="text-xs text-gray-400 mt-1">Your timeline is quiet right now</p>
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400">
+                  <svg className="w-12 h-12 mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                  <p className="text-sm font-medium">No Recent Activity</p>
+                  <p className="text-xs mt-1">Your timeline is quiet right now</p>
                 </div>
               )}
             </div>
+          </div>
         </div>
+
+        {/* Right Column: Quick Links */}
+        <div className="space-y-6">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Quick Actions</h2>
+          
+          <button
+            onClick={() => navigate('/tickets/new')}
+            className="w-full flex items-center p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-colors text-left group"
+          >
+            <div className="p-3 bg-white/20 rounded-lg mr-4 group-hover:scale-105 transition-transform">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-sm">New Request</p>
+              <p className="text-xs text-indigo-100 mt-0.5">Report a new incident</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/facilities')}
+            className="w-full flex items-center p-4 bg-white border border-slate-200 hover:border-slate-300 rounded-xl shadow-sm transition-colors text-left group"
+          >
+            <div className="p-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg mr-4 group-hover:bg-slate-100 transition-colors">
+              <span className="text-xl leading-none">🏛️</span>
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900 text-sm">Facilities &amp; Assets</p>
+              <p className="text-xs text-slate-500 mt-0.5">Browse resources</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/bookings/new')}
+            className="w-full flex items-center p-4 bg-white border border-slate-200 hover:border-slate-300 rounded-xl shadow-sm transition-colors text-left group"
+          >
+            <div className="p-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg mr-4 group-hover:bg-slate-100 transition-colors">
+              <span className="text-xl leading-none">📅</span>
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900 text-sm">Book a Facility</p>
+              <p className="text-xs text-slate-500 mt-0.5">Schedule a resource</p>
+            </div>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ title, value, icon, colorClass }) {
+  return (
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+      <div className={`p-3 rounded-lg border ${colorClass}`}>
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
+        </svg>
+      </div>
+      <div>
+        <p className="text-sm font-medium text-slate-500">{title}</p>
+        <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
       </div>
     </div>
   );
