@@ -33,7 +33,7 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <MainLayout><DashboardPage /></MainLayout>
               </ProtectedRoute>
             }
           />
@@ -95,7 +95,7 @@ function App() {
             path="/admin/users"
             element={
               <ProtectedRoute adminOnly>
-                <UserListPage />
+                <MainLayout><UserListPage /></MainLayout>
               </ProtectedRoute>
             }
           />
@@ -103,7 +103,7 @@ function App() {
             path="/admin/dashboard"
             element={
               <ProtectedRoute adminOnly>
-                <AdminDashboardPage />
+                <MainLayout><AdminDashboardPage /></MainLayout>
               </ProtectedRoute>
             }
           />
