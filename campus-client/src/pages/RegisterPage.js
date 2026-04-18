@@ -42,8 +42,12 @@ export default function RegisterPage() {
     if (Object.keys(e2).length) { setErrors(e2); return; }
     setLoading(true);
     try {
-      await registerUser(form);
-      navigate('/login', { state: { registered: true } });
+      const response = await registerUser(form);
+      if (response.data?.pending) {
+        navigate('/login', { state: { pendingApproval: true } });
+      } else {
+        navigate('/login', { state: { registered: true } });
+      }
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data || 'Registration failed. Please try again.';
       setServerError(typeof msg === 'string' ? msg : 'Registration failed.');
