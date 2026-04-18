@@ -54,8 +54,7 @@ export default function DashboardPage() {
     : '??';
 
   return (
-    <MainLayout>
-
+    <>
       <div className="max-w-3xl mx-auto py-8">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -230,7 +229,7 @@ export default function DashboardPage() {
           }}
         />                                     
       )}
-    </MainLayout>
+    </>
   );
 }
 
