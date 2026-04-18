@@ -140,6 +140,17 @@ const TicketDetailsPage = () => {
     });
   };
 
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Delete this comment?')) return;
+    try {
+      await deleteComment(id, commentId);
+      addToast('Comment deleted', 'success');
+      fetchData();
+    } catch (error) {
+      addToast('Failed to delete comment', 'error');
+    }
+  };
+
   const handleDeleteAttachment = async (filename) => {
     try {
       const actualFilename = filename.split('/').pop();
@@ -474,7 +485,9 @@ const TicketDetailsPage = () => {
                     </div>
                   )}
                 </div>
-                      {/* Evidence Panel */}
+              </div>
+              
+              {/* Evidence Panel */}
               <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white">
                 <h3 className="font-black text-lg text-slate-900 mb-6 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -528,8 +541,6 @@ const TicketDetailsPage = () => {
                   )}
                 </div>
               </div>
-     </div>
-             </div>
             </div>
           </div>
         </div>
