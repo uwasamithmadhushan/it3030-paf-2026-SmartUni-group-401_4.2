@@ -274,13 +274,24 @@ const TicketDetailsPage = () => {
                            <p className={`text-sm leading-relaxed font-medium ${isMyComment ? 'text-indigo-800 text-right' : 'text-slate-600'}`}>{comment.text}</p>
                            
                            {(user.role === 'ADMIN' || isMyComment) && (
-                             <button 
-                               onClick={() => handleDeleteComment(comment.id)}
-                               className={`absolute -top-2 ${isMyComment ? '-left-2' : '-right-2'} w-7 h-7 bg-white text-red-400 rounded-full border border-slate-100 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-md hover:text-red-600 hover:bg-red-50`}
-                               title="Delete Comment"
-                             >
-                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-                             </button>
+                             <div className={`absolute -top-2 ${isMyComment ? '-left-2' : '-right-2'} flex gap-1 opacity-0 group-hover:opacity-100 transition-all`}>
+                               {isMyComment && (
+                                 <button 
+                                   onClick={() => handleEditCommentAction(comment)}
+                                   className="w-7 h-7 bg-white text-indigo-400 rounded-full border border-slate-100 flex items-center justify-center shadow-md hover:text-indigo-600 hover:bg-indigo-50"
+                                   title="Edit Comment"
+                                 >
+                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                 </button>
+                               )}
+                               <button 
+                                 onClick={() => handleDeleteComment(comment.id)}
+                                 className="w-7 h-7 bg-white text-red-400 rounded-full border border-slate-100 flex items-center justify-center shadow-md hover:text-red-600 hover:bg-red-50"
+                                 title="Delete Comment"
+                               >
+                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                               </button>
+                             </div>
                            )}
                          </div>
                        </div>
@@ -463,45 +474,61 @@ const TicketDetailsPage = () => {
                     </div>
                   )}
                 </div>
-             </div>
-             
-             {/* Evidence Panel */}
-             <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white">
-               <h3 className="font-black text-lg text-slate-900 mb-6 flex items-center gap-2">
-                 <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">📎</div>
-                 Attached Evidence
-               </h3>
-               <div className="space-y-4">
-                 {ticket.attachments && ticket.attachments.length > 0 ? (
-                   ticket.attachments.map((file, i) => {
-                     const isImg = file.url.match(/\.(jpeg|jpg|gif|png)$/) != null;
-                     return (
-                        <div key={i} className="group relative">
-                          <a 
-                            href={file.url} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-purple-200 hover:shadow-[0_4px_15px_rgba(168,85,247,0.1)] transition-all truncate group-hover:-translate-y-0.5"
-                          >
-                            <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xl overflow-hidden shadow-sm shrink-0">
-                              {isImg ? <img src={file.url} alt="thumb" className="w-full h-full object-cover" /> : '📄'}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-bold text-slate-700 block truncate group-hover:text-purple-700 transition-colors">{file.filename}</span>
-                              <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{file.fileType || 'File Asset'}</span>
-                            </div>
-                            <svg className="w-5 h-5 text-slate-300 group-hover:text-purple-500 opacity-0 group-hover:opacity-100 transition-all -ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                          </a>
-                        </div>
-                     );
-                   })
-                 ) : (
-                   <div className="text-center py-8 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center">
-                     <svg className="w-8 h-8 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                     <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">No Media Found</span>
-                   </div>
-                 )}
-               </div>
+                      {/* Evidence Panel */}
+              <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white">
+                <h3 className="font-black text-lg text-slate-900 mb-6 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">📎</div>
+                    Attached Evidence
+                  </div>
+                  {(user.role === 'ADMIN' || ticket.createdById === user.id) && ticket.attachments?.length < 3 && (
+                    <label className="cursor-pointer text-indigo-600 hover:text-indigo-700 transition-colors">
+                      <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" />
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                    </label>
+                  )}
+                </h3>
+                <div className="space-y-4">
+                  {ticket.attachments && ticket.attachments.length > 0 ? (
+                    ticket.attachments.map((file, i) => {
+                      const isImg = file.url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+                      return (
+                         <div key={i} className="group relative">
+                           <a 
+                             href={file.url} 
+                             target="_blank" 
+                             rel="noreferrer" 
+                             className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-purple-200 hover:shadow-[0_4px_15px_rgba(168,85,247,0.1)] transition-all truncate group-hover:-translate-y-0.5"
+                           >
+                             <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xl overflow-hidden shadow-sm shrink-0">
+                               {isImg ? <img src={file.url} alt="thumb" className="w-full h-full object-cover" /> : '📄'}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <span className="text-sm font-bold text-slate-700 block truncate group-hover:text-purple-700 transition-colors">{file.filename}</span>
+                               <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{file.fileType || 'File Asset'}</span>
+                             </div>
+                             <svg className="w-5 h-5 text-slate-300 group-hover:text-purple-500 opacity-0 group-hover:opacity-100 transition-all -ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                           </a>
+                           {(user.role === 'ADMIN' || ticket.createdById === user.id) && (
+                             <button 
+                               onClick={() => handleDeleteAttachment(file.url)}
+                               className="absolute -top-2 -right-2 w-6 h-6 bg-white text-red-500 rounded-full border border-slate-100 shadow-md opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50"
+                             >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                             </button>
+                           )}
+                         </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center">
+                      <svg className="w-8 h-8 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">No Media Found</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+     </div>
              </div>
             </div>
           </div>

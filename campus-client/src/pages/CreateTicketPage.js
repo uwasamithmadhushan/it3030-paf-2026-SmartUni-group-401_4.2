@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createTicket, getAllAssets } from '../services/api';
+import { createTicket, getAllAssets, uploadAttachment } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useEffect } from 'react';
@@ -19,6 +19,7 @@ const CreateTicketPage = () => {
     contactDetails: '',
     attachments: []
   });
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
 
   useEffect(() => {
@@ -46,7 +47,20 @@ const CreateTicketPage = () => {
 
     setLoading(true);
     try {
-      await createTicket(formData);
+      const { data: newTicket } = await createTicket({ ...formData, attachments: [] });
+      
+      // Upload files if any
+      if (selectedFiles.length > 0) {
+        addToast(`Uploading ${selectedFiles.length} attachments...`, 'info');
+        for (const file of selectedFiles) {
+          try {
+            await uploadAttachment(newTicket.id, file);
+          } catch (uploadErr) {
+            console.error('File upload failed', uploadErr);
+          }
+        }
+      }
+
       addToast('Ticket submitted successfully!', 'success');
       navigate('/tickets');
     } catch (error) {
