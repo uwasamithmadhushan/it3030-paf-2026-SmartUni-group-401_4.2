@@ -32,8 +32,8 @@ const TicketDetailsPage = () => {
     fetchData();
   }, [id]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
     try {
       const [ticketRes, usersRes] = await Promise.all([
         getTicketById(id),
@@ -106,7 +106,7 @@ const TicketDetailsPage = () => {
         navigate('/tickets');
         return;
       }
-      fetchData();
+      fetchData(true);
     } catch (error) {
       addToast('Requested action failed', 'error');
     }
@@ -119,7 +119,7 @@ const TicketDetailsPage = () => {
     try {
       await addComment(id, newComment);
       setNewComment('');
-      fetchData();
+      fetchData(true);
       addToast('Comment added', 'success');
     } catch (error) {
       addToast('Failed to add comment', 'error');
@@ -145,7 +145,7 @@ const TicketDetailsPage = () => {
     try {
       await deleteComment(id, commentId);
       addToast('Comment deleted', 'success');
-      fetchData();
+      fetchData(true);
     } catch (error) {
       addToast('Failed to delete comment', 'error');
     }
@@ -155,7 +155,7 @@ const TicketDetailsPage = () => {
     try {
       const actualFilename = filename.split('/').pop();
       await deleteAttachment(id, actualFilename);
-      fetchData();
+      fetchData(true);
       addToast('Attachment removed', 'success');
     } catch (error) {
       addToast('Failed to delete attachment', 'error');
@@ -168,7 +168,7 @@ const TicketDetailsPage = () => {
     setLoading(true);
     try {
       await uploadAttachment(id, file);
-      fetchData();
+      fetchData(true);
       addToast('File uploaded successfully', 'success');
     } catch (error) {
       addToast(error.response?.data?.message || 'Upload failed', 'error');
@@ -370,10 +370,16 @@ const TicketDetailsPage = () => {
                     </select>
                     <button 
                       onClick={handleAssignAction}
-                      disabled={!selectedTech}
-                      className="w-full py-2.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                      disabled={!selectedTech || selectedTech === ticket.assignedTechnicianId}
+                      className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                        !selectedTech 
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                          : selectedTech === ticket.assignedTechnicianId
+                            ? 'bg-emerald-500 text-white cursor-default'
+                            : 'bg-[#5B5CE6] text-white hover:bg-indigo-700 active:scale-95'
+                      }`}
                     >
-                      Confirm Assignment
+                      {selectedTech === ticket.assignedTechnicianId ? '✓ Technician Assigned' : ticket.assignedTechnicianId ? 'Confirm Reassignment' : 'Confirm Assignment'}
                     </button>
                   </div>
                 </div>
