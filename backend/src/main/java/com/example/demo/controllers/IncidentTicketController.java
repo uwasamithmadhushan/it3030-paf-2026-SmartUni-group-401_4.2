@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
@@ -72,6 +73,16 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.addComment(id, text, user));
     }
 
+    @PutMapping("/{id}/comments/{commentId}")
+    public ResponseEntity<TicketResponse> updateComment(
+            @PathVariable String id,
+            @PathVariable String commentId,
+            @RequestBody String text,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.updateComment(id, commentId, text, user));
+    }
+
     @DeleteMapping("/{id}/comments/{commentId}")
     public ResponseEntity<TicketResponse> deleteComment(
             @PathVariable String id,
@@ -79,5 +90,23 @@ public class IncidentTicketController {
             Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
         return ResponseEntity.ok(ticketService.deleteComment(id, commentId, user));
+    }
+
+    @PostMapping("/{id}/attachments")
+    public ResponseEntity<TicketResponse> addAttachment(
+            @PathVariable String id,
+            @RequestParam("file") MultipartFile file,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.addAttachment(id, file, user));
+    }
+
+    @DeleteMapping("/{id}/attachments/{filename}")
+    public ResponseEntity<TicketResponse> removeAttachment(
+            @PathVariable String id,
+            @PathVariable String filename,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.removeAttachment(id, filename, user));
     }
 }
