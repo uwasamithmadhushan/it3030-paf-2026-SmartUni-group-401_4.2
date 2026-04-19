@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAllTickets } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TechnicianSchedulePage = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -66,11 +68,23 @@ const TechnicianSchedulePage = () => {
   }, [currentDate]);
 
   const ticketsForSelectedDate = useMemo(() => {
+    const isTodaySelected = 
+      selectedDate.getDate() === new Date().getDate() &&
+      selectedDate.getMonth() === new Date().getMonth() &&
+      selectedDate.getFullYear() === new Date().getFullYear();
+
     return tickets.filter(t => {
       const ticketDate = new Date(t.createdAt);
-      return ticketDate.getDate() === selectedDate.getDate() &&
-             ticketDate.getMonth() === selectedDate.getMonth() &&
-             ticketDate.getFullYear() === selectedDate.getFullYear();
+      const isSameDay = ticketDate.getDate() === selectedDate.getDate() &&
+                        ticketDate.getMonth() === selectedDate.getMonth() &&
+                        ticketDate.getFullYear() === selectedDate.getFullYear();
+      
+      // If today is selected, show all active tasks (Pending/In Progress) even if created earlier
+      if (isTodaySelected) {
+        return isSameDay || t.status === 'PENDING' || t.status === 'IN_PROGRESS';
+      }
+      
+      return isSameDay;
     });
   }, [tickets, selectedDate]);
 
@@ -155,7 +169,11 @@ const TechnicianSchedulePage = () => {
               <div className="space-y-6">
                  {ticketsForSelectedDate.length > 0 ? (
                    ticketsForSelectedDate.map((t, i) => (
-                    <div key={t.id} className="flex gap-4 group cursor-pointer border-l-2 border-transparent hover:border-indigo-600 pl-2 transition-all">
+                    <div 
+                      key={t.id} 
+                      onClick={() => navigate(`/tickets/${t.id}`)}
+                      className="flex gap-4 group cursor-pointer border-l-2 border-transparent hover:border-indigo-600 pl-2 transition-all"
+                    >
                        <div className="flex flex-col items-center">
                           <div className={`w-3 h-3 rounded-full border-2 border-white ring-2 ${t.priority === 'CRITICAL' ? 'bg-rose-500 ring-rose-50' : t.priority === 'HIGH' ? 'bg-amber-500 ring-amber-50' : 'bg-emerald-500 ring-emerald-50'}`}></div>
                           {i < ticketsForSelectedDate.length - 1 && <div className="w-0.5 flex-1 bg-slate-100 my-1"></div>}
