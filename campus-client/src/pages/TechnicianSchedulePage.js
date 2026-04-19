@@ -1,16 +1,60 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 
 const TechnicianSchedulePage = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const monthYearLabel = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const calendarDays = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const days = daysInMonth(year, month);
+    const firstDay = firstDayOfMonth(year, month);
+    
+    const grid = [];
+    // Previous month padding
+    const prevMonthDays = daysInMonth(year, month - 1);
+    for (let i = firstDay - 1; i >= 0; i--) {
+      grid.push({ day: prevMonthDays - i, currentMonth: false });
+    }
+    // Current month
+    for (let i = 1; i <= days; i++) {
+      grid.push({ day: i, currentMonth: true });
+    }
+    // Next month padding
+    const remaining = 42 - grid.length;
+    for (let i = 1; i <= remaining; i++) {
+      grid.push({ day: i, currentMonth: false });
+    }
+    return grid;
+  }, [currentDate]);
+
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+    <div className="p-8 max-w-[1600px] mx-auto space-y-8 text-slate-900">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Shift Schedule & Planner</h1>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">Shift Schedule & Planner</h1>
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Plan your daily visits and track appointments</p>
         </div>
         <div className="flex gap-2">
-           <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">Today</button>
-           <button className="px-5 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all">Month View</button>
+           <button 
+             onClick={() => { setCurrentDate(new Date()); setSelectedDate(new Date()); }}
+             className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all"
+           >
+             Today
+           </button>
         </div>
       </div>
 
@@ -18,13 +62,13 @@ const TechnicianSchedulePage = () => {
         {/* Calendar Side (8 cols) */}
         <div className="lg:col-span-8 bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white p-8">
            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">Maintenance Calendar</h3>
+              <h3 className="text-lg font-black tracking-tight">Maintenance Calendar</h3>
               <div className="flex items-center gap-4">
-                 <button className="p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                 <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-lg transition-colors">
                     <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                  </button>
-                 <span className="text-sm font-black text-slate-700 uppercase tracking-widest">April 2026</span>
-                 <button className="p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                 <span className="text-sm font-black text-slate-700 uppercase tracking-widest min-w-[140px] text-center">{monthYearLabel}</span>
+                 <button onClick={handleNextMonth} className="p-2 hover:bg-slate-50 rounded-lg transition-colors">
                     <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                  </button>
               </div>
@@ -36,19 +80,24 @@ const TechnicianSchedulePage = () => {
                     {day}
                  </div>
               ))}
-              {[...Array(35)].map((_, i) => {
-                 const dayNum = i - 2;
-                 const isToday = dayNum === 19;
-                 const hasTask = [19, 21, 24].includes(dayNum);
+              {calendarDays.map((d, i) => {
+                 const isToday = d.currentMonth && d.day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+                 const isSelected = d.currentMonth && d.day === selectedDate.getDate() && currentDate.getMonth() === selectedDate.getMonth() && currentDate.getFullYear() === selectedDate.getFullYear();
+                 const hasTask = d.currentMonth && [5, 12, 19, 21, 24].includes(d.day);
+                 
                  return (
-                    <div key={i} className={`bg-white h-32 p-3 border-slate-50 transition-colors hover:bg-slate-50 cursor-pointer ${dayNum < 1 || dayNum > 30 ? 'opacity-20' : ''}`}>
-                       <span className={`text-xs font-black ${isToday ? 'bg-indigo-600 text-white w-6 h-6 flex items-center justify-center rounded-lg shadow-lg' : 'text-slate-600'}`}>
-                          {dayNum > 0 && dayNum <= 30 ? dayNum : ''}
+                    <div 
+                      key={i} 
+                      onClick={() => d.currentMonth && setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), d.day))}
+                      className={`bg-white h-24 sm:h-32 p-3 border-slate-50 transition-all cursor-pointer hover:bg-indigo-50/30 ${!d.currentMonth ? 'opacity-20 pointer-events-none' : ''} ${isSelected ? 'ring-2 ring-inset ring-indigo-600 bg-indigo-50/20' : ''}`}
+                    >
+                       <span className={`text-xs font-black w-6 h-6 flex items-center justify-center rounded-lg ${isToday ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : isSelected ? 'text-indigo-600' : 'text-slate-600'}`}>
+                          {d.day}
                        </span>
-                       {dayNum > 0 && dayNum <= 30 && hasTask && (
-                          <div className="mt-2 space-y-1">
-                             <div className="px-2 py-0.5 bg-indigo-50 border-l-2 border-indigo-500 rounded text-[9px] font-bold text-indigo-700 truncate">AC Maintenance</div>
-                             {dayNum === 19 && <div className="px-2 py-0.5 bg-rose-50 border-l-2 border-rose-500 rounded text-[9px] font-bold text-rose-700 truncate">Urgent Leak</div>}
+                       {hasTask && (
+                          <div className="mt-2 space-y-1 overflow-hidden">
+                             <div className="px-2 py-0.5 bg-indigo-100 border-l-2 border-indigo-500 rounded text-[9px] font-bold text-indigo-700 truncate">Work Order</div>
+                             {d.day % 7 === 0 && <div className="px-2 py-0.5 bg-rose-100 border-l-2 border-rose-500 rounded text-[9px] font-bold text-rose-700 truncate">Urgent</div>}
                           </div>
                        )}
                     </div>
@@ -60,7 +109,9 @@ const TechnicianSchedulePage = () => {
         {/* Task List (4 cols) */}
         <div className="lg:col-span-4 space-y-8">
            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Tasks For Today</h3>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">
+                Tasks for {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </h3>
               <div className="space-y-6">
                  {[
                     { time: '09:00 AM', task: 'Projector Service', loc: 'Room 402', priority: 'MEDIUM' },
