@@ -35,13 +35,15 @@ export default function MainLayout({ children }) {
   }, [user]);
 
   const notifications = useMemo(() => {
-    return tickets.map(t => ({
-      id: t.id,
-      title: 'New Task Assigned',
-      message: `${t.title} in ${t.location}`,
-      time: new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: readNotifs.includes(t.id)
-    })).sort((a, b) => b.read ? 1 : -1);
+    return tickets
+      .filter(t => !readNotifs.includes(t.id))
+      .map(t => ({
+        id: t.id,
+        title: 'New Task Assigned',
+        message: `${t.title} in ${t.location}`,
+        time: new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        read: false
+      }));
   }, [tickets, readNotifs]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
