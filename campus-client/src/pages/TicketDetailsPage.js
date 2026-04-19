@@ -105,6 +105,9 @@ const TicketDetailsPage = () => {
         addToast('Ticket deleted successfully', 'success');
         navigate('/tickets');
         return;
+      } else if (modalState.type === 'delete_comment') {
+        await deleteComment(id, modalState.data);
+        addToast('Comment deleted successfully', 'success');
       }
       fetchData(true);
     } catch (error) {
@@ -140,15 +143,14 @@ const TicketDetailsPage = () => {
     });
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Delete this comment?')) return;
-    try {
-      await deleteComment(id, commentId);
-      addToast('Comment deleted', 'success');
-      fetchData(true);
-    } catch (error) {
-      addToast('Failed to delete comment', 'error');
-    }
+  const handleDeleteCommentAction = (commentId) => {
+    setModalState({
+      isOpen: true,
+      type: 'delete_comment',
+      title: 'Delete Comment',
+      message: 'Are you sure you want to permanently remove this comment?',
+      data: commentId
+    });
   };
 
   const handleDeleteAttachment = async (filename) => {
@@ -287,7 +289,7 @@ const TicketDetailsPage = () => {
                               </button>
                             )}
                             <button 
-                              onClick={() => handleDeleteComment(comment.id)}
+                              onClick={() => handleDeleteCommentAction(comment.id)}
                               className="w-6 h-6 text-slate-400 rounded-full flex items-center justify-center hover:text-red-600 hover:bg-red-50 transition-colors"
                               title="Delete"
                             >
