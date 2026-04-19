@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/api';
 
-const ROLES = ['USER', 'ADMIN'];
+const ROLES = ['USER', 'ADMIN', 'TECHNICIAN'];
 
 function FieldError({ msg }) {
   return msg ? <p className="mt-1 text-xs text-red-500">{msg}</p> : null;

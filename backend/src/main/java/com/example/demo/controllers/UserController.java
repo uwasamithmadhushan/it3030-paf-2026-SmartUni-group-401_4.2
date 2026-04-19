@@ -47,7 +47,7 @@ public class UserController {
         // Re-issue JWT so the new username is encoded in the token
         UserDetails newDetails = userDetailsService.loadUserByUsername(updated.getUsername());
         String newToken = jwtUtil.generateToken(newDetails);
-        return ResponseEntity.ok(new AuthResponse(newToken, updated.getUsername(), updated.getEmail(), updated.getRole()));
+        return ResponseEntity.ok(new AuthResponse(updated.getId(), newToken, updated.getUsername(), updated.getEmail(), updated.getRole()));
     }
 
     @GetMapping
