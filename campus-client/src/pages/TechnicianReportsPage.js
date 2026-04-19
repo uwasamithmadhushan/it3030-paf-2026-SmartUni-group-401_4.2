@@ -19,11 +19,17 @@ const TechnicianReportsPage = () => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'landscape',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
+        unit: 'mm',
+        format: 'a4'
       });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const canvasRatio = canvas.height / canvas.width;
+      const imgWidth = pageWidth;
+      const imgHeight = pageWidth * canvasRatio;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight > pageHeight ? pageHeight : imgHeight);
       pdf.save(`Technician_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('PDF Export failed:', error);
