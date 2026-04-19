@@ -149,20 +149,16 @@ const TechnicianAssignmentsPage = () => {
                    </div>
                 </td>
                 <td className="px-8 py-6 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                     <select 
-                        onChange={(e) => handleStatusUpdate(t.id, e.target.value)}
-                        className="text-[10px] font-black uppercase bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500"
-                        value={t.status}
+                  <div className="flex items-center justify-end gap-3">
+                     <StatusDropdown 
+                        currentStatus={t.status} 
+                        onUpdate={(newStatus) => handleStatusUpdate(t.id, newStatus)} 
+                     />
+                     <button 
+                        onClick={() => navigate(`/tickets/${t.id}`)} 
+                        className="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
                      >
-                        <option value="OPEN">Mark Open</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="ON_HOLD">On Hold</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="COMPLETED">Completed</option>
-                     </select>
-                     <button onClick={() => navigate(`/tickets/${t.id}`)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                      </button>
                   </div>
                 </td>
@@ -180,7 +176,7 @@ const TechnicianAssignmentsPage = () => {
   );
 };
 
-const getPriorityStyles = (priority) => {
+function getPriorityStyles(priority) {
   switch (priority) {
     case 'CRITICAL': return 'bg-rose-50 text-rose-600 border-rose-100';
     case 'HIGH': return 'bg-orange-50 text-orange-600 border-orange-100';
@@ -188,6 +184,40 @@ const getPriorityStyles = (priority) => {
     case 'LOW': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
     default: return 'bg-slate-50 text-slate-400 border-slate-100';
   }
-};
+}
+
+function StatusDropdown({ currentStatus, onUpdate }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const options = ['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'RESOLVED', 'COMPLETED'];
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-white hover:border-indigo-300 transition-all shadow-sm active:scale-95"
+      >
+        {currentStatus.replace('_', ' ')}
+        <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
+          <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-2xl border border-slate-100 py-2 z-50 animate-scale-up">
+            {options.map(opt => (
+              <button
+                key={opt}
+                onClick={() => { onUpdate(opt); setIsOpen(false); }}
+                className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors ${currentStatus === opt ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-500'}`}
+              >
+                {opt.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default TechnicianAssignmentsPage;
