@@ -262,7 +262,7 @@ const TicketDetailsPage = () => {
             <div className="space-y-6 mb-8">
               {ticket.comments && ticket.comments.length > 0 ? (
                 ticket.comments.map((comment, i) => {
-                  const isMyComment = comment.userId === user.id;
+                  const isMyComment = comment.userId === user.id || comment.username === user.username;
                   return (
                     <div key={i} className={`flex gap-4 items-start group ${isMyComment ? 'flex-row-reverse' : ''}`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isMyComment ? 'bg-[#5B5CE6] text-white' : 'bg-slate-100 text-slate-600'}`}>
