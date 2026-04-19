@@ -1,9 +1,60 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { getAllTickets } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const TechnicianReportsPage = () => {
   const reportRef = useRef(null);
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const { data } = await getAllTickets();
+      // Filter for current technician
+      const myTickets = data.filter(t => t.assignedTechnicianId === user?.id);
+      setTickets(myTickets);
+    } catch (error) {
+      console.error('Failed to fetch report data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stats = useMemo(() => {
+    const completed = tickets.filter(t => t.status === 'RESOLVED' || t.status === 'COMPLETED');
+    
+    // Category distribution
+    const categories = {};
+    tickets.forEach(t => {
+      categories[t.category] = (categories[t.category] || 0) + 1;
+    });
+    
+    const total = tickets.length || 1;
+    const catDist = Object.entries(categories).map(([label, count]) => ({
+      label,
+      value: `${Math.round((count / total) * 100)}%`,
+      count
+    })).sort((a, b) => b.count - a.count);
+
+    return {
+      completedCount: completed.length,
+      totalCount: tickets.length,
+      catDist,
+      productivity: tickets.length > 0 ? Math.round((completed.length / tickets.length) * 100) : 0
+    };
+  }, [tickets]);
+
+  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Generating Live Metrics..." />;
 
   const handleExportPDF = async () => {
     if (!reportRef.current) return;
@@ -76,10 +127,10 @@ const TechnicianReportsPage = () => {
 
       <div ref={reportRef} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-         <ReportStatCard title="Jobs Completed" value="142" subValue="+12% from last month" color="indigo" />
+         <ReportStatCard title="Jobs Completed" value={stats.completedCount} subValue={`${stats.totalCount} total assigned`} color="indigo" />
          <ReportStatCard title="Avg Response" value="18m" subValue="-2m improvement" color="emerald" />
          <ReportStatCard title="Resolution Time" value="3.5h" subValue="Target met" color="blue" />
-         <ReportStatCard title="Productivity Score" value="94%" subValue="Top 5% tier" color="amber" />
+         <ReportStatCard title="Productivity Score" value={`${stats.productivity}%`} subValue="Live calculation" color="amber" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -108,15 +159,19 @@ const TechnicianReportsPage = () => {
          <div className="lg:col-span-4 bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white">
             <h3 className="text-sm font-black uppercase tracking-widest mb-8">Category Distribution</h3>
             <div className="space-y-6">
-               <CategoryRow label="AC Maintenance" value="35%" color="bg-indigo-500" />
-               <CategoryRow label="IT & Networking" value="25%" color="bg-blue-500" />
-               <CategoryRow label="Electrical" value="20%" color="bg-amber-500" />
-               <CategoryRow label="Plumbing" value="15%" color="bg-emerald-500" />
-               <CategoryRow label="Others" value="5%" color="bg-slate-300" />
+               {stats.catDist.map((cat, i) => (
+                  <CategoryRow 
+                    key={i} 
+                    label={cat.label} 
+                    value={cat.value} 
+                    color={['bg-indigo-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-slate-300'][i % 5]} 
+                  />
+               ))}
+               {stats.catDist.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4">No data yet</p>}
             </div>
             <div className="mt-12 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Most Frequent Site</p>
-               <p className="text-sm font-black text-slate-900">Engineering Block B</p>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+               <p className="text-sm font-black text-slate-900">Live Data Connected</p>
             </div>
           </div>
         </div>

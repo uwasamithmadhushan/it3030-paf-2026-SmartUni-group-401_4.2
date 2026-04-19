@@ -1,8 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getAllTickets } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const TechnicianSchedulePage = () => {
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const { data } = await getAllTickets();
+      const myTickets = data.filter(t => t.assignedTechnicianId === user?.id);
+      setTickets(myTickets);
+    } catch (error) {
+      console.error('Failed to load schedule data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -40,6 +64,17 @@ const TechnicianSchedulePage = () => {
     }
     return grid;
   }, [currentDate]);
+
+  const ticketsForSelectedDate = useMemo(() => {
+    return tickets.filter(t => {
+      const ticketDate = new Date(t.createdAt);
+      return ticketDate.getDate() === selectedDate.getDate() &&
+             ticketDate.getMonth() === selectedDate.getMonth() &&
+             ticketDate.getFullYear() === selectedDate.getFullYear();
+    });
+  }, [tickets, selectedDate]);
+
+  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Syncing Schedule..." />;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 text-slate-900">
@@ -83,25 +118,30 @@ const TechnicianSchedulePage = () => {
               {calendarDays.map((d, i) => {
                  const isToday = d.currentMonth && d.day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
                  const isSelected = d.currentMonth && d.day === selectedDate.getDate() && currentDate.getMonth() === selectedDate.getMonth() && currentDate.getFullYear() === selectedDate.getFullYear();
-                 const hasTask = d.currentMonth && [5, 12, 19, 21, 24].includes(d.day);
-                 
-                 return (
+                  const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), d.day);
+                  const dayTickets = tickets.filter(t => {
+                    const tDate = new Date(t.createdAt);
+                    return tDate.getDate() === d.day && tDate.getMonth() === currentDate.getMonth() && tDate.getFullYear() === currentDate.getFullYear();
+                  });
+                  const hasUrgent = dayTickets.some(t => t.priority === 'CRITICAL' || t.priority === 'HIGH');
+                  
+                  return (
                     <div 
                       key={i} 
-                      onClick={() => d.currentMonth && setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), d.day))}
+                      onClick={() => d.currentMonth && setSelectedDate(dayDate)}
                       className={`bg-white h-24 sm:h-32 p-3 border-slate-50 transition-all cursor-pointer hover:bg-indigo-50/30 ${!d.currentMonth ? 'opacity-20 pointer-events-none' : ''} ${isSelected ? 'ring-2 ring-inset ring-indigo-600 bg-indigo-50/20' : ''}`}
                     >
                        <span className={`text-xs font-black w-6 h-6 flex items-center justify-center rounded-lg ${isToday ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : isSelected ? 'text-indigo-600' : 'text-slate-600'}`}>
                           {d.day}
                        </span>
-                       {hasTask && (
+                       {d.currentMonth && dayTickets.length > 0 && (
                           <div className="mt-2 space-y-1 overflow-hidden">
-                             <div className="px-2 py-0.5 bg-indigo-100 border-l-2 border-indigo-500 rounded text-[9px] font-bold text-indigo-700 truncate">Work Order</div>
-                             {d.day % 7 === 0 && <div className="px-2 py-0.5 bg-rose-100 border-l-2 border-rose-500 rounded text-[9px] font-bold text-rose-700 truncate">Urgent</div>}
+                             <div className="px-2 py-0.5 bg-indigo-100 border-l-2 border-indigo-500 rounded text-[9px] font-bold text-indigo-700 truncate">{dayTickets.length} Task{dayTickets.length > 1 ? 's' : ''}</div>
+                             {hasUrgent && <div className="px-2 py-0.5 bg-rose-100 border-l-2 border-rose-500 rounded text-[9px] font-bold text-rose-700 truncate">Urgent</div>}
                           </div>
                        )}
                     </div>
-                 );
+                  );
               })}
            </div>
         </div>
@@ -113,24 +153,35 @@ const TechnicianSchedulePage = () => {
                 Tasks for {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </h3>
               <div className="space-y-6">
-                 {[
-                    { time: '09:00 AM', task: 'Projector Service', loc: 'Room 402', priority: 'MEDIUM' },
-                    { time: '11:30 AM', task: 'Network Troubleshooting', loc: 'Server Room', priority: 'HIGH' },
-                    { time: '02:00 PM', task: 'Power Outage Check', loc: 'Hostel B', priority: 'CRITICAL' },
-                    { time: '04:30 PM', task: 'Site Inspection', loc: 'Canteen', priority: 'LOW' }
-                 ].map((t, i) => (
-                    <div key={i} className="flex gap-4 group cursor-pointer">
+                 {ticketsForSelectedDate.length > 0 ? (
+                   ticketsForSelectedDate.map((t, i) => (
+                    <div key={t.id} className="flex gap-4 group cursor-pointer border-l-2 border-transparent hover:border-indigo-600 pl-2 transition-all">
                        <div className="flex flex-col items-center">
-                          <div className={`w-3 h-3 rounded-full border-2 border-white ring-2 ${i === 0 ? 'bg-emerald-500 ring-emerald-50' : i === 1 ? 'bg-indigo-600 ring-indigo-50' : 'bg-slate-200 ring-slate-50'}`}></div>
-                          {i < 3 && <div className="w-0.5 flex-1 bg-slate-100 my-1"></div>}
+                          <div className={`w-3 h-3 rounded-full border-2 border-white ring-2 ${t.priority === 'CRITICAL' ? 'bg-rose-500 ring-rose-50' : t.priority === 'HIGH' ? 'bg-amber-500 ring-amber-50' : 'bg-emerald-500 ring-emerald-50'}`}></div>
+                          {i < ticketsForSelectedDate.length - 1 && <div className="w-0.5 flex-1 bg-slate-100 my-1"></div>}
                        </div>
-                       <div className="pb-4 group-hover:translate-x-1 transition-transform">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.time}</p>
-                          <p className="text-sm font-black text-slate-800">{t.task}</p>
-                          <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider">📍 {t.loc}</p>
+                       <div className="pb-4 group-hover:translate-x-1 transition-transform min-w-0 flex-1">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          <p className="text-sm font-black text-slate-800 truncate">{t.title}</p>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider truncate">📍 {t.location}</p>
+                          <div className="mt-1">
+                             <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${t.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {t.status}
+                             </span>
+                          </div>
                        </div>
                     </div>
-                 ))}
+                   ))
+                 ) : (
+                   <div className="text-center py-10">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                         <svg className="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      </div>
+                      <p className="text-xs font-bold text-slate-400">No tasks scheduled for this day.</p>
+                   </div>
+                 )}
               </div>
            </div>
 
