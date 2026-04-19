@@ -1,6 +1,54 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const TechnicianReportsPage = () => {
+  const reportRef = useRef(null);
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#F8FAFC'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`Technician_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('PDF Export failed:', error);
+    }
+  };
+
+  const handleExportExcel = () => {
+    // Simple CSV Export as 'Excel' placeholder
+    const data = [
+      ['Metric', 'Value'],
+      ['Jobs Completed', '142'],
+      ['Avg Response', '18m'],
+      ['Resolution Time', '3.5h'],
+      ['Productivity', '94%']
+    ];
+    
+    const csvContent = "data:text/csv;charset=utf-8," + data.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Technician_Metrics_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 text-slate-900">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
