@@ -37,7 +37,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { data } = await loginUser(form);
-      login(data.token, { username: data.username, email: data.email, role: data.role });
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
       navigate(from, { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message;
