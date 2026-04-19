@@ -86,7 +86,7 @@ const TicketDetailsPage = () => {
     });
   };
 
-  const performAction = async () => {
+  const performAction = async (inputValue) => {
     try {
       if (modalState.type === 'assign') {
         await assignTechnician(id, { technicianId: modalState.data });
@@ -94,11 +94,11 @@ const TicketDetailsPage = () => {
       } else if (modalState.type === 'status') {
         await updateTicketStatus(id, { 
           status: modalState.data,
-          note: modalState.reason || `Status updated to ${modalState.data} by ${user.username}` 
+          note: inputValue || `Status updated to ${modalState.data} by ${user.username}` 
         });
         addToast(`Ticket status updated to ${modalState.data}`, 'success');
       } else if (modalState.type === 'edit_comment') {
-        await updateComment(id, modalState.data.id, modalState.reason);
+        await updateComment(id, modalState.data.id, inputValue);
         addToast('Comment updated successfully', 'success');
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
@@ -506,6 +506,8 @@ const TicketDetailsPage = () => {
         message={modalState.message}
         type={modalState.type === 'assign' || modalState.data === 'RESOLVED' ? 'info' : 'danger'}
         confirmText={modalState.type === 'assign' ? 'Assign' : 'Confirm'}
+        isInput={modalState.isInput}
+        initialValue={modalState.initialValue}
       />
     </div>
   );
