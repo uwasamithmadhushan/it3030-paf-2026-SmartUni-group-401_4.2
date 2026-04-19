@@ -7,9 +7,15 @@ import com.example.demo.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,6 +24,7 @@ public class IncidentTicketService {
 
     private final IncidentTicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final Path root = Paths.get("uploads");
 
     public TicketResponse createTicket(TicketRequest request, String userId) {
         if (request.getAttachments() != null && request.getAttachments().size() > 3) {
@@ -67,6 +74,23 @@ public class IncidentTicketService {
         return mapToResponse(ticketRepository.save(ticket));
     }
 
+    public TicketResponse updateComment(String ticketId, String commentId, String text, User user) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        
+        Comment comment = ticket.getComments().stream()
+                .filter(c -> c.getId().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+        
+        if (user.getRole() != UserRole.ADMIN && !comment.getUserId().equals(user.getId())) {
+            throw new AccessDeniedException("You don't have permission to edit this comment");
+        }
+        
+        comment.setText(text);
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
     public TicketResponse deleteComment(String ticketId, String commentId, User user) {
         IncidentTicket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
@@ -79,6 +103,46 @@ public class IncidentTicketService {
             throw new RuntimeException("Comment not found or access denied");
         }
         
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
+    public TicketResponse addAttachment(String ticketId, MultipartFile file, User user) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        
+        if (ticket.getAttachments().size() >= 3) {
+            throw new RuntimeException("Maximum 3 attachments allowed per ticket");
+        }
+
+        try {
+            if (!Files.exists(root)) {
+                Files.createDirectories(root);
+            }
+            String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            Files.copy(file.getInputStream(), this.root.resolve(filename));
+
+            Attachment attachment = new Attachment(
+                    file.getOriginalFilename(),
+                    file.getContentType(),
+                    "/api/files/" + filename
+            );
+            
+            ticket.getAttachments().add(attachment);
+            return mapToResponse(ticketRepository.save(ticket));
+        } catch (IOException e) {
+            throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
+        }
+    }
+
+    public TicketResponse removeAttachment(String ticketId, String filename, User user) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        
+        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        ticket.getAttachments().removeIf(a -> a.getUrl().endsWith(filename));
         return mapToResponse(ticketRepository.save(ticket));
     }
 
