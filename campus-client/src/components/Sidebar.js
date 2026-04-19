@@ -13,14 +13,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { to: '/facilities', label: 'Facility & Assets', icon: '🏛️' },
-    { to: '/tickets', label: 'Incident Tickets', icon: '🎫' },
   ];
 
   if (user?.role === 'ADMIN') {
+    navItems.push({ to: '/facilities', label: 'Facility & Assets', icon: '🏛️' });
+    navItems.push({ to: '/tickets', label: 'Incident Tickets', icon: '🎫' });
     navItems.push({ to: '/admin/users', label: 'User Management', icon: '👥' });
     navItems.push({ to: '/admin/bookings', label: 'Manage Bookings', icon: '📅' });
+  } else if (user?.role === 'TECHNICIAN') {
+    navItems.push({ to: '/tickets', label: 'My Jobs', icon: '🛠️' });
+    navItems.push({ to: '/assignments', label: 'Assignments', icon: '📋' });
+    navItems.push({ to: '/schedule', label: 'Schedule', icon: '📅' });
+    navItems.push({ to: '/reports', label: 'Reports', icon: '📊' });
+    navItems.push({ to: '/messages', label: 'Messages', icon: '💬' });
+    navItems.push({ to: '/profile', label: 'Profile', icon: '👤' });
   } else {
+    navItems.push({ to: '/facilities', label: 'Facility & Assets', icon: '🏛️' });
+    navItems.push({ to: '/tickets', label: 'Incident Tickets', icon: '🎫' });
     navItems.push({ to: '/bookings/my', label: 'My Bookings', icon: '📅' });
   }
 

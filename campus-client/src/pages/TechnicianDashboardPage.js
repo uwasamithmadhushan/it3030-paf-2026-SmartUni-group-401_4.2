@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllTickets, updateTicketStatus } from '../services/api';
+import { getAllTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import EmptyState from '../components/EmptyState';
 
 const TechnicianDashboardPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -14,181 +13,216 @@ const TechnicianDashboardPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.id) {
-      fetchTickets();
-    } else {
-      setLoading(false);
-    }
+    if (user?.id) fetchTickets();
   }, [user?.id]);
 
   const fetchTickets = async () => {
-    if (!user?.id) return;
     setLoading(true);
     try {
       const { data } = await getAllTickets();
-      // Filter for tickets assigned to this technician
       setTickets(data.filter(t => t.assignedTechnicianId === user.id));
     } catch (error) {
-      addToast('Error fetching assigned tasks', 'error');
+      addToast('Error fetching summary', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickUpdate = async (id, status) => {
-    try {
-      await updateTicketStatus(id, { 
-        status, 
-        note: `Technician quick-status update to ${status}` 
-      });
-      addToast(`Status updated to ${status.replace('_', ' ')}`, 'success');
-      fetchTickets();
-    } catch (error) {
-      addToast('Quick update failed', 'error');
-    }
-  };
-
-  if (loading) return <LoadingSpinner fullScreen message="Loading your queue..." />;
+  if (loading) return <LoadingSpinner fullScreen message="Syncing Maintenance Data..." />;
 
   const stats = {
-    total: tickets.length,
-    open: tickets.filter(t => t.status === 'OPEN').length,
+    assigned: tickets.length,
+    pending: tickets.filter(t => t.status === 'OPEN').length,
     inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+    completedToday: tickets.filter(t => (t.status === 'RESOLVED' || t.status === 'COMPLETED') && new Date(t.updatedAt).toDateString() === new Date().toDateString()).length,
     highPriority: tickets.filter(t => t.priority === 'HIGH' || t.priority === 'CRITICAL').length,
-    completedToday: tickets.filter(t => 
-      t.status === 'RESOLVED' && 
-      new Date(t.updatedAt).toDateString() === new Date().toDateString()
-    ).length
+    completionRate: tickets.length > 0 ? Math.round((tickets.filter(t => t.status === 'RESOLVED').length / tickets.length) * 100) : 0
   };
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+    <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Technician Dashboard</h1>
-          <p className="text-sm text-slate-500 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Online: {user?.username} (Staff ID: {user?.id?.substring(0, 8) || 'N/A'})
-          </p>
+           <h1 className="text-2xl font-black text-slate-900 tracking-tight tracking-tight">System Overview</h1>
+           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Maintenance Command Center • Logged in as {user?.username}</p>
         </div>
-        <div className="flex gap-3">
-           <button 
-             onClick={fetchTickets}
-             className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm flex items-center gap-2"
-           >
-             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-             Refresh Queue
-           </button>
+        <div className="text-right">
+           <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Shift Status</p>
+           <p className="text-sm font-black text-emerald-600 uppercase tracking-widest">On Duty</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="My Workload" value={stats.total} icon="📋" color="indigo" />
-        <StatCard title="High Priority" value={stats.highPriority} icon="🔥" color="rose" />
-        <StatCard title="Active" value={stats.inProgress} icon="⚡" color="amber" />
-        <StatCard title="Done Today" value={stats.completedToday} icon="✅" color="emerald" />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <KPICard title="Assigned" value={stats.assigned} icon="📋" color="indigo" trend="+2 today" />
+        <KPICard title="Pending" value={stats.pending} icon="⏳" color="amber" trend="-5% improvement" />
+        <KPICard title="In Progress" value={stats.inProgress} icon="⚡" color="blue" trend="Active now" />
+        <KPICard title="Completed" value={stats.completedToday} icon="✅" color="emerald" trend="+12% weekly" />
+        <KPICard title="High Priority" value={stats.highPriority} icon="🔥" color="rose" trend="Immediate action" />
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h2 className="font-bold text-slate-900">Primary Queue</h2>
-          <div className="flex gap-2">
-            <span className="text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">{tickets.length} Items</span>
-          </div>
-        </div>
-        
-        <div className="divide-y divide-slate-100">
-          {tickets.length > 0 ? (
-            tickets.map((ticket) => (
-              <div key={ticket.id} className="p-6 hover:bg-slate-50 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-6 group">
-                <div className="space-y-3 flex-1">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${getPriorityStyles(ticket.priority)}`}>
-                      {ticket.priority} Priority
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">#{ticket.id?.substring(0, 8) || 'N/A'}</span>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-lg group-hover:text-[#5B5CE6] transition-colors cursor-pointer mb-1" onClick={() => navigate(`/tickets/${ticket.id}`)}>
-                      {ticket.title}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-slate-400">Reporter:</span>
-                        <span className="text-slate-700 font-bold">{ticket.createdByUsername}</span>
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                        {ticket.category.replace('_', ' ')}
-                      </span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content Area (8 cols) */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Active Assignments Preview */}
+          <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
+            <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Active Work Order Preview</h3>
+              <button onClick={() => navigate('/assignments')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">View All Full Queue</button>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {tickets.slice(0, 4).map(t => (
+                <div key={t.id} className="px-8 py-5 flex items-center justify-between hover:bg-slate-50 transition-all cursor-pointer group" onClick={() => navigate(`/tickets/${t.id}`)}>
+                  <div className="flex gap-4 items-center">
+                    <span className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xs shadow-inner">🛠️</span>
+                    <div>
+                      <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{t.title}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📍 {t.location || 'General'}</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border text-center ${getStatusStyles(ticket.status)}`}>
-                    {ticket.status.replace('_', ' ')}
-                  </span>
-                  
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    {ticket.status === 'OPEN' && (
-                      <button 
-                        onClick={() => handleQuickUpdate(ticket.id, 'IN_PROGRESS')}
-                        className="flex-1 px-4 py-2 bg-[#5B5CE6] text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
-                      >
-                        Accept
-                      </button>
-                    )}
-                    {ticket.status === 'IN_PROGRESS' && (
-                      <button 
-                        onClick={() => handleQuickUpdate(ticket.id, 'RESOLVED')}
-                        className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors shadow-sm"
-                      >
-                        Resolve
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => navigate(`/tickets/${ticket.id}`)}
-                      className="flex-1 px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
-                    >
-                      Inspect
-                    </button>
+                  <div className="text-right">
+                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${getPriorityStyles(t.priority)}`}>{t.priority}</span>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-12">
-              <EmptyState 
-                title="Zero Active Issues" 
-                message="Your queue is completely clear. You're all caught up on your assigned tickets."
-                icon="🎉"
-              />
+              ))}
+              {tickets.length === 0 && <div className="p-12 text-center text-slate-400 italic text-sm">No active tasks assigned.</div>}
             </div>
-          )}
+          </div>
+
+          {/* Performance Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white">
+                <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-slate-900">Weekly Progress</h3>
+                <div className="flex items-end justify-between h-32 gap-2 px-2">
+                   {[40, 70, 45, 90, 65, 85, 30].map((h, i) => (
+                      <div key={i} className="flex-1 bg-slate-100 rounded-t-lg relative group">
+                         <div className={`absolute bottom-0 w-full rounded-t-lg transition-all duration-700 ${i === 3 ? 'bg-indigo-600' : 'bg-slate-300 group-hover:bg-indigo-300'}`} style={{ height: `${h}%` }}></div>
+                      </div>
+                   ))}
+                </div>
+                <div className="flex justify-between mt-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
+                   <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+             </div>
+
+             <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-xl shadow-slate-900/20 text-white relative overflow-hidden">
+                <div className="relative z-10">
+                   <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-6">Efficiency Pulse</h3>
+                   <div className="space-y-6">
+                      <div>
+                         <div className="flex justify-between text-[10px] font-black uppercase mb-1">
+                            <span>SLA Compliance</span>
+                            <span>98%</span>
+                         </div>
+                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500" style={{ width: '98%' }}></div>
+                         </div>
+                      </div>
+                      <div>
+                         <div className="flex justify-between text-[10px] font-black uppercase mb-1">
+                            <span>Completion Target</span>
+                            <span>{stats.completionRate}%</span>
+                         </div>
+                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-500" style={{ width: `${stats.completionRate}%` }}></div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        {/* Sidebar / Right Side (4 cols) */}
+        <div className="lg:col-span-4 space-y-8">
+           {/* Workload Overview */}
+           <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 border border-white">
+              <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-slate-900">Workload Pulse</h3>
+              <div className="flex flex-col items-center">
+                 <div className="relative w-36 h-36 mb-6">
+                    <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 36 36">
+                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" strokeWidth="3.5" />
+                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#5B5CE6" strokeWidth="3.5" strokeDasharray={`${stats.completionRate} 100`} strokeLinecap="round" className="transition-all duration-1000" />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                       <span className="text-2xl font-black text-slate-900">{stats.completionRate}%</span>
+                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Rate</span>
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-2 w-full gap-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                       <p className="text-xl font-black text-slate-900">{stats.assigned}</p>
+                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+                    </div>
+                    <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-center">
+                       <p className="text-xl font-black text-rose-600">3</p>
+                       <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Overdue</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           {/* Urgent Jobs */}
+           <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
+              <div className="px-8 py-5 border-b border-slate-50 flex items-center gap-2">
+                 <span className="text-rose-600">🔥</span>
+                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Immediate Attention</h3>
+              </div>
+              <div className="divide-y divide-slate-50">
+                 {tickets.filter(t => t.priority === 'CRITICAL' || t.priority === 'HIGH').slice(0, 3).map(t => (
+                    <div key={t.id} className="p-6 hover:bg-rose-50/10 transition-colors cursor-pointer group" onClick={() => navigate(`/tickets/${t.id}`)}>
+                       <div className="flex justify-between items-start mb-2">
+                          <span className="text-[8px] font-black px-2 py-0.5 bg-rose-100 text-rose-600 rounded uppercase tracking-widest">CRITICAL</span>
+                          <span className="text-[9px] font-bold text-slate-400">#{t.id.substring(0, 6)}</span>
+                       </div>
+                       <h4 className="text-xs font-black text-slate-800 line-clamp-1">{t.title}</h4>
+                    </div>
+                 ))}
+                 {tickets.filter(t => t.priority === 'CRITICAL' || t.priority === 'HIGH').length === 0 && <div className="p-6 text-center text-[10px] font-bold text-slate-400 italic">No urgent jobs currently.</div>}
+              </div>
+           </div>
+
+           {/* Recent Activity */}
+           <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white p-8">
+              <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-slate-900">Recent Activity</h3>
+              <div className="space-y-6">
+                 {tickets.slice(0, 3).map((t, i) => (
+                    <div key={i} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0">
+                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-xs">🛠️</div>
+                       <div>
+                          <p className="text-[10px] font-black text-slate-800 leading-tight">Ticket Updated: <span className="text-indigo-600">#{t.id.substring(0, 6)}</span></p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">2 hours ago • {t.status}</p>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
         </div>
       </div>
     </div>
   );
 };
 
-const StatCard = ({ title, value, icon, color }) => {
+const KPICard = ({ title, value, icon, color, trend }) => {
   const colorMap = {
-    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-    rose: 'bg-rose-50 text-rose-600 border-rose-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100'
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100 shadow-indigo-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100',
+    blue: 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100',
+    rose: 'bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100'
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl border ${colorMap[color] || 'bg-slate-50 text-slate-600 border-slate-100'}`}>
+    <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 hover:scale-[1.03] transition-all group">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl border ${colorMap[color]} group-hover:rotate-12 transition-transform mb-4`}>
         {icon}
       </div>
       <div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{title}</div>
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+        <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+        <p className="text-[9px] font-bold text-slate-400 mt-2">{trend}</p>
       </div>
     </div>
   );
@@ -196,20 +230,11 @@ const StatCard = ({ title, value, icon, color }) => {
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
-    case 'CRITICAL': return 'text-rose-600 border-rose-200 bg-rose-50';
-    case 'HIGH': return 'text-orange-600 border-orange-200 bg-orange-50';
-    case 'MEDIUM': return 'text-amber-600 border-amber-200 bg-amber-50';
-    case 'LOW': return 'text-emerald-600 border-emerald-200 bg-emerald-50';
-    default: return 'text-slate-500 border-slate-200 bg-slate-50';
-  }
-};
-
-const getStatusStyles = (status) => {
-  switch (status) {
-    case 'OPEN': return 'bg-blue-50 text-blue-700 border-blue-200';
-    case 'IN_PROGRESS': return 'bg-amber-50 text-amber-700 border-amber-200';
-    case 'RESOLVED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    default: return 'bg-slate-50 text-slate-600 border-slate-200';
+    case 'CRITICAL': return 'bg-rose-50 text-rose-600 border-rose-100';
+    case 'HIGH': return 'bg-orange-50 text-orange-600 border-orange-100';
+    case 'MEDIUM': return 'bg-amber-50 text-amber-600 border-amber-100';
+    case 'LOW': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+    default: return 'bg-slate-50 text-slate-400 border-slate-100';
   }
 };
 

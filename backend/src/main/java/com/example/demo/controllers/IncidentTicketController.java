@@ -28,6 +28,7 @@ public class IncidentTicketController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<TicketResponse> createTicket(@RequestBody TicketRequest request, Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
         return ResponseEntity.ok(ticketService.createTicket(request, user.getId()));
