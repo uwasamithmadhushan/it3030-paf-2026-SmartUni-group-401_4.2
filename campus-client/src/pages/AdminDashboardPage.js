@@ -10,22 +10,26 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [ticketsRes, assetsRes] = await Promise.all([
-          getAllTickets(),
-          getAllAssets()
-        ]);
-        setTickets(ticketsRes.data);
-        setAssets(assetsRes.data);
-      } catch (err) {
-        console.error('Failed to fetch admin data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchData(true);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    try {
+      const [ticketsRes, assetsRes] = await Promise.all([
+        getAllTickets(),
+        getAllAssets()
+      ]);
+      setTickets(ticketsRes.data);
+      setAssets(assetsRes.data);
+    } catch (err) {
+      console.error('Failed to fetch admin data');
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
 
   if (loading) return <LoadingSpinner fullScreen />;
 
