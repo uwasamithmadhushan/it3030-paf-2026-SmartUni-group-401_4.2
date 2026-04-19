@@ -118,7 +118,8 @@ const TechnicianReportsPage = () => {
                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Most Frequent Site</p>
                <p className="text-sm font-black text-slate-900">Engineering Block B</p>
             </div>
-         </div>
+          </div>
+        </div>
       </div>
     </div>
   );
