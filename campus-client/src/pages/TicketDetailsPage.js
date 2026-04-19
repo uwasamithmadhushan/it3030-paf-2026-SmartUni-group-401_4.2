@@ -32,8 +32,8 @@ const TicketDetailsPage = () => {
     fetchData();
   }, [id]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
     try {
       const [ticketRes, usersRes] = await Promise.all([
         getTicketById(id),
@@ -86,7 +86,7 @@ const TicketDetailsPage = () => {
     });
   };
 
-  const performAction = async () => {
+  const performAction = async (inputValue) => {
     try {
       if (modalState.type === 'assign') {
         await assignTechnician(id, { technicianId: modalState.data });
@@ -94,19 +94,22 @@ const TicketDetailsPage = () => {
       } else if (modalState.type === 'status') {
         await updateTicketStatus(id, { 
           status: modalState.data,
-          note: modalState.reason || `Status updated to ${modalState.data} by ${user.username}` 
+          note: inputValue || `Status updated to ${modalState.data} by ${user.username}` 
         });
         addToast(`Ticket status updated to ${modalState.data}`, 'success');
       } else if (modalState.type === 'edit_comment') {
-        await updateComment(id, modalState.data.id, modalState.reason);
+        await updateComment(id, modalState.data.id, inputValue);
         addToast('Comment updated successfully', 'success');
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
         addToast('Ticket deleted successfully', 'success');
         navigate('/tickets');
         return;
+      } else if (modalState.type === 'delete_comment') {
+        await deleteComment(id, modalState.data);
+        addToast('Comment deleted successfully', 'success');
       }
-      fetchData();
+      fetchData(true);
     } catch (error) {
       addToast('Requested action failed', 'error');
     }
@@ -119,7 +122,7 @@ const TicketDetailsPage = () => {
     try {
       await addComment(id, newComment);
       setNewComment('');
-      fetchData();
+      fetchData(true);
       addToast('Comment added', 'success');
     } catch (error) {
       addToast('Failed to add comment', 'error');
@@ -140,22 +143,21 @@ const TicketDetailsPage = () => {
     });
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Delete this comment?')) return;
-    try {
-      await deleteComment(id, commentId);
-      addToast('Comment deleted', 'success');
-      fetchData();
-    } catch (error) {
-      addToast('Failed to delete comment', 'error');
-    }
+  const handleDeleteCommentAction = (commentId) => {
+    setModalState({
+      isOpen: true,
+      type: 'delete_comment',
+      title: 'Delete Comment',
+      message: 'Are you sure you want to permanently remove this comment?',
+      data: commentId
+    });
   };
 
   const handleDeleteAttachment = async (filename) => {
     try {
       const actualFilename = filename.split('/').pop();
       await deleteAttachment(id, actualFilename);
-      fetchData();
+      fetchData(true);
       addToast('Attachment removed', 'success');
     } catch (error) {
       addToast('Failed to delete attachment', 'error');
@@ -168,7 +170,7 @@ const TicketDetailsPage = () => {
     setLoading(true);
     try {
       await uploadAttachment(id, file);
-      fetchData();
+      fetchData(true);
       addToast('File uploaded successfully', 'success');
     } catch (error) {
       addToast(error.response?.data?.message || 'Upload failed', 'error');
@@ -262,7 +264,7 @@ const TicketDetailsPage = () => {
             <div className="space-y-6 mb-8">
               {ticket.comments && ticket.comments.length > 0 ? (
                 ticket.comments.map((comment, i) => {
-                  const isMyComment = comment.userId === user.id;
+                  const isMyComment = comment.userId === user.id || comment.username === user.username;
                   return (
                     <div key={i} className={`flex gap-4 items-start group ${isMyComment ? 'flex-row-reverse' : ''}`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isMyComment ? 'bg-[#5B5CE6] text-white' : 'bg-slate-100 text-slate-600'}`}>
@@ -287,7 +289,7 @@ const TicketDetailsPage = () => {
                               </button>
                             )}
                             <button 
-                              onClick={() => handleDeleteComment(comment.id)}
+                              onClick={() => handleDeleteCommentAction(comment.id)}
                               className="w-6 h-6 text-slate-400 rounded-full flex items-center justify-center hover:text-red-600 hover:bg-red-50 transition-colors"
                               title="Delete"
                             >
@@ -370,10 +372,16 @@ const TicketDetailsPage = () => {
                     </select>
                     <button 
                       onClick={handleAssignAction}
-                      disabled={!selectedTech}
-                      className="w-full py-2.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                      disabled={!selectedTech || selectedTech === ticket.assignedTechnicianId}
+                      className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                        !selectedTech 
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                          : selectedTech === ticket.assignedTechnicianId
+                            ? 'bg-emerald-500 text-white cursor-default'
+                            : 'bg-[#5B5CE6] text-white hover:bg-indigo-700 active:scale-95'
+                      }`}
                     >
-                      Confirm Assignment
+                      {selectedTech === ticket.assignedTechnicianId ? '✓ Technician Assigned' : ticket.assignedTechnicianId ? 'Confirm Reassignment' : 'Confirm Assignment'}
                     </button>
                   </div>
                 </div>
@@ -500,6 +508,8 @@ const TicketDetailsPage = () => {
         message={modalState.message}
         type={modalState.type === 'assign' || modalState.data === 'RESOLVED' ? 'info' : 'danger'}
         confirmText={modalState.type === 'assign' ? 'Assign' : 'Confirm'}
+        isInput={modalState.isInput}
+        initialValue={modalState.initialValue}
       />
     </div>
   );
