@@ -21,7 +21,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     navItems.push({ to: '/admin/users', label: 'User Management', icon: '👥' });
     navItems.push({ to: '/admin/bookings', label: 'Manage Bookings', icon: '📅' });
   } else if (user?.role === 'TECHNICIAN') {
-    navItems.push({ to: '/tickets', label: 'My Jobs', icon: '🛠️' });
     navItems.push({ to: '/assignments', label: 'Assignments', icon: '📋' });
     navItems.push({ to: '/schedule', label: 'Schedule', icon: '📅' });
     navItems.push({ to: '/reports', label: 'Reports', icon: '📊' });
