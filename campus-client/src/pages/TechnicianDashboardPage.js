@@ -14,10 +14,15 @@ const TechnicianDashboardPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (user?.id) {
+      fetchTickets();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   const fetchTickets = async () => {
+    if (!user?.id) return;
     setLoading(true);
     try {
       const { data } = await getAllTickets();
@@ -63,7 +68,7 @@ const TechnicianDashboardPage = () => {
           <h1 className="text-2xl font-bold text-slate-900 mb-1">Technician Dashboard</h1>
           <p className="text-sm text-slate-500 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Online: {user.username} (Staff ID: {user.id.substring(0, 8)})
+            Online: {user?.username} (Staff ID: {user?.id?.substring(0, 8) || 'N/A'})
           </p>
         </div>
         <div className="flex gap-3">
@@ -101,7 +106,7 @@ const TechnicianDashboardPage = () => {
                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${getPriorityStyles(ticket.priority)}`}>
                       {ticket.priority} Priority
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">#{ticket.id.substring(0, 8)}</span>
+                    <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">#{ticket.id?.substring(0, 8) || 'N/A'}</span>
                   </div>
                   
                   <div>
