@@ -23,6 +23,7 @@ import TechnicianSchedulePage from './pages/TechnicianSchedulePage';
 import TechnicianReportsPage from './pages/TechnicianReportsPage';
 import TechnicianMessagesPage from './pages/TechnicianMessagesPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminMessagesPage from './pages/AdminMessagesPage';
 
 function DashboardRouter() {
   const { user } = useAuth();
@@ -126,6 +127,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <MainLayout><AdminDashboardPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/messages"
+            element={
+              <ProtectedRoute adminOnly>
+                <MainLayout><AdminMessagesPage /></MainLayout>
               </ProtectedRoute>
             }
           />
