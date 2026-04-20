@@ -151,7 +151,7 @@ export default function MainLayout({ children }) {
         <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
-              key={location.pathname}
+              key={location.pathname === '/tickets/new' ? '/tickets' : location.pathname}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
