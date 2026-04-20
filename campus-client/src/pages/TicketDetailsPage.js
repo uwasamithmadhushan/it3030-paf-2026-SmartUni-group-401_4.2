@@ -264,7 +264,7 @@ const TicketDetailsPage = () => {
               {ticket.resourceId && (
                 <div className="flex flex-col gap-1 border-l border-slate-200 pl-6">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Related Asset</span>
-                  <span className="text-sm font-bold text-[#5B5CE6]">{ticket.resourceId.substring(0,8)}</span>
+                  <span className="text-sm font-bold text-[#10B981]">{ticket.resourceId.substring(0,8)}</span>
                 </div>
               )}
             </div>
@@ -280,7 +280,7 @@ const TicketDetailsPage = () => {
                   const isMyComment = comment.userId === user.id || comment.username === user.username;
                   return (
                     <div key={i} className={`flex gap-4 items-start group ${isMyComment ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isMyComment ? 'bg-[#5B5CE6] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isMyComment ? 'bg-[#10B981] text-white' : 'bg-slate-100 text-slate-600'}`}>
                         {comment.username.charAt(0).toUpperCase()}
                       </div>
                       <div className={`relative max-w-[85%] p-4 rounded-2xl border ${isMyComment ? 'bg-indigo-50 border-indigo-100 rounded-tr-sm' : 'bg-slate-50 border-slate-100 rounded-tl-sm'}`}>
@@ -295,7 +295,7 @@ const TicketDetailsPage = () => {
                             {isMyComment && (
                               <button 
                                 onClick={() => handleEditCommentAction(comment)}
-                                className="w-6 h-6 text-slate-400 rounded-full flex items-center justify-center hover:text-[#5B5CE6] hover:bg-indigo-50 transition-colors"
+                                className="w-6 h-6 text-slate-400 rounded-full flex items-center justify-center hover:text-[#10B981] hover:bg-indigo-50 transition-colors"
                                 title="Edit"
                               >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -322,7 +322,7 @@ const TicketDetailsPage = () => {
             </div>
 
             <form onSubmit={handleAddComment} className="relative">
-              <div className="bg-white rounded-xl border border-slate-200 focus-within:border-[#5B5CE6] overflow-hidden transition-colors shadow-sm">
+              <div className="bg-white rounded-xl border border-slate-200 focus-within:border-[#10B981] overflow-hidden transition-colors shadow-sm">
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -335,7 +335,7 @@ const TicketDetailsPage = () => {
                   <button 
                     type="submit"
                     disabled={commenting || !newComment.trim()}
-                    className="px-6 py-2 bg-[#5B5CE6] text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors ml-auto"
+                    className="px-6 py-2 bg-[#10B981] text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors ml-auto"
                   >
                     Post Comment
                   </button>
@@ -376,7 +376,7 @@ const TicketDetailsPage = () => {
                     <select 
                       value={selectedTech}
                       onChange={(e) => setSelectedTech(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-[#5B5CE6] outline-none"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-[#10B981] outline-none"
                     >
                       <option value="">Select Technician...</option>
                       {technicians.map(t => (
@@ -391,7 +391,7 @@ const TicketDetailsPage = () => {
                           ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                           : selectedTech === ticket.assignedTechnicianId
                             ? 'bg-emerald-500 text-white cursor-default'
-                            : 'bg-[#5B5CE6] text-white hover:bg-indigo-700 active:scale-95'
+                            : 'bg-[#10B981] text-white hover:bg-indigo-700 active:scale-95'
                       }`}
                     >
                       {selectedTech === ticket.assignedTechnicianId ? '✓ Technician Assigned' : ticket.assignedTechnicianId ? 'Confirm Reassignment' : 'Confirm Assignment'}
@@ -450,7 +450,7 @@ const TicketDetailsPage = () => {
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
               <h3 className="font-bold text-slate-900">Attachments</h3>
               {(user.role === 'ADMIN' || ticket.createdById === user.id) && ticket.attachments?.length < 3 && (
-                <label className="cursor-pointer text-[#5B5CE6] hover:text-indigo-700 text-xs font-bold uppercase tracking-wider">
+                <label className="cursor-pointer text-[#10B981] hover:text-indigo-700 text-xs font-bold uppercase tracking-wider">
                   + Add File
                   <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" />
                 </label>
@@ -496,7 +496,7 @@ const TicketDetailsPage = () => {
               {ticket.updates && ticket.updates.length > 0 ? (
                 ticket.updates.map((update, idx) => (
                   <div key={idx} className="relative">
-                    <div className="absolute -left-[18.5px] top-1.5 w-2 h-2 rounded-full border border-white bg-[#5B5CE6]"></div>
+                    <div className="absolute -left-[18.5px] top-1.5 w-2 h-2 rounded-full border border-white bg-[#10B981]"></div>
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 block mb-1">
                         {new Date(update.timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
@@ -543,8 +543,8 @@ const DetailItem = ({ label, value, valueClass = "font-bold text-slate-900" }) =
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-blue-50 text-blue-700 border border-blue-200';
-    case 'IN_PROGRESS': return 'bg-amber-50 text-amber-700 border border-amber-200';
+    case 'OPEN': return 'bg-amber-50 text-amber-700 border border-amber-200';
+    case 'IN_PROGRESS': return 'bg-slate-50 text-slate-700 border border-slate-200';
     case 'RESOLVED': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
     case 'CLOSED': return 'bg-slate-100 text-slate-600 border border-slate-200';
     case 'REJECTED': return 'bg-rose-50 text-rose-700 border border-rose-200';
@@ -554,8 +554,8 @@ const getStatusStyles = (status) => {
 
 const getStatusDotColor = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-blue-500';
-    case 'IN_PROGRESS': return 'bg-amber-500';
+    case 'OPEN': return 'bg-amber-500';
+    case 'IN_PROGRESS': return 'bg-slate-500';
     case 'RESOLVED': return 'bg-emerald-500';
     case 'CLOSED': return 'bg-slate-400';
     case 'REJECTED': return 'bg-rose-500';
@@ -565,12 +565,12 @@ const getStatusDotColor = (status) => {
 
 const getStatusBannerGradient = (status) => {
   switch (status) {
-    case 'OPEN': return 'from-blue-400 to-blue-500';
-    case 'IN_PROGRESS': return 'from-amber-400 to-amber-500';
+    case 'OPEN': return 'from-amber-400 to-amber-500';
+    case 'IN_PROGRESS': return 'from-slate-400 to-slate-500';
     case 'RESOLVED': return 'from-emerald-400 to-green-500';
     case 'CLOSED': return 'from-slate-300 to-slate-400';
     case 'REJECTED': return 'from-rose-400 to-red-500';
-    default: return 'from-indigo-400 to-[#5B5CE6]';
+    default: return 'from-emerald-400 to-[#10B981]';
   }
 };
 

@@ -220,7 +220,7 @@ function StatusDropdown({ currentStatus, onUpdate }) {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-white hover:border-indigo-300 transition-all shadow-sm active:scale-95"
+        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-white hover:border-emerald-300 transition-all shadow-sm active:scale-95"
       >
         {currentStatus.replace('_', ' ')}
         <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
@@ -234,7 +234,7 @@ function StatusDropdown({ currentStatus, onUpdate }) {
               <button
                 key={opt}
                 onClick={() => { onUpdate(opt); setIsOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors ${currentStatus === opt ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-500'}`}
+                className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors ${currentStatus === opt ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-500'}`}
               >
                 {opt.replace('_', ' ')}
               </button>
