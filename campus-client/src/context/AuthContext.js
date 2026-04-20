@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear(); // Purge everything: token, notifications, etc.
     setUser(null);
   };
 
