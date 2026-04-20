@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllTickets } from '../services/api';
+import { getAllTickets, deleteTicket } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const TicketSkeleton = () => (
   <tr className="animate-pulse border-b border-gray-50">
@@ -35,22 +37,38 @@ const TicketListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  // Modal State
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, ticketId: null });
+
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
-    fetchTickets();
+    fetchTickets(true);
+    const interval = setInterval(() => fetchTickets(false), 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchTickets = async () => {
-    setLoading(true);
+  const fetchTickets = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const { data } = await getAllTickets();
       setTickets(data);
     } catch (err) {
       setError('Failed to load tickets. Please try again later.');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteTicket(id);
+      addToast('Ticket deleted successfully', 'success');
+      fetchTickets(false);
+    } catch (err) {
+      addToast('Failed to delete ticket', 'error');
     }
   };
 
@@ -208,13 +226,26 @@ const TicketListPage = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <button
-                        onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-sm font-bold text-gray-700 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-transparent hover:shadow-[0_8px_20px_rgba(99,102,241,0.25)] hover:-translate-y-0.5 transition-all duration-300"
-                      >
-                        View Details
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-xs font-bold text-gray-700 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-transparent transition-all"
+                        >
+                          View
+                        </button>
+                        {(user.role === 'ADMIN' || ticket.createdById === user?.id) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteModal({ isOpen: true, ticketId: ticket.id });
+                            }}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Delete Ticket"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                   ))
@@ -222,6 +253,16 @@ const TicketListPage = () => {
               </tbody>
             </table>
           </div>
+
+          <ConfirmationModal 
+            isOpen={deleteModal.isOpen}
+            onClose={() => setDeleteModal({ isOpen: false, ticketId: null })}
+            onConfirm={() => handleDelete(deleteModal.ticketId)}
+            title="Delete Incident Report"
+            message="Are you sure you want to permanently delete this incident report? This action cannot be undone and will remove all associated data."
+            confirmText="Delete Ticket"
+            type="danger"
+          />
 
           {/* Pagination Grid Footer */}
           {totalPages > 1 && (

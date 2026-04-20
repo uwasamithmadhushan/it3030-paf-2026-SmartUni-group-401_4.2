@@ -13,18 +13,23 @@ const TechnicianDashboardPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.id) fetchTickets();
+    if (user?.id) {
+      fetchTickets(true);
+      const interval = setInterval(() => fetchTickets(false), 30000);
+      return () => clearInterval(interval);
+    }
   }, [user?.id]);
 
-  const fetchTickets = async () => {
-    setLoading(true);
+  const fetchTickets = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const { data } = await getAllTickets();
       setTickets(data.filter(t => t.assignedTechnicianId === user.id));
     } catch (error) {
-      addToast('Error fetching summary', 'error');
+      console.error('Fetch error:', error);
+      if (showLoading) addToast('Error fetching summary', 'error');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

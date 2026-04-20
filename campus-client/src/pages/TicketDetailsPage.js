@@ -15,6 +15,9 @@ const TicketDetailsPage = () => {
   const [ticket, setTicket] = useState(null);    
   const [loading, setLoading] = useState(true);
   const [technicians, setTechnicians] = useState([]);
+  const [selectedTech, setSelectedTech] = useState('');
+  const [commenting, setCommenting] = useState(false);
+  const [newComment, setNewComment] = useState('');
   
   const [modalState, setModalState] = useState({ 
     isOpen: false, 
@@ -23,16 +26,17 @@ const TicketDetailsPage = () => {
     message: '', 
     data: null 
   });
-  
-  const [selectedTech, setSelectedTech] = useState('');
-  const [newComment, setNewComment] = useState('');
-  const [commenting, setCommenting] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, [id]);
+    if (user) {
+      fetchData();
+      const interval = setInterval(() => fetchData(true), 30000);
+      return () => clearInterval(interval);
+    }
+  }, [id, user]);
 
   const fetchData = async (isRefresh = false) => {
+    if (!user) return;
     if (!isRefresh) setLoading(true);
     try {
       const [ticketRes, usersRes] = await Promise.all([
@@ -44,9 +48,17 @@ const TicketDetailsPage = () => {
         setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
       }
     } catch (error) {
-      addToast('Failed to load ticket details', 'error');
+      console.error('Fetch error:', error);
+      if (!isRefresh) {
+        const message = error.response?.status === 404 
+          ? 'Ticket not found. It may have been deleted.' 
+          : error.response?.status === 403 
+            ? 'Access denied. You do not have permission to view this ticket.'
+            : 'Failed to load ticket details. Please try again.';
+        addToast(message, 'error');
+      }
     } finally {
-      setLoading(false);
+      if (!isRefresh) setLoading(false);
     }
   };
 
@@ -80,9 +92,10 @@ const TicketDetailsPage = () => {
     setModalState({
       isOpen: true,
       type: 'delete_ticket',
-      title: 'Delete Ticket',
-      message: 'Are you sure you want to permanently remove this ticket?',
-      data: null
+      title: 'Delete Incident Report',
+      message: 'Are you sure you want to permanently delete this incident report? This action cannot be undone and will remove all associated data.',
+      confirmText: 'Delete Ticket',
+      type_color: 'danger'
     });
   };
 
@@ -100,14 +113,14 @@ const TicketDetailsPage = () => {
       } else if (modalState.type === 'edit_comment') {
         await updateComment(id, modalState.data.id, inputValue);
         addToast('Comment updated successfully', 'success');
+      } else if (modalState.type === 'delete_comment') {
+        await deleteComment(id, modalState.data);
+        addToast('Comment deleted successfully', 'success');
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
         addToast('Ticket deleted successfully', 'success');
         navigate('/tickets');
         return;
-      } else if (modalState.type === 'delete_comment') {
-        await deleteComment(id, modalState.data);
-        addToast('Comment deleted successfully', 'success');
       }
       fetchData(true);
     } catch (error) {
@@ -416,15 +429,17 @@ const TicketDetailsPage = () => {
                 </div>
               )}
 
-              {/* Delete */}
+              {/* Delete Action */}
               {(user.role === 'ADMIN' || ticket.createdById === user.id) && (
-                <div className="pt-2 text-center">
+                <div className="pt-6 border-t border-slate-100">
                   <button 
                     onClick={handleDeleteAction}
-                    className="py-2 text-red-600 text-xs font-bold hover:underline"
+                    className="w-full py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors flex items-center justify-center gap-2"
                   >
-                    Delete Ticket
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Delete Incident Report
                   </button>
+                  <p className="mt-3 text-[10px] text-slate-400 font-medium text-center">This action cannot be undone.</p>
                 </div>
               )}
             </div>
@@ -506,8 +521,8 @@ const TicketDetailsPage = () => {
         onConfirm={performAction}
         title={modalState.title}
         message={modalState.message}
-        type={modalState.type === 'assign' || modalState.data === 'RESOLVED' ? 'info' : 'danger'}
-        confirmText={modalState.type === 'assign' ? 'Assign' : 'Confirm'}
+        type={modalState.type_color || (modalState.type === 'assign' || modalState.data === 'RESOLVED' ? 'info' : 'danger')}
+        confirmText={modalState.confirmText || (modalState.type === 'assign' ? 'Assign' : 'Confirm')}
         isInput={modalState.isInput}
         initialValue={modalState.initialValue}
       />
