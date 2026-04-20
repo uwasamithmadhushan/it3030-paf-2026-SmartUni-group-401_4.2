@@ -323,11 +323,12 @@ const TicketListPage = () => {
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-amber-100/50 text-amber-700';
-    case 'IN_PROGRESS': return 'bg-slate-100/50 text-slate-700';
-    case 'RESOLVED': return 'bg-emerald-100/50 text-emerald-700';
-    case 'REJECTED': return 'bg-rose-100/50 text-rose-700';
-    default: return 'bg-slate-100/50 text-slate-600';
+    case 'OPEN': return 'bg-amber-50/80 text-amber-600 border border-amber-200/50';
+    case 'IN_PROGRESS': return 'bg-blue-50/80 text-blue-600 border border-blue-200/50';
+    case 'RESOLVED': return 'bg-emerald-50/80 text-emerald-600 border border-emerald-200/50';
+    case 'REJECTED': return 'bg-rose-50/80 text-rose-600 border border-rose-200/50';
+    case 'CLOSED': return 'bg-slate-50/80 text-slate-600 border border-slate-200/50';
+    default: return 'bg-slate-50/80 text-slate-500 border border-slate-200/50';
   }
 };
 
