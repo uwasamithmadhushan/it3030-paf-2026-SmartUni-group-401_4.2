@@ -55,7 +55,7 @@ export default function UserDashboardPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden bg-[#5B5CE6] rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl shadow-indigo-200"
+        className="relative overflow-hidden bg-gradient-to-br from-[#10B981] to-[#059669] rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl shadow-emerald-200/50"
       >
         <div className="relative z-10">
           <span className="inline-block px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-widest mb-6">
@@ -85,14 +85,14 @@ export default function UserDashboardPage() {
               label="Pending Items" 
               value={stats.open} 
               icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-              color="blue" 
+              color="amber" 
               delay={0.1}
             />
             <ModernStatCard 
               label="Being Handled" 
               value={stats.inProgress} 
               icon="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
-              color="amber" 
+              color="slate" 
               delay={0.2}
             />
             <ModernStatCard 
@@ -113,7 +113,7 @@ export default function UserDashboardPage() {
           >
             <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 </div>
                 <div>
@@ -123,7 +123,7 @@ export default function UserDashboardPage() {
               </div>
               <button 
                 onClick={() => navigate('/tickets')} 
-                className="px-4 py-2 text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-xl transition-all uppercase tracking-widest"
+                className="px-4 py-2 text-xs font-black text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white rounded-xl transition-all uppercase tracking-widest"
               >
                 View Feed
               </button>
@@ -190,9 +190,9 @@ export default function UserDashboardPage() {
           />
 
           {/* Productivity Tip */}
-          <div className="p-8 bg-indigo-50/50 rounded-[2rem] border border-indigo-100 relative overflow-hidden group">
+          <div className="p-8 bg-emerald-50/50 rounded-[2rem] border border-emerald-100 relative overflow-hidden group">
             <div className="relative z-10">
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3 block">Pro Tip</span>
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3 block">Pro Tip</span>
               <p className="text-sm font-bold text-slate-700 leading-relaxed">
                 "Keep your campus running smoothly! Reporting issues early helps our technicians resolve them faster."
               </p>
@@ -210,7 +210,7 @@ export default function UserDashboardPage() {
 
 function ModernStatCard({ label, value, icon, color, delay }) {
   const colorStyles = {
-    blue: 'bg-blue-50 text-blue-600 border-blue-100',
+    slate: 'bg-slate-50 text-slate-600 border-slate-100',
     amber: 'bg-amber-50 text-amber-600 border-amber-100',
     emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100'
   };
@@ -220,7 +220,7 @@ function ModernStatCard({ label, value, icon, color, delay }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
-      className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 group hover:border-indigo-200 transition-all cursor-default"
+      className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 group hover:border-emerald-200 transition-all cursor-default"
     >
       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 border transition-transform group-hover:rotate-6 ${colorStyles[color]}`}>
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -241,8 +241,8 @@ function QuickActionButton({ title, desc, icon, primary, emoji, onClick }) {
       onClick={onClick}
       className={`w-full flex items-center p-6 rounded-[2rem] transition-all group relative overflow-hidden ${
         primary 
-          ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-200 hover:bg-indigo-700' 
-          : 'bg-white border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-indigo-200 text-slate-900'
+          ? 'bg-[#10B981] text-white shadow-2xl shadow-emerald-200/50 hover:bg-[#059669]' 
+          : 'bg-white border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-emerald-200 text-slate-900'
       }`}
     >
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mr-5 shrink-0 transition-all group-hover:scale-110 ${
@@ -258,7 +258,7 @@ function QuickActionButton({ title, desc, icon, primary, emoji, onClick }) {
       </div>
       <div className="text-left">
         <p className="font-black text-sm tracking-tight">{title}</p>
-        <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${primary ? 'text-indigo-100' : 'text-slate-400'}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${primary ? 'text-white/70' : 'text-slate-400'}`}>
           {desc}
         </p>
       </div>
