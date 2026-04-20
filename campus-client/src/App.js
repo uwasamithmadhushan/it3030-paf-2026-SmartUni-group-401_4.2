@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,6 +18,10 @@ import CreateTicketPage from './pages/CreateTicketPage';
 import TicketListPage from './pages/TicketListPage';
 import TicketDetailsPage from './pages/TicketDetailsPage';
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
+import TechnicianAssignmentsPage from './pages/TechnicianAssignmentsPage';
+import TechnicianSchedulePage from './pages/TechnicianSchedulePage';
+import TechnicianReportsPage from './pages/TechnicianReportsPage';
+import TechnicianMessagesPage from './pages/TechnicianMessagesPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 
 function DashboardRouter() {
@@ -28,6 +33,7 @@ function DashboardRouter() {
 
 function App() {
   return (
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
     <ToastProvider>
       <AuthProvider>
       <BrowserRouter>
@@ -144,6 +150,12 @@ function App() {
             }
           />
 
+          {/* Technician Specific Pages */}
+          <Route path="/assignments" element={<ProtectedRoute><MainLayout><TechnicianAssignmentsPage /></MainLayout></ProtectedRoute>} />
+          <Route path="/schedule" element={<ProtectedRoute><MainLayout><TechnicianSchedulePage /></MainLayout></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><MainLayout><TechnicianReportsPage /></MainLayout></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><MainLayout><TechnicianMessagesPage /></MainLayout></ProtectedRoute>} />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
@@ -151,6 +163,7 @@ function App() {
       </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
+    </GoogleOAuthProvider>
   );
 }
 
