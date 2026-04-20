@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { loginUser, googleLogin } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -46,6 +47,20 @@ export default function LoginPage() {
       } else {
         setServerError(err.response?.status === 401 ? 'Invalid username or password.' : 'Login failed. Please try again.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const { data } = await googleLogin(credentialResponse.credential);
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
+      navigate(from, { replace: true });
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      setServerError(msg || 'Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -129,6 +144,24 @@ export default function LoginPage() {
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setServerError('Google sign-in was cancelled or failed.')}
+              useOneTap={false}
+              theme="outline"
+              shape="rectangular"
+              width="100%"
+              text="signin_with"
+            />
+          </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{' '}
