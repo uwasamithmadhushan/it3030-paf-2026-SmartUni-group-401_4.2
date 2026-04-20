@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -28,6 +29,7 @@ function DashboardRouter() {
 
 function App() {
   return (
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
     <ToastProvider>
       <AuthProvider>
       <BrowserRouter>
@@ -151,6 +153,7 @@ function App() {
       </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
+    </GoogleOAuthProvider>
   );
 }
 
