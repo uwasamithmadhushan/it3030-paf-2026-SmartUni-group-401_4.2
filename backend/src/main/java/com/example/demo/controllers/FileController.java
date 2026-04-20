@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -25,15 +26,20 @@ public class FileController {
             Path file = root.resolve(filename);
             Resource resource = new UrlResource(file.toUri());
 
-            if (resource.exists() || resource.isReadable()) {
+            if (resource.exists() && resource.isReadable()) {
+                // Auto-detect content type from the actual file
+                String contentType = Files.probeContentType(file);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
                 return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG) // Simplified, could detect type
+                        .contentType(MediaType.parseMediaType(contentType))
                         .body(resource);
             } else {
-                throw new RuntimeException("Could not read the file!");
+                return ResponseEntity.notFound().build();
             }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
