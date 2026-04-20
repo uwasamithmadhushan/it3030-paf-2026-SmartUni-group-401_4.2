@@ -14,6 +14,7 @@ const TicketDetailsPage = () => {
   
   const [ticket, setTicket] = useState(null);    
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [technicians, setTechnicians] = useState([]);
   const [selectedTech, setSelectedTech] = useState('');
   const [commenting, setCommenting] = useState(false);
@@ -29,26 +30,32 @@ const TicketDetailsPage = () => {
   });
 
   useEffect(() => {
+    let isMounted = true;
     if (user) {
-      fetchData();
-      const interval = setInterval(() => fetchData(true), 30000);
-      return () => clearInterval(interval);
+      fetchData(false, isMounted);
+      const interval = setInterval(() => fetchData(true, isMounted), 30000);
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+      };
     }
   }, [id, user]);
 
-  const fetchData = async (isRefresh = false) => {
+  const fetchData = async (isRefresh = false, isMounted = true) => {
     if (!user) return;
-    if (!isRefresh) setLoading(true);
+    if (!isRefresh && isMounted) setLoading(true);
     try {
       const [ticketRes, usersRes] = await Promise.all([
         getTicketById(id),
         user.role === 'ADMIN' ? getAllUsers() : Promise.resolve({ data: [] })
       ]);
+      if (!isMounted) return;
       setTicket(ticketRes.data);
       if (user.role === 'ADMIN') {
         setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
       }
     } catch (error) {
+      if (!isMounted) return;
       console.error('Fetch error:', error);
       if (!isRefresh) {
         const message = error.response?.status === 404 
@@ -59,7 +66,7 @@ const TicketDetailsPage = () => {
         addToast(message, 'error');
       }
     } finally {
-      if (!isRefresh) setLoading(false);
+      if (!isRefresh && isMounted) setLoading(false);
     }
   };
 
@@ -181,15 +188,18 @@ const TicketDetailsPage = () => {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setLoading(true);
+    // Reset input so the same file can be selected again
+    e.target.value = '';
+    setUploading(true);
     try {
       await uploadAttachment(id, file);
       fetchData(true);
       addToast('File uploaded successfully', 'success');
     } catch (error) {
-      addToast(error.response?.data?.message || 'Upload failed', 'error');
+      const msg = error.response?.data?.message || error.message || 'Upload failed. Please try again.';
+      addToast(msg, 'error');
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -539,22 +549,27 @@ const TicketDetailsPage = () => {
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
               <h3 className="font-bold text-slate-900">Attachments</h3>
               {(user.role === 'ADMIN' || ticket.createdById === user.id) && ticket.attachments?.length < 3 && (
-                <label className="cursor-pointer text-[#10B981] hover:text-emerald-700 text-xs font-bold uppercase tracking-wider">
-                  + Add File
-                  <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" />
-                </label>
+                uploading ? (
+                  <span className="text-xs font-bold text-emerald-600 animate-pulse">Uploading...</span>
+                ) : (
+                  <label className="cursor-pointer text-[#10B981] hover:text-emerald-700 text-xs font-bold uppercase tracking-wider">
+                    + Add File
+                    <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
+                  </label>
+                )
               )}
             </div>
             
             <div className="space-y-3">
               {ticket.attachments && ticket.attachments.length > 0 ? (
                 ticket.attachments.map((file, i) => {
-                  const isImg = file.url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+                  const fileUrl = file.url.startsWith('http') ? file.url : `http://localhost:8080${file.url}`;
+                  const isImg = /\.(jpeg|jpg|gif|png|webp)$/i.test(file.url);
                   return (
                     <div key={i} className="group relative flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors">
-                      <a href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 flex-1 min-w-0">
+                      <a href={fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                          {isImg ? <img src={file.url} alt="thumb" className="w-full h-full object-cover" /> : '📄'}
+                          {isImg ? <img src={fileUrl} alt="thumb" className="w-full h-full object-cover" /> : '📄'}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-slate-900 truncate">{file.filename}</p>

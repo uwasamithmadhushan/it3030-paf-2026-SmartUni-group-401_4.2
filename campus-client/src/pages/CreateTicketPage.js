@@ -97,11 +97,15 @@ const CreateTicketPage = () => {
   if (loading) return <LoadingSpinner fullScreen message="Submitting your request..." />;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex justify-center items-start pt-10 pb-10 overflow-y-auto custom-scrollbar px-4">
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-gray-100 overflow-hidden relative my-auto animate-in fade-in zoom-in-95 duration-200">
+    <>
+      {/* Static Backdrop */}
+      <div className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-150"></div>
+      
+      {/* Fixed Centered Modal - No Animations, No Resize Jumps */}
+      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-[720px] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 custom-scrollbar">
         
         {/* Header Banner */}
-        <div className="bg-[#10B981] px-8 py-6 text-white flex justify-between items-start">
+        <div className="bg-[#10B981] px-8 py-6 text-white flex justify-between items-start sticky top-0 z-10">
           <div>
             <h1 className="text-xl font-bold mb-1">New Incident Report</h1>
             <p className="text-indigo-100 text-sm">Please provide details about the issue.</p>
@@ -264,7 +268,7 @@ const CreateTicketPage = () => {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 };
 
