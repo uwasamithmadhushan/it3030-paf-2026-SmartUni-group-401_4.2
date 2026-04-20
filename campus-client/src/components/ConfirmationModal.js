@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', type = 'danger' }) => {
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', type = 'danger', isInput = false, initialValue = '' }) => {
+  const [inputValue, setInputValue] = useState(initialValue);
+
+  useEffect(() => {
+    if (isOpen) setInputValue(initialValue);
+  }, [isOpen, initialValue]);
+
   if (!isOpen) return null;
 
   return (
@@ -17,9 +23,21 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirm
             </div>
             <h3 className="text-xl font-bold text-gray-900">{title}</h3>
           </div>
-          <p className="text-gray-600 mb-8 leading-relaxed">
+          <p className="text-gray-600 mb-4 leading-relaxed">
             {message}
           </p>
+
+          {isInput && (
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full p-4 mb-6 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition-all"
+              rows="4"
+              placeholder="Enter details..."
+              autoFocus
+            />
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -28,7 +46,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirm
               Cancel
             </button>
             <button
-              onClick={() => { onConfirm(); onClose(); }}
+              onClick={() => { onConfirm(inputValue); onClose(); }}
               className={`flex-1 px-4 py-2.5 text-white rounded-xl font-bold transition shadow-md hover:shadow-lg ${
                 type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
