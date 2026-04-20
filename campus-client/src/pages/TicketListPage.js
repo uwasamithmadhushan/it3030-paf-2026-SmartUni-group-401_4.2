@@ -120,7 +120,7 @@ const TicketListPage = () => {
       className="relative pb-10"
     >
       {/* Header Section */}
-      <div className="bg-[#5B5CE6] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shadow-sm">
+      <div className="bg-[#10B981] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shadow-sm">
         <div className="text-white">
           <h1 className="text-2xl font-bold mb-1">My Incident Reports</h1>
           <p className="text-white/80 text-sm">Track and manage your submitted campus issues.</p>
@@ -136,7 +136,7 @@ const TicketListPage = () => {
           {user?.role !== 'TECHNICIAN' && (
             <button
               onClick={() => navigate('/tickets/new')}
-              className="inline-flex items-center gap-2 bg-white text-[#5B5CE6] px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-gray-50 shadow-sm"
+              className="inline-flex items-center gap-2 bg-white text-[#10B981] px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-gray-50 shadow-sm"
             >
               <span className="text-lg leading-none mb-0.5">+</span>
               <span>New Ticket</span>
@@ -179,14 +179,14 @@ const TicketListPage = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse table-fixed">
               <thead>
-                <tr className="bg-gray-50/80 border-b border-gray-100 text-[11px] uppercase tracking-widest font-bold text-gray-400">
+                <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] uppercase tracking-widest font-black text-slate-400">
                   <th className="px-8 py-5 w-1/2">Ticket Info</th>
                   <th className="px-8 py-5 w-32">Status</th>
                   <th className="px-8 py-5 w-40">Priority</th>
                   <th className="px-8 py-5 w-40 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-slate-50">
                 {loading ? (
                   [...Array(5)].map((_, i) => <TicketSkeleton key={i} />)
                 ) : (
@@ -229,7 +229,7 @@ const TicketListPage = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => navigate(`/tickets/${ticket.id}`)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-xs font-bold text-gray-700 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-transparent transition-all"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-xl hover:bg-emerald-600 hover:text-white hover:border-transparent transition-all"
                         >
                           View
                         </button>
@@ -323,11 +323,11 @@ const TicketListPage = () => {
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-blue-100/50 text-blue-700';
-    case 'IN_PROGRESS': return 'bg-yellow-100/50 text-yellow-700';
+    case 'OPEN': return 'bg-amber-100/50 text-amber-700';
+    case 'IN_PROGRESS': return 'bg-slate-100/50 text-slate-700';
     case 'RESOLVED': return 'bg-emerald-100/50 text-emerald-700';
-    case 'REJECTED': return 'bg-red-100/50 text-red-700';
-    default: return 'bg-gray-100/50 text-gray-600';
+    case 'REJECTED': return 'bg-rose-100/50 text-rose-700';
+    default: return 'bg-slate-100/50 text-slate-600';
   }
 };
 

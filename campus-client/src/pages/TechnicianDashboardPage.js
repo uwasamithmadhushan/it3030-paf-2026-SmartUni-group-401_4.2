@@ -149,7 +149,7 @@ const TechnicianDashboardPage = () => {
                  <div className="relative w-36 h-36 mb-6">
                     <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 36 36">
                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" strokeWidth="3.5" />
-                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#5B5CE6" strokeWidth="3.5" strokeDasharray={`${stats.completionRate} 100`} strokeLinecap="round" className="transition-all duration-1000" />
+                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#10B981" strokeWidth="3.5" strokeDasharray={`${stats.completionRate} 100`} strokeLinecap="round" className="transition-all duration-1000" />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                        <span className="text-2xl font-black text-slate-900">{stats.completionRate}%</span>

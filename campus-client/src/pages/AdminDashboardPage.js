@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
         </div>
         <button 
           onClick={() => navigate('/tickets/new')}
-          className="bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-6 py-2.5 rounded-full font-bold text-sm transition-colors flex items-center gap-2 shadow-sm"
+          className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-6 py-2.5 rounded-full font-bold text-sm transition-colors flex items-center gap-2 shadow-sm"
         >
           <span className="text-lg leading-none">+</span> Create Ticket
         </button>
@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
 
       {/* Row 2: 4 Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="TOTAL ASSETS" value={stats.totalAssets} change="System wide" color="border-l-indigo-500" />
+        <StatCard title="TOTAL ASSETS" value={stats.totalAssets} change="System wide" color="border-l-slate-400" />
         <StatCard title="ACTIVE FACILITIES" value={stats.activeAssets} change="Operational" color="border-l-emerald-500" />
         <StatCard title="SUPPORT TICKETS" value={stats.totalTickets} change="Lifetime" color="border-l-amber-500" />
         <StatCard title="UNRESOLVED" value={stats.openTickets} change="Needs Action" color="border-l-rose-500" />
@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Banner (span 2) */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden flex flex-col justify-center">
+        <div className="lg:col-span-2 bg-gradient-to-br from-[#334155] to-[#0F172A] rounded-3xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden flex flex-col justify-center">
           <div className="absolute right-0 top-0 opacity-20 pointer-events-none">
             <svg width="400" height="400" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <path fill="#ffffff" d="M45.7,-76.4C58.9,-69.3,69.1,-55.3,77.7,-40.8C86.3,-26.3,93.4,-11.3,91.8,2.7C90.2,16.7,79.9,29.7,70.5,41.8C61.1,53.9,52.6,65.1,40.7,72.2C28.8,79.3,13.5,82.3,-0.9,83.8C-15.3,85.3,-30.6,85.3,-43.3,79.2C-56,73.1,-66.1,60.9,-75.5,47.7C-84.9,34.5,-93.6,20.3,-95.1,5.3C-96.6,-9.7,-90.9,-25.5,-81.4,-38.4C-71.9,-51.3,-58.6,-61.3,-44.6,-67.7C-30.6,-74.1,-15.3,-76.9,0.5,-77.8C16.3,-78.7,32.5,-83.5,45.7,-76.4Z" transform="translate(100 100) scale(1.1)" />
@@ -81,12 +81,12 @@ export default function AdminDashboardPage() {
           
           <div className="relative z-10 max-w-lg">
             <h2 className="text-3xl font-black mb-3">Operations Hub</h2>
-            <p className="text-indigo-200 text-sm leading-relaxed mb-8 font-medium">
+            <p className="text-slate-300 text-sm leading-relaxed mb-8 font-medium">
               Your centralized control panel for managing campus resources. 
               Review active incidents, update facility statuses, and maintain operational efficiency.
             </p>
             <div className="flex gap-4">
-              <button onClick={() => navigate('/facilities')} className="bg-white text-indigo-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-indigo-50 transition-colors">
+              <button onClick={() => navigate('/facilities')} className="bg-[#10B981] text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-[#059669] transition-colors shadow-lg shadow-emerald-900/20">
                 Resource Directory
               </button>
               <button onClick={() => navigate('/tickets')} className="bg-white/10 text-white border border-white/20 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/20 transition-colors">
@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
           <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest mb-6 flex items-center justify-between">
             Active Issues
-            <span className="text-xs text-indigo-600 font-bold cursor-pointer hover:underline" onClick={() => navigate('/tickets')}>Queue</span>
+            <span className="text-xs text-emerald-600 font-bold cursor-pointer hover:underline" onClick={() => navigate('/tickets')}>Queue</span>
           </h3>
           <div className="space-y-4">
             {activeTicketsList.map((ticket, i) => (
@@ -162,13 +162,13 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Need Support */}
-        <div className="bg-indigo-50 rounded-3xl border border-indigo-100 p-8 shadow-sm flex flex-col justify-center items-center text-center">
-          <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-indigo-600 mb-4 border border-indigo-50">
+        <div className="bg-emerald-50 rounded-3xl border border-emerald-100 p-8 shadow-sm flex flex-col justify-center items-center text-center">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-emerald-600 mb-4 border border-emerald-50">
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
           </div>
-          <h3 className="font-black text-indigo-900 text-lg mb-2">Technical Assistance</h3>
-          <p className="text-indigo-600/80 text-xs font-medium mb-6">Need help with the platform integration?</p>
-          <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-3 rounded-xl transition-colors shadow-sm">
+          <h3 className="font-black text-emerald-900 text-lg mb-2">Technical Assistance</h3>
+          <p className="text-emerald-600/80 text-xs font-medium mb-6">Need help with the platform integration?</p>
+          <button className="w-full bg-[#10B981] hover:bg-[#059669] text-white font-bold text-sm py-3 rounded-xl transition-colors shadow-sm">
             Contact Tech Team
           </button>
         </div>
