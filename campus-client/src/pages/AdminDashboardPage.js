@@ -143,7 +143,11 @@ export default function AdminDashboardPage() {
           </h3>
           <div className="space-y-4">
             {activeTicketsList.map((ticket, i) => (
-              <div key={i} className="flex items-start justify-between border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+              <div 
+                key={i} 
+                onClick={() => navigate(`/tickets/${ticket.id}`)}
+                className="flex items-start justify-between border-b border-slate-50 pb-3 last:border-0 last:pb-0 cursor-pointer group hover:bg-slate-50/50 -mx-2 px-2 rounded-lg transition-colors"
+              >
                 <div className="pr-2">
                   <h4 className="font-bold text-slate-900 text-sm line-clamp-1">{ticket.title}</h4>
                   <p className="text-xs text-slate-400 font-medium mt-0.5">{getTimeAgo(ticket.createdAt)}</p>
