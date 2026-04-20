@@ -1,9 +1,24 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getAllTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
+
+const TicketSkeleton = () => (
+  <tr className="animate-pulse border-b border-gray-50">
+    <td className="px-8 py-6">
+      <div className="flex flex-col gap-2">
+        <div className="h-4 bg-slate-100 rounded-md w-1/4"></div>
+        <div className="h-6 bg-slate-100 rounded-lg w-3/4"></div>
+        <div className="h-3 bg-slate-100 rounded-md w-1/2"></div>
+      </div>
+    </td>
+    <td className="px-8 py-6"><div className="h-8 bg-slate-100 rounded-xl w-24"></div></td>
+    <td className="px-8 py-6"><div className="h-8 bg-slate-100 rounded-full w-20"></div></td>
+    <td className="px-8 py-6 text-right"><div className="h-10 bg-slate-100 rounded-xl w-32 ml-auto"></div></td>
+  </tr>
+);
 
 const TicketListPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -43,7 +58,6 @@ const TicketListPage = () => {
   const processedTickets = useMemo(() => {
     let result = [...tickets];
 
-    // Search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(t => 
@@ -53,17 +67,14 @@ const TicketListPage = () => {
       );
     }
 
-    // Status Filter
     if (statusFilter !== 'ALL') {
       result = result.filter(t => t.status === statusFilter);
     }
 
-    // Priority Filter
     if (priorityFilter !== 'ALL') {
       result = result.filter(t => t.priority === priorityFilter);
     }
 
-    // Sorting
     result.sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
       if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
@@ -77,26 +88,24 @@ const TicketListPage = () => {
     return result;
   }, [tickets, searchTerm, statusFilter, priorityFilter, sortBy]);
 
-  // Derived Pagination
   const totalPages = Math.ceil(processedTickets.length / itemsPerPage);
   const currentTickets = processedTickets.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  if (loading) return <LoadingSpinner fullScreen message="Fetching support tickets..." />;
-
   return (
-    <div className="relative pb-10">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="relative pb-10"
+    >
       {/* Header Section */}
       <div className="bg-[#5B5CE6] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shadow-sm">
         <div className="text-white">
-          <h1 className="text-2xl font-bold mb-1">
-            My Incident Reports
-          </h1>
-          <p className="text-white/80 text-sm">
-            Track and manage your submitted campus issues.
-          </p>
+          <h1 className="text-2xl font-bold mb-1">My Incident Reports</h1>
+          <p className="text-white/80 text-sm">Track and manage your submitted campus issues.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -147,20 +156,23 @@ const TicketListPage = () => {
       </div>
 
       {/* Data Grid / Cards List */}
-      {processedTickets.length > 0 ? (
-        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100/80 overflow-hidden">
+      {(processedTickets.length > 0 || loading) ? (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100/80 overflow-hidden min-h-[400px]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-100 text-[11px] uppercase tracking-widest font-bold text-gray-400">
-                  <th className="px-8 py-5 whitespace-nowrap">Ticket Info</th>
-                  <th className="px-8 py-5 whitespace-nowrap">Status</th>
-                  <th className="px-8 py-5 whitespace-nowrap">Priority</th>
-                  <th className="px-8 py-5 whitespace-nowrap text-right">Actions</th>
+                  <th className="px-8 py-5 w-1/2">Ticket Info</th>
+                  <th className="px-8 py-5 w-32">Status</th>
+                  <th className="px-8 py-5 w-40">Priority</th>
+                  <th className="px-8 py-5 w-40 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {currentTickets.map((ticket) => (
+                {loading ? (
+                  [...Array(5)].map((_, i) => <TicketSkeleton key={i} />)
+                ) : (
+                  currentTickets.map((ticket) => (
                   <tr key={ticket.id} className="group hover:bg-indigo-50/30 transition-all duration-300">
                     <td className="px-8 py-6">
                       <div className="flex flex-col gap-1.5">
@@ -205,7 +217,8 @@ const TicketListPage = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -263,7 +276,7 @@ const TicketListPage = () => {
       
       {/* Modal Outlet for Nested Routes (like CreateTicketPage) */}
       <Outlet context={{ refreshTickets: fetchTickets }} />
-    </div>
+    </motion.div>
   );
 };
 
