@@ -1,9 +1,26 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { getAllTickets } from '../services/api';
+import { useNavigate, Outlet } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getAllTickets, deleteTicket } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
+import ConfirmationModal from '../components/ConfirmationModal';
+
+const TicketSkeleton = () => (
+  <tr className="animate-pulse border-b border-gray-50">
+    <td className="px-8 py-6">
+      <div className="flex flex-col gap-2">
+        <div className="h-4 bg-slate-100 rounded-md w-1/4"></div>
+        <div className="h-6 bg-slate-100 rounded-lg w-3/4"></div>
+        <div className="h-3 bg-slate-100 rounded-md w-1/2"></div>
+      </div>
+    </td>
+    <td className="px-8 py-6"><div className="h-8 bg-slate-100 rounded-xl w-24"></div></td>
+    <td className="px-8 py-6"><div className="h-8 bg-slate-100 rounded-full w-20"></div></td>
+    <td className="px-8 py-6 text-right"><div className="h-10 bg-slate-100 rounded-xl w-32 ml-auto"></div></td>
+  </tr>
+);
 
 const TicketListPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -20,22 +37,38 @@ const TicketListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  // Modal State
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, ticketId: null });
+
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
-    fetchTickets();
+    fetchTickets(true);
+    const interval = setInterval(() => fetchTickets(false), 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchTickets = async () => {
-    setLoading(true);
+  const fetchTickets = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const { data } = await getAllTickets();
       setTickets(data);
     } catch (err) {
       setError('Failed to load tickets. Please try again later.');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteTicket(id);
+      addToast('Ticket deleted successfully', 'success');
+      fetchTickets(false);
+    } catch (err) {
+      addToast('Failed to delete ticket', 'error');
     }
   };
 
@@ -43,7 +76,6 @@ const TicketListPage = () => {
   const processedTickets = useMemo(() => {
     let result = [...tickets];
 
-    // Search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(t => 
@@ -53,17 +85,14 @@ const TicketListPage = () => {
       );
     }
 
-    // Status Filter
     if (statusFilter !== 'ALL') {
       result = result.filter(t => t.status === statusFilter);
     }
 
-    // Priority Filter
     if (priorityFilter !== 'ALL') {
       result = result.filter(t => t.priority === priorityFilter);
     }
 
-    // Sorting
     result.sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
       if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
@@ -77,26 +106,24 @@ const TicketListPage = () => {
     return result;
   }, [tickets, searchTerm, statusFilter, priorityFilter, sortBy]);
 
-  // Derived Pagination
   const totalPages = Math.ceil(processedTickets.length / itemsPerPage);
   const currentTickets = processedTickets.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  if (loading) return <LoadingSpinner fullScreen message="Fetching support tickets..." />;
-
   return (
-    <div className="relative pb-10">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="relative pb-10"
+    >
       {/* Header Section */}
-      <div className="bg-[#5B5CE6] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shadow-sm">
+      <div className="bg-[#10B981] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shadow-sm">
         <div className="text-white">
-          <h1 className="text-2xl font-bold mb-1">
-            My Incident Reports
-          </h1>
-          <p className="text-white/80 text-sm">
-            Track and manage your submitted campus issues.
-          </p>
+          <h1 className="text-2xl font-bold mb-1">My Incident Reports</h1>
+          <p className="text-white/80 text-sm">Track and manage your submitted campus issues.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -109,7 +136,7 @@ const TicketListPage = () => {
           {user?.role !== 'TECHNICIAN' && (
             <button
               onClick={() => navigate('/tickets/new')}
-              className="inline-flex items-center gap-2 bg-white text-[#5B5CE6] px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-gray-50 shadow-sm"
+              className="inline-flex items-center gap-2 bg-white text-[#10B981] px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-gray-50 shadow-sm"
             >
               <span className="text-lg leading-none mb-0.5">+</span>
               <span>New Ticket</span>
@@ -147,20 +174,23 @@ const TicketListPage = () => {
       </div>
 
       {/* Data Grid / Cards List */}
-      {processedTickets.length > 0 ? (
-        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100/80 overflow-hidden">
+      {(processedTickets.length > 0 || loading) ? (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100/80 overflow-hidden min-h-[400px]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse table-fixed">
               <thead>
-                <tr className="bg-gray-50/80 border-b border-gray-100 text-[11px] uppercase tracking-widest font-bold text-gray-400">
-                  <th className="px-8 py-5 whitespace-nowrap">Ticket Info</th>
-                  <th className="px-8 py-5 whitespace-nowrap">Status</th>
-                  <th className="px-8 py-5 whitespace-nowrap">Priority</th>
-                  <th className="px-8 py-5 whitespace-nowrap text-right">Actions</th>
+                <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] uppercase tracking-widest font-black text-slate-400">
+                  <th className="px-8 py-5 w-1/2">Ticket Info</th>
+                  <th className="px-8 py-5 w-32">Status</th>
+                  <th className="px-8 py-5 w-40">Priority</th>
+                  <th className="px-8 py-5 w-40 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {currentTickets.map((ticket) => (
+              <tbody className="divide-y divide-slate-50">
+                {loading ? (
+                  [...Array(5)].map((_, i) => <TicketSkeleton key={i} />)
+                ) : (
+                  currentTickets.map((ticket) => (
                   <tr key={ticket.id} className="group hover:bg-indigo-50/30 transition-all duration-300">
                     <td className="px-8 py-6">
                       <div className="flex flex-col gap-1.5">
@@ -196,19 +226,43 @@ const TicketListPage = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <button
-                        onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-sm font-bold text-gray-700 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-transparent hover:shadow-[0_8px_20px_rgba(99,102,241,0.25)] hover:-translate-y-0.5 transition-all duration-300"
-                      >
-                        View Details
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-xl hover:bg-emerald-600 hover:text-white hover:border-transparent transition-all"
+                        >
+                          View
+                        </button>
+                        {(user.role === 'ADMIN' || ticket.createdById === user?.id) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteModal({ isOpen: true, ticketId: ticket.id });
+                            }}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Delete Ticket"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+
+          <ConfirmationModal 
+            isOpen={deleteModal.isOpen}
+            onClose={() => setDeleteModal({ isOpen: false, ticketId: null })}
+            onConfirm={() => handleDelete(deleteModal.ticketId)}
+            title="Delete Incident Report"
+            message="Are you sure you want to permanently delete this incident report? This action cannot be undone and will remove all associated data."
+            confirmText="Delete Ticket"
+            type="danger"
+          />
 
           {/* Pagination Grid Footer */}
           {totalPages > 1 && (
@@ -263,17 +317,18 @@ const TicketListPage = () => {
       
       {/* Modal Outlet for Nested Routes (like CreateTicketPage) */}
       <Outlet context={{ refreshTickets: fetchTickets }} />
-    </div>
+    </motion.div>
   );
 };
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-blue-100/50 text-blue-700';
-    case 'IN_PROGRESS': return 'bg-yellow-100/50 text-yellow-700';
-    case 'RESOLVED': return 'bg-emerald-100/50 text-emerald-700';
-    case 'REJECTED': return 'bg-red-100/50 text-red-700';
-    default: return 'bg-gray-100/50 text-gray-600';
+    case 'OPEN': return 'bg-amber-50/80 text-amber-600 border border-amber-200/50';
+    case 'IN_PROGRESS': return 'bg-blue-50/80 text-blue-600 border border-blue-200/50';
+    case 'RESOLVED': return 'bg-emerald-50/80 text-emerald-600 border border-emerald-200/50';
+    case 'REJECTED': return 'bg-rose-50/80 text-rose-600 border border-rose-200/50';
+    case 'CLOSED': return 'bg-slate-50/80 text-slate-600 border border-slate-200/50';
+    default: return 'bg-slate-50/80 text-slate-500 border border-slate-200/50';
   }
 };
 

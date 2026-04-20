@@ -24,7 +24,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     navItems.push({ to: '/assignments', label: 'Assignments', icon: '📋' });
     navItems.push({ to: '/schedule', label: 'Schedule', icon: '📅' });
     navItems.push({ to: '/reports', label: 'Reports', icon: '📊' });
-    navItems.push({ to: '/messages', label: 'Messages', icon: '💬' });
     navItems.push({ to: '/profile', label: 'Profile', icon: '👤' });
   } else {
     navItems.push({ to: '/facilities', label: 'Facility & Assets', icon: '🏛️' });
@@ -43,23 +42,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       )}
 
       {/* Sidebar Container */}
-      <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-slate-100 z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-gradient-to-b from-[#10B981] to-[#059669] z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl`}>
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="p-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <span className="text-xl font-black text-slate-900 tracking-tight">SmartUni</span>
+              <span className="text-xl font-black text-white tracking-tight">SmartUni</span>
             </div>
           </div>
 
           {/* Navigation Links */}
           <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-            <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Main Menu</p>
+            <p className="px-4 text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-4">Main Menu</p>
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -68,8 +67,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 className={({ isActive }) => `
                   flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all
                   ${isActive 
-                    ? 'bg-[#5B5CE6] text-white shadow-md' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}
+                    ? 'bg-white text-[#059669] shadow-xl shadow-emerald-900/20' 
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'}
                 `}
               >
                 <span className="text-xl opacity-80">{item.icon}</span>
@@ -79,9 +78,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </nav>
 
           {/* Bottom Actions */}
-          <div className="p-4 mt-auto border-t border-slate-50 space-y-1.5">
+          <div className="p-4 mt-auto border-t border-white/10 space-y-1.5">
             <button 
-              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all"
             >
               <span className="text-xl opacity-80">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +91,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </button>
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-rose-100 hover:bg-rose-500/20 transition-all"
             >
               <span className="text-xl opacity-80">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
