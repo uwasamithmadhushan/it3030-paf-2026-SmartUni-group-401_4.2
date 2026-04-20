@@ -1,9 +1,24 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getAllTickets, updateTicketStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import LoadingSpinner from '../components/LoadingSpinner';
+
+const AssignmentSkeleton = () => (
+  <tr className="animate-pulse border-b border-slate-50">
+    <td className="px-8 py-6">
+      <div className="h-3 bg-slate-100 rounded w-16 mb-2"></div>
+      <div className="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
+      <div className="h-3 bg-slate-100 rounded w-1/2"></div>
+    </td>
+    <td className="px-8 py-6"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
+    <td className="px-8 py-6"><div className="h-6 bg-slate-100 rounded-full w-16"></div></td>
+    <td className="px-8 py-6"><div className="h-10 bg-slate-100 rounded w-20"></div></td>
+    <td className="px-8 py-6"><div className="h-4 bg-slate-100 rounded w-16"></div></td>
+    <td className="px-8 py-6 text-right"><div className="h-10 bg-slate-100 rounded-xl w-24 ml-auto"></div></td>
+  </tr>
+);
 
 const TechnicianAssignmentsPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -17,18 +32,22 @@ const TechnicianAssignmentsPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.id) fetchTickets();
+    if (user?.id) {
+      fetchTickets(true);
+      const interval = setInterval(() => fetchTickets(false), 30000);
+      return () => clearInterval(interval);
+    }
   }, [user?.id]);
 
-  const fetchTickets = async () => {
-    setLoading(true);
+  const fetchTickets = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const { data } = await getAllTickets();
       setTickets(data.filter(t => t.assignedTechnicianId === user.id));
     } catch (error) {
       addToast('Error fetching assignments', 'error');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -53,10 +72,13 @@ const TechnicianAssignmentsPage = () => {
     });
   }, [tickets, searchTerm, statusFilter, priorityFilter]);
 
-  if (loading) return <LoadingSpinner fullScreen message="Loading assignment console..." />;
-
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="p-8 max-w-[1600px] mx-auto space-y-8"
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Work Order Management</h1>
@@ -110,20 +132,23 @@ const TechnicianAssignmentsPage = () => {
       </div>
 
       {/* Main Table */}
-      <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden min-h-[400px]">
+        <table className="w-full text-left table-fixed">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Details</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SLA Time</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-              <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-1/3">Job Details</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-40">Location</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">Priority</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">SLA Time</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">Status</th>
+              <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest w-48">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {filteredTickets.map(t => (
+            {loading ? (
+              [...Array(5)].map((_, i) => <AssignmentSkeleton key={i} />)
+            ) : (
+              filteredTickets.map(t => (
               <tr key={t.id} className="hover:bg-slate-50/50 transition-all group">
                 <td className="px-8 py-6">
                   <p className="text-xs font-black text-indigo-600 mb-0.5">#{t.id.substring(0, 8)}</p>
@@ -163,7 +188,8 @@ const TechnicianAssignmentsPage = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
         {filteredTickets.length === 0 && (
@@ -172,7 +198,7 @@ const TechnicianAssignmentsPage = () => {
            </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -194,7 +220,7 @@ function StatusDropdown({ currentStatus, onUpdate }) {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-white hover:border-indigo-300 transition-all shadow-sm active:scale-95"
+        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-white hover:border-emerald-300 transition-all shadow-sm active:scale-95"
       >
         {currentStatus.replace('_', ' ')}
         <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
@@ -208,7 +234,7 @@ function StatusDropdown({ currentStatus, onUpdate }) {
               <button
                 key={opt}
                 onClick={() => { onUpdate(opt); setIsOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors ${currentStatus === opt ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-500'}`}
+                className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors ${currentStatus === opt ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-500'}`}
               >
                 {opt.replace('_', ' ')}
               </button>
