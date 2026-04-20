@@ -24,7 +24,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     navItems.push({ to: '/assignments', label: 'Assignments', icon: '📋' });
     navItems.push({ to: '/schedule', label: 'Schedule', icon: '📅' });
     navItems.push({ to: '/reports', label: 'Reports', icon: '📊' });
-    navItems.push({ to: '/messages', label: 'Messages', icon: '💬' });
     navItems.push({ to: '/profile', label: 'Profile', icon: '👤' });
   } else {
     navItems.push({ to: '/facilities', label: 'Facility & Assets', icon: '🏛️' });
