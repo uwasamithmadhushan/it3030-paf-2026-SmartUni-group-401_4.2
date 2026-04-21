@@ -37,6 +37,11 @@ export default function AdminBookings() {
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectModal, setRejectModal] = useState({ isOpen: false, bookingId: null });
 
+  /**
+   * Load Bookings (Side Effect)
+   * Fetches data based on the selected status filter.
+   * Wrapped in useCallback to prevent unnecessary re-renders.
+   */
   const load = useCallback(async (status) => {
     setLoading(true);
     setError('');
