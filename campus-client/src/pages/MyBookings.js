@@ -13,6 +13,11 @@ const STATUS_STYLES = {
   CANCELLED: 'bg-slate-50/80 text-slate-600 border-slate-200/50',
 };
 
+/**
+ * Helper: formatDT
+ * Demonstrates separation of concerns by extracting date formatting logic.
+ */
+
 function formatDT(iso) {
   return new Date(iso).toLocaleString(undefined, {
     dateStyle: 'medium',
