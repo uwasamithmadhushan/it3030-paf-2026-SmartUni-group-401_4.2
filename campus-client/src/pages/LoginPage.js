@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { loginUser, googleLogin } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { data } = await loginUser(form);
-      login(data.token, { username: data.username, email: data.email, role: data.role });
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
       navigate(from, { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message;
@@ -51,12 +52,26 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const { data } = await googleLogin(credentialResponse.credential);
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
+      navigate(from, { replace: true });
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      setServerError(msg || 'Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-600 rounded-full mb-4 shadow-lg shadow-emerald-200">
               <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
@@ -124,11 +139,29 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-sm font-bold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-lg shadow-emerald-900/10"
             >
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setServerError('Google sign-in was cancelled or failed.')}
+              useOneTap={false}
+              theme="outline"
+              shape="rectangular"
+              width="100%"
+              text="signin_with"
+            />
+          </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{' '}
