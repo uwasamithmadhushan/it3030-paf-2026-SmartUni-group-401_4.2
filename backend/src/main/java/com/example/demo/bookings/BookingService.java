@@ -39,6 +39,20 @@ public class BookingService {
                 .noneMatch(b -> !b.getId().equals(excludeId));
     }
 
+    /**
+     * Validates availability and persists the booking.
+     * Passing a non-null excludeId (the booking's own ID) prevents the booking
+     * from conflicting with itself on updates.
+     */
+    private Booking saveBooking(Booking booking, String excludeId) {
+        if (!isResourceAvailable(booking.getResourceId(),
+                booking.getStartTime(), booking.getEndTime(), excludeId)) {
+            throw new BookingConflictException(
+                    "Resource is already booked for that time slot");
+        }
+        return bookingRepository.save(booking);
+    }
+
     private BookingResponse toResponse(Booking b) {
         String resourceName = resourceRepository.findById(b.getResourceId())
                 .map(Resource::getName).orElse("Unknown Resource");
@@ -69,12 +83,6 @@ public class BookingService {
                     "Resource '" + resource.getName() + "' is not available for booking");
         }
 
-        if (!isResourceAvailable(request.getResourceId(),
-                request.getStartTime(), request.getEndTime(), null)) {
-            throw new BookingConflictException(
-                    "Resource '" + resource.getName() + "' is already booked for that time slot");
-        }
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
@@ -87,7 +95,7 @@ public class BookingService {
         booking.setExpectedAttendees(request.getExpectedAttendees());
         booking.setStatus(BookingStatus.PENDING);
 
-        return toResponse(bookingRepository.save(booking));
+        return toResponse(saveBooking(booking, null));
     }
 
     // ── read ─────────────────────────────────────────────────────────────────
@@ -133,17 +141,13 @@ public class BookingService {
                     "Only PENDING bookings can be approved or rejected");
         }
 
-        if (request.getStatus() == BookingStatus.APPROVED) {
-            if (!isResourceAvailable(booking.getResourceId(),
-                    booking.getStartTime(), booking.getEndTime(), booking.getId())) {
-                throw new BookingConflictException(
-                        "Cannot approve: time slot conflicts with an existing booking");
-            }
-        }
-
         booking.setStatus(request.getStatus());
         booking.setRejectionReason(request.getReason());
 
+        // saveBooking re-checks availability; pass booking.getId() to exclude itself
+        if (request.getStatus() == BookingStatus.APPROVED) {
+            return toResponse(saveBooking(booking, booking.getId()));
+        }
         return toResponse(bookingRepository.save(booking));
     }
 
