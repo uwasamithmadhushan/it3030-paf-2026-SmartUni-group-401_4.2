@@ -45,6 +45,10 @@ public class BookingService {
      * from conflicting with itself on updates.
      */
     private Booking saveBooking(Booking booking, String excludeId) {
+        if (booking.getStartTime() == null || booking.getEndTime() == null ||
+                !booking.getEndTime().isAfter(booking.getStartTime())) {
+            throw new IllegalArgumentException("End time must be after start time");
+        }
         if (!isResourceAvailable(booking.getResourceId(),
                 booking.getStartTime(), booking.getEndTime(), excludeId)) {
             throw new BookingConflictException(
@@ -69,11 +73,6 @@ public class BookingService {
     // ── create ───────────────────────────────────────────────────────────────
 
     public BookingResponse createBooking(BookingRequest request, String username) {
-        if (request.getEndTime().isBefore(request.getStartTime()) ||
-                request.getEndTime().isEqual(request.getStartTime())) {
-            throw new IllegalArgumentException("End time must be after start time");
-        }
-
         Resource resource = resourceRepository.findById(request.getResourceId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Resource not found: " + request.getResourceId()));
