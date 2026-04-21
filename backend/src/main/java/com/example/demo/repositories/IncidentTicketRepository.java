@@ -1,6 +1,7 @@
 package com.example.demo.repositories;
 
 import com.example.demo.dto.TechnicianPerformanceResult;
+import com.example.demo.dto.TechnicianStatsResult;
 import com.example.demo.models.IncidentTicket;
 import com.example.demo.models.TicketStatus;
 import org.springframework.data.mongodb.repository.Aggregation;
@@ -27,4 +28,13 @@ public interface IncidentTicketRepository extends MongoRepository<IncidentTicket
         "{ $project: { _id: 0, technicianId: '$_id', avgResolutionTimeMs: 1 } }"
     })
     List<TechnicianPerformanceResult> findAvgResolutionTimePerTechnician();
+
+    // Returns resolved-count and avg resolution time per technician for the analytics dashboard.
+    @Aggregation(pipeline = {
+        "{ $match: { status: 'RESOLVED', assignedTechnician: { $ne: null } } }",
+        "{ $group: { _id: '$assignedTechnician', resolvedCount: { $sum: 1 }, " +
+            "avgResolutionTimeMs: { $avg: { $cond: [ { $and: [ '$resolvedAt', '$createdAt' ] }, { $subtract: ['$resolvedAt', '$createdAt'] }, null ] } } } }",
+        "{ $project: { _id: 0, technicianId: '$_id', resolvedCount: 1, avgResolutionTimeMs: 1 } }"
+    })
+    List<TechnicianStatsResult> findTechnicianStats();
 }
