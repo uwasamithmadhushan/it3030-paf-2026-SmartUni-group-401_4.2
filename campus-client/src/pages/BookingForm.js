@@ -94,26 +94,41 @@ export default function BookingForm() {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      {/* Page header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">New Booking</h2>
-        <p className="text-sm text-gray-500 mt-1">Reserve a campus resource</p>
+    <div className="p-8 max-w-2xl mx-auto space-y-8">
+      {/* Redesigned Header */}
+      <div className="bg-[#10B981] rounded-[2rem] p-8 text-white shadow-lg shadow-emerald-500/10">
+        <h1 className="text-2xl font-black mb-1">New Booking</h1>
+        <p className="text-emerald-50 text-sm font-medium">Complete the details below to reserve your resource.</p>
       </div>
 
-      {/* Resource card */}
+      {/* Resource card - Enhanced */}
       {loadingResource ? (
-        <div className="text-sm text-gray-400 py-4">Loading resource…</div>
+        <div className="flex items-center gap-3 text-sm text-slate-400 py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100 animate-pulse">
+           <div className="w-4 h-4 rounded-full bg-slate-200"></div>
+           Loading resource details...
+        </div>
       ) : resourceError ? (
-        <div className="text-sm text-red-500 py-4">{resourceError}</div>
+        <div className="text-sm text-rose-500 py-4 px-6 bg-rose-50 rounded-2xl border border-rose-100 font-bold">
+           ⚠️ {resourceError}
+        </div>
       ) : resource ? (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-lg shrink-0">🏛️</div>
+        <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2rem] p-6 flex items-center gap-5 shadow-sm">
+          <div className="w-14 h-14 bg-[#10B981] rounded-2xl flex items-center justify-center text-white text-2xl shadow-inner shrink-0 rotate-3 group-hover:rotate-0 transition-transform">
+             {resource.type === 'EQUIPMENT' ? '🛠️' : '🏛️'}
+          </div>
           <div>
-            <p className="font-semibold text-gray-800">{resource.name}</p>
-            <p className="text-xs text-gray-500">
-              {TYPE_LABELS[resource.type] || resource.type} · {resource.location} · Capacity {resource.capacity}
-            </p>
+            <p className="text-lg font-black text-slate-900">{resource.name}</p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#10B981] bg-white px-2 py-0.5 rounded border border-emerald-100">
+                {TYPE_LABELS[resource.type] || resource.type}
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                📍 {resource.location}
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                👥 Cap: {resource.capacity}
+              </span>
+            </div>
           </div>
         </div>
       ) : null}
