@@ -116,6 +116,7 @@ export default function MyBookings() {
       ) : bookings.length === 0 ? (
         <EmptyState 
           title="No Bookings Found" 
+          /* UX: Providing a clear call-to-action (CTA) for empty states */
           message="You haven't reserved any campus facilities yet. Browse the available spaces to get started."
           onAction={() => navigate('/facilities')}
           actionText="Browse Facilities"
