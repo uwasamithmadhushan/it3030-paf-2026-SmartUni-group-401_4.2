@@ -7,8 +7,7 @@ export default function UserDashboardPage() {
   const [userData, setUserData] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();

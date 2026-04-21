@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate, Outlet } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getAllTickets, deleteTicket } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -8,7 +9,22 @@ import LoadingSpinner from '../components/LoadingSpinner';
 export default function TicketListPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('ALL');
+  const [, setError] = useState(null);
+  
+  // Search and Filter State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [sortBy] = useState('newest');
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Modal State
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, ticketId: null });
+
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();

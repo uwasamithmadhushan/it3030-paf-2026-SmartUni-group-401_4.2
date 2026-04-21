@@ -6,7 +6,15 @@ import { useAuth } from '../context/AuthContext';
 
 export default function MainLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [readNotifs, setReadNotifs] = useState(() => {
+    const saved = localStorage.getItem('read_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
