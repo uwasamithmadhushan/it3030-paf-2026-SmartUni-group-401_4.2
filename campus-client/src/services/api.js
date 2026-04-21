@@ -12,6 +12,24 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Normalise booking 409 Conflict errors into a readable message
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 409 &&
+      error.config?.url?.includes('/bookings')
+    ) {
+      const message =
+        error.response.data?.error ||
+        error.response.data?.message ||
+        'This time slot is already booked. Please choose a different time.';
+      return Promise.reject(new Error(message));
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const registerUser = (data) => api.post('/auth/register', data);
 export const loginUser = (data) => api.post('/auth/login', data);
@@ -55,7 +73,7 @@ export const uploadAttachment = (id, file) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post(`/tickets/${id}/attachments`, formData, {
-    headers: { 'Content-Type': undefined }
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
 };
 export const deleteAttachment = (id, filename) => api.delete(`/tickets/${id}/attachments/${filename}`);
