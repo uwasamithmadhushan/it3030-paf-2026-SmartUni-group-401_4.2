@@ -86,8 +86,13 @@ export default function BookingForm() {
       });
       navigate('/bookings/my');
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data || 'Failed to submit booking.';
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      // 409 conflicts are normalised to plain Error by the axios interceptor
+      if (err instanceof Error && !err.response) {
+        setError(err.message);
+      } else {
+        const msg = err.response?.data?.error || err.response?.data?.message || err.response?.data || 'Failed to submit booking.';
+        setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      }
     } finally {
       setSubmitting(false);
     }
