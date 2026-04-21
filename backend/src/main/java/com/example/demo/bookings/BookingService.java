@@ -49,6 +49,9 @@ public class BookingService {
                 !booking.getEndTime().isAfter(booking.getStartTime())) {
             throw new IllegalArgumentException("End time must be after start time");
         }
+        if (booking.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Cannot make a booking in the past");
+        }
         if (!isResourceAvailable(booking.getResourceId(),
                 booking.getStartTime(), booking.getEndTime(), excludeId)) {
             throw new BookingConflictException(
