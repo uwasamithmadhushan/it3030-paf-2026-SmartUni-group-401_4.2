@@ -32,6 +32,18 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     })
     List<BookingCountByResource> countBookingsByResource();
 
+    long countByStatus(BookingStatus status);
+
+    // Returns booking counts grouped by month of startTime, sorted chronologically.
+    // Capped to the last 12 months of data.
+    @Aggregation(pipeline = {
+        "{ $group: { _id: { year: { $year: '$startTime' }, month: { $month: '$startTime' } }, count: { $sum: 1 } } }",
+        "{ $sort: { '_id.year': 1, '_id.month': 1 } }",
+        "{ $limit: 12 }",
+        "{ $project: { _id: 0, year: '$_id.year', month: '$_id.month', count: 1 } }"
+    })
+    List<BookingTrendPoint> findMonthlyBookingTrends();
+
     // Returns booking counts grouped by the hour of startTime, sorted by count descending.
     // Useful for identifying peak booking hours (0–23).
     @Aggregation(pipeline = {
