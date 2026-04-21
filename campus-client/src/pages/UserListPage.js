@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getAllUsers, deleteUser, approveUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,8 +8,7 @@ const ROLE_COLORS = {
 };
 
 export default function UserListPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
