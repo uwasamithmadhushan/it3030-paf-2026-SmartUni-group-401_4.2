@@ -1,17 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --plum-dark: #190019;
+  --violet-deep: #2B124C;
+  --wine-muted: #522B5B;
+  --mauve-dusty: #854F6C;
+  --blush-soft: #DFB6B2;
+  --ivory-warm: #FBE4D8;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--plum-dark);
+  color: var(--ivory-warm);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Luxury Utilities */
+@layer components {
+  .glass-panel {
+    @apply bg-wine-muted/20 backdrop-blur-xl border border-ivory-warm/10 shadow-luxury;
+  }
+  
+  .luxury-button {
+    @apply px-8 py-3 rounded-full font-bold transition-all duration-500 active:scale-95 shadow-soft;
+    background: linear-gradient(135deg, var(--mauve-dusty), var(--wine-muted));
+    color: var(--ivory-warm);
+  }
+  
+  .luxury-button:hover {
+    @apply shadow-luxury;
+    background: linear-gradient(135deg, var(--wine-muted), var(--mauve-dusty));
+    transform: translateY(-2px);
+  }
+
+  .luxury-input {
+    @apply w-full bg-violet-deep/30 border border-ivory-warm/10 rounded-2xl px-6 py-3 text-ivory-warm placeholder-ivory-warm/40 focus:outline-none focus:ring-2 focus:ring-blush-soft/50 transition-all duration-300;
+  }
+
+  .luxury-card {
+    @apply bg-wine-muted/30 border border-ivory-warm/5 rounded-luxury p-8 shadow-soft hover:shadow-luxury transition-all duration-500;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--plum-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--wine-muted);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mauve-dusty);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-luxury {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
