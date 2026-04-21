@@ -168,7 +168,7 @@ const TechnicianDashboardPage = () => {
                       animate={{ strokeDasharray: `${stats.completionRate} 100` }}
                       transition={{ duration: 2, ease: "easeOut" }}
                     />
-                 </motion.circle>
+                  </svg>
                  <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl font-black text-ivory-warm tracking-tighter">{stats.completionRate}%</span>
                     <span className="text-[10px] font-black text-blush-soft uppercase tracking-widest mt-1">Resolution</span>
