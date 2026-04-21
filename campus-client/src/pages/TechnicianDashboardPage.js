@@ -18,6 +18,7 @@ const TechnicianDashboardPage = () => {
       const interval = setInterval(() => fetchTickets(false), 30000);
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const fetchTickets = async (showLoading = true) => {
