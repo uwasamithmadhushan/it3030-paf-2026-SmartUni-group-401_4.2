@@ -1,5 +1,6 @@
 package com.example.demo.bookings;
 
+import com.example.demo.exception.BookingConflictException;
 import com.example.demo.models.Resource;
 import com.example.demo.models.ResourceStatus;
 import com.example.demo.models.User;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,6 +22,22 @@ public class BookingService {
     private final UserRepository userRepository;
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    /**
+     * Returns true when no APPROVED or PENDING booking for the same resource
+     * overlaps the requested [start, end) window.
+     * An optional excludeId lets the approval path ignore the booking being
+     * evaluated (it would otherwise always conflict with itself).
+     */
+    private boolean isResourceAvailable(String resourceId,
+                                         LocalDateTime start,
+                                         LocalDateTime end,
+                                         String excludeId) {
+        return bookingRepository
+                .findConflictingBookings(resourceId, start, end)
+                .stream()
+                .noneMatch(b -> !b.getId().equals(excludeId));
+    }
 
     private BookingResponse toResponse(Booking b) {
         String resourceName = resourceRepository.findById(b.getResourceId())
@@ -51,11 +69,10 @@ public class BookingService {
                     "Resource '" + resource.getName() + "' is not available for booking");
         }
 
-        List<Booking> conflicts = bookingRepository.findConflictingBookings(
-                request.getResourceId(), request.getStartTime(), request.getEndTime());
-        if (!conflicts.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Time slot conflicts with an existing approved booking");
+        if (!isResourceAvailable(request.getResourceId(),
+                request.getStartTime(), request.getEndTime(), null)) {
+            throw new BookingConflictException(
+                    "Resource '" + resource.getName() + "' is already booked for that time slot");
         }
 
         User user = userRepository.findByUsername(username)
@@ -117,11 +134,10 @@ public class BookingService {
         }
 
         if (request.getStatus() == BookingStatus.APPROVED) {
-            List<Booking> conflicts = bookingRepository.findConflictingBookings(
-                    booking.getResourceId(), booking.getStartTime(), booking.getEndTime());
-            if (!conflicts.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Cannot approve: time slot conflicts with an existing approved booking");
+            if (!isResourceAvailable(booking.getResourceId(),
+                    booking.getStartTime(), booking.getEndTime(), booking.getId())) {
+                throw new BookingConflictException(
+                        "Cannot approve: time slot conflicts with an existing booking");
             }
         }
 
