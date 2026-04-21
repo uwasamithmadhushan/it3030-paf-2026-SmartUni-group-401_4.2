@@ -20,46 +20,165 @@ const DashboardRedirect = () => {
   if (user?.role === 'ADMIN') return <AdminDashboardPage />;
   if (user?.role === 'TECHNICIAN') return <TechnicianDashboardPage />;
   return <UserDashboardPage />;
-};
+}
 
 function App() {
   const { user } = useAuth();
 
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <Routes key={user?.id}>
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+    <ToastProvider>
+      <AuthProvider>
+      <BrowserRouter>
+        <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Protected Main Layout Wrapper */}
-          <Route element={<ProtectedRoute><MainLayout><DashboardRedirect /></MainLayout></ProtectedRoute>}>
-            <Route path="/dashboard" element={<DashboardRedirect />} />
-          </Route>
-
-          {/* Profile Hub */}
-          <Route path="/profile" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          {/* Protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <MainLayout><DashboardRouter /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <MainLayout><ProfilePage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Facilities & Assets */}
-          <Route path="/facilities" element={<ProtectedRoute><MainLayout><AssetList /></MainLayout></ProtectedRoute>} />
-          <Route path="/facilities/add" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><AssetForm /></MainLayout></ProtectedRoute>} />
-          <Route path="/facilities/edit/:id" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><AssetForm /></MainLayout></ProtectedRoute>} />
+          <Route
+            path="/facilities"
+            element={
+              <ProtectedRoute>
+                <MainLayout><AssetList /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/facilities/add"
+            element={
+              <ProtectedRoute>
+                <MainLayout><AssetForm /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/facilities/edit/:id"
+            element={
+              <ProtectedRoute>
+                <MainLayout><AssetForm /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Incident Tickets */}
-          <Route path="/tickets" element={<ProtectedRoute><MainLayout><TicketListPage /></MainLayout></ProtectedRoute>} />
+          {/* Bookings */}
+          <Route
+            path="/bookings/new"
+            element={
+              <ProtectedRoute>
+                <MainLayout><BookingForm /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings/my"
+            element={
+              <ProtectedRoute>
+                <MainLayout><MyBookings /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Technician only */}
+          <Route
+            path="/assignments"
+            element={
+              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
+                <MainLayout><TechnicianAssignmentsPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
+                <MainLayout><TechnicianSchedulePage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
+                <MainLayout><TechnicianReportsPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin only */}
-          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><UserListPage /></MainLayout></ProtectedRoute>} />
+          <Route
+            path="/admin/bookings"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <MainLayout><AdminBookings /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <MainLayout><UserListPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <MainLayout><AdminDashboardPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Incident Tickets */}
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute>
+                <MainLayout><TicketListPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="new" element={<CreateTicketPage />} />
+          </Route>
+          <Route
+            path="/tickets/:id"
+            element={
+              <ProtectedRoute>
+                <MainLayout><TicketDetailsPage /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
-      </ToastProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ToastProvider>
+    </GoogleOAuthProvider>
   );
 }
 
 export default App;
+
