@@ -21,6 +21,11 @@ function formatDT(iso) {
 }
 
 export default function MyBookings() {
+  /**
+   * MyBookings Component
+   * Purpose: Provides a student-centric view of all resource reservations.
+   * Features: Real-time status tracking, cancellation workflow, and responsive layout.
+   */
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [bookings, setBookings] = useState([]);
@@ -113,6 +118,10 @@ export default function MyBookings() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {bookings.map((b) => (
+            /* 
+               Motion Component: layout prop enables automatic layout animations 
+               when items are added, removed, or reordered.
+            */
             <motion.div
               layout
               key={b.id}
