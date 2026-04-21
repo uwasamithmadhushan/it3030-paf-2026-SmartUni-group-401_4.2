@@ -192,7 +192,11 @@ public class IncidentTicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
         ticket.setStatus(request.getStatus());
-        
+
+        if (request.getStatus() == TicketStatus.RESOLVED && ticket.getResolvedAt() == null) {
+            ticket.setResolvedAt(LocalDateTime.now());
+        }
+
         if (request.getNote() != null && !request.getNote().isEmpty()) {
             TechnicianUpdate update = new TechnicianUpdate(technicianId, request.getNote(), LocalDateTime.now());
             ticket.getUpdates().add(update);
