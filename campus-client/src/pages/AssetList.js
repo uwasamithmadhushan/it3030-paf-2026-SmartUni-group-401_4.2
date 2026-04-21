@@ -2,15 +2,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAllAssets, deleteAsset } from '../services/api';
-import StatusBadge from '../components/StatusBadge';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const RESOURCE_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
 
 const TYPE_LABELS = {
   LECTURE_HALL: 'Lecture Hall',
-  LAB: 'Lab',
-  MEETING_ROOM: 'Meeting Room',
-  EQUIPMENT: 'Equipment',
+  LAB: 'Research Lab',
+  MEETING_ROOM: 'Executive Suite',
+  EQUIPMENT: 'Precision Equipment',
 };
 
 export default function AssetList() {
@@ -23,7 +23,6 @@ export default function AssetList() {
   const [deleting, setDeleting] = useState(null);
 
   const [filters, setFilters] = useState({ type: '', capacity: '', location: '' });
-  const [applied, setApplied] = useState({});
 
   const fetchAssets = useCallback(async (params) => {
     setLoading(true);
@@ -32,7 +31,7 @@ export default function AssetList() {
       const res = await getAllAssets(params);
       setAssets(res.data);
     } catch {
-      setError('Failed to load assets. Ensure the backend is running on port 8080.');
+      setError('Failed to load assets. Cloud synchronization error.');
     } finally {
       setLoading(false);
     }
@@ -47,19 +46,17 @@ export default function AssetList() {
   };
 
   const handleApplyFilter = () => {
-    setApplied(filters);
     fetchAssets(filters);
   };
 
   const handleClearFilter = () => {
     const empty = { type: '', capacity: '', location: '' };
     setFilters(empty);
-    setApplied(empty);
     fetchAssets({});
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resource?')) return;
+    if (!window.confirm('Are you sure you want to decommission this resource?')) return;
     setDeleting(id);
     try {
       await deleteAsset(id);
@@ -71,156 +68,161 @@ export default function AssetList() {
     }
   };
 
+  if (loading) return <LoadingSpinner fullScreen message="Consulting Archive..." />;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="max-w-[1600px] mx-auto space-y-10 animate-luxury font-['Outfit']">
+      
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-ivory-warm/10">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Facilities & Assets</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage campus resources and facilities</p>
+           <h1 className="text-4xl font-black text-ivory-warm tracking-tight">Facility Portfolio</h1>
+           <p className="text-sm font-bold text-blush-soft uppercase tracking-widest mt-2">Campus Assets & Executive Suites</p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={() => navigate('/facilities/add')}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow"
-          >
-            + Add New Asset
-          </button>
-        )}
+        <div className="flex items-center gap-4">
+           {isAdmin && (
+             <button
+               onClick={() => navigate('/facilities/add')}
+               className="luxury-button"
+             >
+               Add New Asset
+             </button>
+           )}
+        </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Filter Resources</p>
-        <div className="flex flex-wrap gap-3 items-end">
-          {/* Type dropdown */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">Resource Type</label>
+      {/* Luxury Filter Bar */}
+      <div className="luxury-card !p-8 bg-violet-deep/20">
+        <div className="flex flex-wrap gap-8 items-end">
+          <div className="flex-1 min-w-[240px] space-y-3">
+            <label className="text-[10px] font-black text-blush-soft uppercase tracking-widest ml-2">Resource Category</label>
             <select
               name="type"
               value={filters.type}
               onChange={handleFilterChange}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="luxury-input appearance-none cursor-pointer"
             >
-              <option value="">All Types</option>
+              <option value="">All Categories</option>
               {RESOURCE_TYPES.map((t) => (
                 <option key={t} value={t}>{TYPE_LABELS[t]}</option>
               ))}
             </select>
           </div>
 
-          {/* Min Capacity */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">Min Capacity</label>
+          <div className="w-40 space-y-3">
+            <label className="text-[10px] font-black text-blush-soft uppercase tracking-widest ml-2">Min Capacity</label>
             <input
               type="number"
               name="capacity"
               value={filters.capacity}
               onChange={handleFilterChange}
-              min="1"
-              placeholder="e.g. 30"
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              placeholder="Ex: 50"
+              className="luxury-input"
             />
           </div>
 
-          {/* Location */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">Location</label>
+          <div className="flex-1 min-w-[240px] space-y-3">
+            <label className="text-[10px] font-black text-blush-soft uppercase tracking-widest ml-2">Location Hub</label>
             <input
               type="text"
               name="location"
               value={filters.location}
               onChange={handleFilterChange}
-              placeholder="e.g. Block A"
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              placeholder="Ex: Executive Wing"
+              className="luxury-input"
             />
           </div>
 
-          <button
-            onClick={handleApplyFilter}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            Apply
-          </button>
-          <button
-            onClick={handleClearFilter}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            Clear
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={handleApplyFilter}
+              className="px-8 py-3 rounded-xl bg-ivory-warm text-plum-dark font-black text-xs uppercase tracking-widest hover:bg-blush-soft transition-all"
+            >
+              Apply
+            </button>
+            <button
+              onClick={handleClearFilter}
+              className="px-8 py-3 rounded-xl bg-white/5 text-ivory-warm border border-ivory-warm/10 font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all"
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-16 text-gray-400 text-sm">Loading assets...</div>
-        ) : error ? (
-          <div className="flex items-center justify-center py-16 text-red-500 text-sm">{error}</div>
-        ) : assets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-400 text-sm gap-2">
-            <span className="text-4xl">🏛️</span>
-            No assets found. Try clearing the filter or adding a new asset.
+      {error && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs font-bold text-rose-400 flex items-center gap-3">
+           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+           {error}
+        </div>
+      )}
+
+      {/* Asset Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {assets.map((asset) => (
+          <div key={asset.id} className="luxury-card group hover:-translate-y-2">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-deep to-wine-muted flex items-center justify-center text-2xl shadow-soft group-hover:rotate-6 transition-all duration-500">
+                {asset.type === 'LECTURE_HALL' ? '🏛️' : asset.type === 'LAB' ? '🧪' : asset.type === 'MEETING_ROOM' ? '💼' : '🛠️'}
+              </div>
+              <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${asset.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                {asset.status}
+              </span>
+            </div>
+
+            <h3 className="text-xl font-black text-ivory-warm mb-2 group-hover:text-blush-soft transition-colors">{asset.name}</h3>
+            <p className="text-xs font-bold text-ivory-warm/40 uppercase tracking-widest mb-6">{TYPE_LABELS[asset.type] || asset.type}</p>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+               <div className="p-4 rounded-xl bg-plum-dark/40 border border-ivory-warm/5">
+                  <p className="text-[9px] font-black text-blush-soft uppercase tracking-widest mb-1">Capacity</p>
+                  <p className="text-sm font-bold text-ivory-warm">{asset.capacity} Seats</p>
+               </div>
+               <div className="p-4 rounded-xl bg-plum-dark/40 border border-ivory-warm/5">
+                  <p className="text-[9px] font-black text-blush-soft uppercase tracking-widest mb-1">Location</p>
+                  <p className="text-sm font-bold text-ivory-warm truncate">{asset.location}</p>
+               </div>
+            </div>
+
+            <div className="flex gap-4 pt-6 border-t border-ivory-warm/5">
+              {isAdmin ? (
+                <>
+                  <button
+                    onClick={() => navigate(`/facilities/edit/${asset.id}`)}
+                    className="flex-1 py-3 rounded-xl bg-white/5 border border-ivory-warm/10 text-[10px] font-black text-ivory-warm uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(asset.id)}
+                    disabled={deleting === asset.id}
+                    className="px-5 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all disabled:opacity-50"
+                  >
+                    {deleting === asset.id ? '...' : (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="w-full py-3 rounded-xl bg-ivory-warm text-plum-dark font-black text-[10px] uppercase tracking-widest hover:bg-blush-soft transition-all opacity-50 cursor-not-allowed"
+                  disabled
+                >
+                  Reserve Soon
+                </button>
+              )}
+            </div>
           </div>
-        ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                {['Name', 'Type', 'Capacity', 'Location', 'Status', 'Actions'].map((h) => (
-                  <th key={h} className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {assets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-4 font-medium text-gray-800">{asset.name}</td>
-                  <td className="px-5 py-4 text-gray-600">{TYPE_LABELS[asset.type] || asset.type}</td>
-                  <td className="px-5 py-4 text-gray-600">{asset.capacity}</td>
-                  <td className="px-5 py-4 text-gray-600">{asset.location}</td>
-                  <td className="px-5 py-4">
-                    <StatusBadge status={asset.status} />
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      {isAdmin ? (
-                        <>
-                          <button
-                            onClick={() => navigate(`/facilities/edit/${asset.id}`)}
-                            className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(asset.id)}
-                            disabled={deleting === asset.id}
-                            className="text-xs bg-red-50 hover:bg-red-100 text-red-700 font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                          >
-                            {deleting === asset.id ? 'Deleting…' : 'Delete'}
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
-                          title="Booking coming soon"
-                          disabled
-                        >
-                          📅 Book
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        ))}
       </div>
 
-      {!loading && !error && (
-        <p className="text-xs text-gray-400 text-right">{assets.length} record(s) shown</p>
+      {assets.length === 0 && (
+        <div className="py-32 text-center luxury-card border-dashed">
+          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+             <span className="text-4xl opacity-20">🏛️</span>
+          </div>
+          <h3 className="text-xl font-black text-ivory-warm/40 italic tracking-tight">No assets in the registry match your selection</h3>
+        </div>
       )}
     </div>
   );
