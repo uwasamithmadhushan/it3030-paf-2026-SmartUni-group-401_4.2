@@ -216,3 +216,9 @@ export default function MyBookings() {
     </motion.div>
   );
 }
+
+/**
+ * End of MyBookings Module
+ * This component completes the student-facing portion of the 
+ * Booking Management Feature, ensuring a seamless facility reservation experience.
+ */
