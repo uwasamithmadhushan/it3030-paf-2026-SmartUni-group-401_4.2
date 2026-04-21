@@ -39,6 +39,7 @@ const TicketDetailsPage = () => {
         clearInterval(interval);
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
 
   const fetchData = async (isRefresh = false, isMounted = true) => {
@@ -636,15 +637,6 @@ const TicketDetailsPage = () => {
 
 /* --- UI Helper Functions --- */
 
-const DetailItem = ({ label, value, valueClass = "font-bold text-slate-900" }) => (
-  <div>
-    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-    <p className={`text-sm truncate ${valueClass}`}>
-      {typeof value === 'string' ? value.replace('_', ' ') : value}
-    </p>
-  </div>
-);
-
 const getStatusStyles = (status) => {
   switch (status) {
     case 'OPEN': return 'bg-amber-50/80 text-amber-600 border border-amber-200/50';
@@ -685,39 +677,6 @@ const MetaChip = ({ icon, label, value, color = "slate" }) => {
       </div>
     </div>
   );
-};
-
-const getStatusBorderColor = (status) => {
-  switch (status) {
-    case 'OPEN': return 'border-amber-400 shadow-amber-900/5';
-    case 'IN_PROGRESS': return 'border-blue-400 shadow-blue-900/5';
-    case 'RESOLVED': return 'border-emerald-400 shadow-emerald-900/5';
-    case 'CLOSED': return 'border-slate-400 shadow-slate-900/5';
-    case 'REJECTED': return 'border-rose-400 shadow-rose-900/5';
-    default: return 'border-emerald-400 shadow-emerald-900/5';
-  }
-};
-
-const getStatusBannerGradient = (status) => {
-  switch (status) {
-    case 'OPEN': return 'from-amber-500/10 to-transparent';
-    case 'IN_PROGRESS': return 'from-blue-500/10 to-transparent';
-    case 'RESOLVED': return 'from-emerald-500/10 to-transparent';
-    case 'CLOSED': return 'from-slate-500/10 to-transparent';
-    case 'REJECTED': return 'from-rose-500/10 to-transparent';
-    default: return 'from-emerald-500/10 to-transparent';
-  }
-};
-
-const getStatusPillStyles = (status) => {
-  switch (status) {
-    case 'OPEN': return 'bg-amber-50 text-amber-600 border-amber-200';
-    case 'IN_PROGRESS': return 'bg-blue-50 text-blue-600 border-blue-200';
-    case 'RESOLVED': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-    case 'CLOSED': return 'bg-slate-50 text-slate-600 border-slate-200';
-    case 'REJECTED': return 'bg-rose-50 text-rose-600 border-rose-200';
-    default: return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-  }
 };
 
 const getPriorityColor = (priority) => {

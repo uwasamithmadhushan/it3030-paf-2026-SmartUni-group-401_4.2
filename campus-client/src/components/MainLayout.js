@@ -15,7 +15,7 @@ export default function MainLayout({ children }) {
     return saved ? JSON.parse(saved) : [];
   });
   
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
