@@ -12,6 +12,24 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Normalise booking 409 Conflict errors into a readable message
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 409 &&
+      error.config?.url?.includes('/bookings')
+    ) {
+      const message =
+        error.response.data?.error ||
+        error.response.data?.message ||
+        'This time slot is already booked. Please choose a different time.';
+      return Promise.reject(new Error(message));
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const registerUser = (data) => api.post('/auth/register', data);
 export const loginUser = (data) => api.post('/auth/login', data);
