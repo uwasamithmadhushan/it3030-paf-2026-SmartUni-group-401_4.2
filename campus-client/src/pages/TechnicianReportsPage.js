@@ -15,6 +15,7 @@ const TechnicianReportsPage = () => {
     fetchData();
     const interval = setInterval(fetchData, 30000); // Update every 30s
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
