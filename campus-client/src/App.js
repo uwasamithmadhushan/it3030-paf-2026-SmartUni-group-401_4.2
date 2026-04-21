@@ -13,6 +13,8 @@ import AssetForm from './pages/AssetForm';
 import TicketListPage from './pages/TicketListPage';
 import DashboardPage from './pages/DashboardPage';
 
+import { ToastProvider } from './context/ToastContext';
+
 const DashboardRedirect = () => {
   const { user } = useAuth();
   if (user?.role === 'ADMIN') return <AdminDashboardPage />;
@@ -25,8 +27,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes key={user?.id}>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes key={user?.id}>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -54,6 +57,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }
