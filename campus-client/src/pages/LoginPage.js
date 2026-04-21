@@ -14,8 +14,6 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const registered = location.state?.registered;
-  const pendingApproval = location.state?.pendingApproval;
   const from = location.state?.from || '/dashboard';
 
   const validate = () => {
@@ -41,131 +39,76 @@ export default function LoginPage() {
       login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
       navigate(from, { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message;
-      if (msg) {
-        setServerError(msg);
-      } else {
-        setServerError(err.response?.status === 401 ? 'Invalid username or password.' : 'Login failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
-    try {
-      const { data } = await googleLogin(credentialResponse.credential);
-      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
-      navigate(from, { replace: true });
-    } catch (err) {
-      const msg = err.response?.data?.message;
-      setServerError(msg || 'Google sign-in failed. Please try again.');
+      setServerError(err.response?.status === 401 ? 'Invalid credentials.' : 'Login failed.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-slate-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-600 rounded-full mb-4 shadow-lg shadow-emerald-200">
-              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    <div className="min-h-screen bg-plum-dark flex items-center justify-center p-6 relative overflow-hidden font-['Outfit']">
+      {/* Premium Background Blurs */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-violet-deep/30 rounded-full blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] bg-mauve-dusty/10 rounded-full blur-[100px]" />
+
+      <div className="w-full max-w-md relative z-10 animate-luxury">
+        <div className="bg-wine-muted/20 backdrop-blur-3xl rounded-luxury shadow-luxury border border-ivory-warm/10 p-10 lg:p-12">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-mauve-dusty to-wine-muted rounded-3xl mb-6 shadow-soft">
+              <svg className="w-10 h-10 text-ivory-warm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to Smart Campus</p>
+            <h1 className="text-3xl font-black text-ivory-warm tracking-tight">Luxury Entry</h1>
+            <p className="text-sm font-medium text-blush-soft mt-2 uppercase tracking-widest">Smart Campus Concierge</p>
           </div>
 
-          {registered && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Account created! Please sign in.
-            </div>
-          )}
-
-          {pendingApproval && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800 flex items-start gap-2">
-              <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span>Your admin account is <strong>pending approval</strong>. An existing admin must approve it before you can sign in.</span>
-            </div>
-          )}
-
           {serverError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs font-bold text-rose-400 flex items-center gap-3">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
               {serverError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-2 ml-4">Username</label>
               <input
                 type="text"
                 name="username"
                 value={form.username}
                 onChange={handleChange}
-                placeholder="Your username"
-                autoComplete="username"
-                className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${errors.username ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                placeholder="Ex: beauty.admin"
+                className="luxury-input"
               />
-              {errors.username && <p className="mt-1 text-xs text-red-500">{errors.username}</p>}
+              {errors.username && <p className="mt-2 text-[10px] font-bold text-rose-400 ml-4">{errors.username}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-2 ml-4">Password</label>
               <input
                 type="password"
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder="Your password"
-                autoComplete="current-password"
-                className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                placeholder="••••••••"
+                className="luxury-input"
               />
-              {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+              {errors.password && <p className="mt-2 text-[10px] font-bold text-rose-400 ml-4">{errors.password}</p>}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-sm font-bold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-lg shadow-emerald-900/10"
+              className="w-full luxury-button mt-4"
             >
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? 'Authenticating...' : 'Sign In to Portal'}
             </button>
           </form>
 
-          <div className="my-5 flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">OR</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setServerError('Google sign-in was cancelled or failed.')}
-              useOneTap={false}
-              theme="outline"
-              shape="rectangular"
-              width="100%"
-              text="signin_with"
-            />
-          </div>
-
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-indigo-600 font-medium hover:underline">Register</Link>
+          <p className="text-center text-xs font-medium text-ivory-warm/40 mt-8">
+            New here?{' '}
+            <Link to="/register" className="text-blush-soft font-black hover:text-ivory-warm transition-colors underline decoration-ivory-warm/20 underline-offset-4">Create Account</Link>
           </p>
         </div>
       </div>
