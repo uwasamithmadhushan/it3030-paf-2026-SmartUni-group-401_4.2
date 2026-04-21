@@ -1,5 +1,6 @@
 package com.example.demo.bookings;
 
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -23,4 +24,11 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     List<Booking> findConflictingBookings(String resourceId,
                                           LocalDateTime start,
                                           LocalDateTime end);
+
+    // Returns the total number of bookings for each resourceId across all statuses.
+    @Aggregation(pipeline = {
+        "{ $group: { _id: '$resourceId', count: { $sum: 1 } } }",
+        "{ $project: { _id: 0, resourceId: '$_id', count: 1 } }"
+    })
+    List<BookingCountByResource> countBookingsByResource();
 }
