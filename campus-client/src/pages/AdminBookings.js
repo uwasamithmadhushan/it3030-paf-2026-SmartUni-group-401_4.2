@@ -111,39 +111,26 @@ export default function AdminBookings() {
         />
       )}
 
-      <div className="p-8 max-w-[1400px] mx-auto space-y-8">
-        {/* Redesigned Admin Header */}
-        <div className="bg-[#10B981] rounded-[2.5rem] p-8 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-lg shadow-emerald-500/10">
-          <div className="text-white text-center lg:text-left">
-            <h1 className="text-2xl font-black mb-1 tracking-tight">Booking Management</h1>
-            <p className="text-emerald-50 text-sm font-medium opacity-90">Review and action all campus resource requests.</p>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Booking Management</h2>
+            <p className="text-sm text-gray-500 mt-1">Review and action all booking requests</p>
           </div>
-          
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {/* Status Filter Styled */}
-            <div className="flex items-center gap-3 bg-white/10 p-1.5 rounded-2xl border border-white/10">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-3">Filter</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-white text-[#10B981] text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl border-none focus:ring-2 focus:ring-white/50 cursor-pointer shadow-sm"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s || 'All Statuses'}</option>
-                ))}
-              </select>
-            </div>
 
-            {/* Refresh Button */}
-            <button
-              onClick={() => load(statusFilter)}
-              className="w-11 h-11 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-2xl transition-all text-white shadow-sm active:scale-95"
-              title="Refresh Data"
+          {/* Status filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-600">Filter:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s || 'All Statuses'}</option>
+              ))}
+            </select>
           </div>
         </div>
 
