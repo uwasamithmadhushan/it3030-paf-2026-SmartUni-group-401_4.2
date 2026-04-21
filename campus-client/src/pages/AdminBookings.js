@@ -24,6 +24,11 @@ function formatDT(iso) {
 // Removed custom RejectModal in favor of reusable ConfirmationModal
 
 export default function AdminBookings() {
+  /**
+   * AdminBookings Component
+   * Purpose: Administrative moderation dashboard for campus resource reservations.
+   * Logic: Fetches all bookings (optionally filtered by status) and provides approval/rejection workflows.
+   */
   const { addToast } = useToast();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -159,6 +164,10 @@ export default function AdminBookings() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
+                {/* 
+                   Dynamic Row Generation: Iterating through bookings array 
+                   to render table rows with unique keys and conditional logic.
+                */}
                 {bookings.map((b) => (
                   <tr key={b.id} className="group hover:bg-slate-50/50 transition-all duration-300">
                     <td className="px-8 py-6">
