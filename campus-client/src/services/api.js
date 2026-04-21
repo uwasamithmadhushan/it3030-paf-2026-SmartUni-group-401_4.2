@@ -54,7 +54,7 @@ export const uploadAttachment = (id, file) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post(`/tickets/${id}/attachments`, formData, {
-    headers: { 'Content-Type': undefined }
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
 };
 export const deleteAttachment = (id, filename) => api.delete(`/tickets/${id}/attachments/${filename}`);
