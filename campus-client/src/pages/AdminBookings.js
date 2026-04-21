@@ -71,6 +71,7 @@ export default function AdminBookings() {
   };
 
   const handleRejectConfirm = async (reason) => {
+    // Defensive Programming: Ensuring mandatory data is present before API call
     if (!reason?.trim()) {
       addToast('Rejection reason is required', 'error');
       return;
