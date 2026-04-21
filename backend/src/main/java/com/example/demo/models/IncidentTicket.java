@@ -42,4 +42,7 @@ public class IncidentTicket {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    /** Set when status transitions to RESOLVED. Used for performance metrics. */
+    private LocalDateTime resolvedAt;
 }
