@@ -42,10 +42,10 @@ export const updateAsset = (id, data) => api.put(`/assets/${id}`, data);
 export const deleteAsset = (id) => api.delete(`/assets/${id}`);
 
 // Incident Tickets
-export const getAllTickets = () => api.get('/tickets');
-export const getMyTickets = () => api.get('/tickets/my');
-export const getAssignedTickets = () => api.get('/tickets/assigned/me');
-export const getTechnicianDashboard = () => api.get('/tickets/technician/dashboard');
+export const getAllTickets = (params) => api.get('/tickets', { params });
+export const getMyTickets = (params) => api.get('/tickets/my', { params });
+export const getAssignedTickets = (params) => api.get('/tickets/assigned/me', { params });
+export const getTechnicianDashboardStats = () => api.get('/tickets/technician/dashboard');
 export const getTicketById = (id) => api.get(`/tickets/${id}`);
 export const createTicket = (data) => api.post('/tickets', data);
 export const updateTicket = (id, data) => api.put(`/tickets/${id}`, data);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTechnicianDashboard, getAssignedTickets } from '../services/api';
+import { getTechnicianDashboardStats, getAssignedTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { 
@@ -32,7 +32,7 @@ export default function TechnicianDashboardPage() {
     if (showLoading) setLoading(true);
     try {
       const [statsRes, ticketsRes] = await Promise.all([
-        getTechnicianDashboard(),
+        getTechnicianDashboardStats(),
         getAssignedTickets()
       ]);
       setStats(statsRes.data);
