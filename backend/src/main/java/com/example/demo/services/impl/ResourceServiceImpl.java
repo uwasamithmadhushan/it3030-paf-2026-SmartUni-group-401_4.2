@@ -43,6 +43,9 @@ public class ResourceServiceImpl implements ResourceService {
                 .build();
 
         Resource savedResource = resourceRepository.save(resource);
+        if (savedResource == null) {
+            throw new RuntimeException("Critical failure: Data persistence returned null for resource " + resource.getResourceCode());
+        }
         return mapToResponse(savedResource);
     }
 
