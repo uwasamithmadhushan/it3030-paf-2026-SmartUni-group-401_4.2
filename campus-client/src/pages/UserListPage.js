@@ -2,14 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllUsers, deleteUser, approveUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const ROLE_COLORS = {
-  ADMIN: 'bg-purple-100 text-purple-700',
-  USER: 'bg-blue-100 text-blue-700',
-};
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function UserListPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -31,11 +27,7 @@ export default function UserListPage() {
       const { data } = await getAllUsers();
       setUsers(data);
     } catch (err) {
-      if (err.response?.status === 403 || err.response?.status === 401) {
-        setError('Access denied. Admin privileges required.');
-      } else {
-        setError('Failed to load users. Please try again.');
-      }
+      setError(err.response?.status === 403 ? 'Access denied. Specialist privileges required.' : 'Failed to load member registry.');
     } finally {
       setLoading(false);
     }
@@ -49,7 +41,7 @@ export default function UserListPage() {
       setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch {
-      setError('Failed to delete user.');
+      setError('Failed to revoke access.');
     } finally {
       setDeleting(false);
     }
@@ -78,167 +70,108 @@ export default function UserListPage() {
       u.role?.toLowerCase().includes(search.toLowerCase()))
   );
 
+  if (loading) return <LoadingSpinner fullScreen message="Accessing Registry..." />;
+
   return (
-    <>
-        {/* Header content moved to page body */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800 tracking-tight">System User Directory</h1>
-            <p className="text-sm text-gray-500 mt-0.5 font-medium">{users.length} registered accounts in database</p>
-          </div>
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search users…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-            />
-            <svg className="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+    <div className="max-w-[1400px] mx-auto space-y-8 animate-luxury font-['Outfit']">
+      
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-ivory-warm/10">
+        <div>
+           <h1 className="text-4xl font-black text-ivory-warm tracking-tight">Member Registry</h1>
+           <p className="text-sm font-bold text-blush-soft uppercase tracking-widest mt-2">{users.length} Registered Personnel</p>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600 font-bold flex items-center gap-3">
-            <span className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">⚠️</span>
-            {error}
-          </div>
-        )}
-
-        {/* Pending Admin Approvals */}
-        {pendingAdmins.length > 0 && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl overflow-hidden">
-            <div className="px-6 py-3 border-b border-yellow-200 flex items-center gap-2">
-              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm font-semibold text-yellow-800">Pending Admin Approvals ({pendingAdmins.length})</span>
-            </div>
-            <div className="divide-y divide-yellow-100">
-              {pendingAdmins.map((u) => (
-                <div key={u.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-yellow-200 flex items-center justify-center text-yellow-800 text-xs font-bold flex-shrink-0">
-                      {u.username?.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{u.username}</p>
-                      <p className="text-xs text-gray-500">{u.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full font-semibold">PENDING</span>
-                    <button
-                      onClick={() => handleApprove(u)}
-                      disabled={approving === u.id}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 transition"
-                    >
-                      {approving === u.id ? 'Approving…' : '✓ Approve'}
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(u)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Table Card */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50 overflow-hidden">
-          {loading ? (
-            <div className="flex items-center justify-center py-32">
-              <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-32 text-slate-300">
-              <div className="text-6xl mb-6">🔍</div>
-              <p className="text-sm font-black uppercase tracking-widest opacity-40">No matching users found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50/50 border-b border-slate-50">
-                  <tr>
-                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-10 py-5">Identity</th>
-                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-10 py-5">Communication</th>
-                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-10 py-5">Privileges</th>
-                    <th className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest px-10 py-5">Operations</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filtered.map((u) => (
-                    <tr key={u.id} className="hover:bg-indigo-50/10 transition-colors group">
-                      <td className="px-10 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-[1.25rem] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-black group-hover:scale-110 transition-transform">
-                            {u.username?.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-black text-slate-800 text-base">{u.username}</p>
-                            <p className="text-[10px] text-slate-400 font-mono tracking-tighter opacity-70">UID: {u.id?.slice(-12)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-10 py-6 text-slate-600 font-bold">{u.email}</td>
-                      <td className="px-10 py-6">
-                        <span className={`inline-block text-[10px] font-black px-4 py-1.5 rounded-full border tracking-widest ${ROLE_COLORS[u.role] || 'bg-slate-50 text-slate-600 border-slate-100 text-slate-400'}`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setDeleteTarget(u)}
-                            disabled={u.id === user?.id}
-                            className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white disabled:opacity-20 disabled:grayscale transition-all shadow-sm active:scale-90"
-                          >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div className="relative w-full md:w-80">
+          <svg className="absolute left-4 top-3 w-4 h-4 text-ivory-warm/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search personnel..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 bg-white/5 border border-ivory-warm/10 rounded-xl text-sm text-ivory-warm placeholder:text-ivory-warm/20 outline-none focus:ring-2 focus:ring-blush-soft/30 transition-all"
+          />
         </div>
+      </div>
 
-      {/* Delete Confirm Modal */}
+      {error && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs font-bold text-rose-400 flex items-center gap-3">
+           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+           {error}
+        </div>
+      )}
+
+      {/* Grid of Users */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map((u) => (
+          <div key={u.id} className="luxury-card group">
+            <div className="flex items-center gap-5 mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mauve-dusty to-wine-muted flex items-center justify-center text-xl font-black text-ivory-warm shadow-soft group-hover:rotate-6 transition-all duration-500">
+                {u.username?.slice(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-black text-ivory-warm truncate">{u.username}</h3>
+                <p className="text-[10px] font-black text-blush-soft uppercase tracking-widest">{u.role}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-8">
+               <div className="flex items-center gap-3 text-ivory-warm/50">
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  <span className="text-xs font-medium truncate">{u.email}</span>
+               </div>
+               <div className="flex items-center gap-3 text-ivory-warm/30">
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                  <span className="text-[10px] font-mono">{u.id}</span>
+               </div>
+            </div>
+
+            <div className="flex gap-3 pt-6 border-t border-ivory-warm/5">
+              <button
+                onClick={() => navigate(`/admin/users/edit/${u.id}`)}
+                className="flex-1 py-2 rounded-xl bg-white/5 border border-ivory-warm/10 text-[10px] font-black text-ivory-warm uppercase tracking-widest hover:bg-white/10 transition-all"
+              >
+                Refine
+              </button>
+              <button
+                onClick={() => setDeleteTarget(u)}
+                disabled={u.id === user?.id}
+                className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Confirmation Overlay */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm p-10 text-center">
-            <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl">
-              🗑️
-            </div>
-            <h3 className="font-black text-slate-900 text-xl mb-2">Delete User?</h3>
-            <p className="text-sm text-slate-500 font-medium mb-8 leading-relaxed">
-              Are you sure you want to permanently remove <strong>{deleteTarget.username}</strong>? This action cannot be undone.
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="w-full py-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-black uppercase tracking-widest transition shadow-lg shadow-rose-200 disabled:opacity-50"
-              >
-                {deleting ? 'Deleting…' : 'Yes, Delete Account'}
-              </button>
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="w-full py-4 rounded-2xl bg-slate-50 text-slate-500 text-sm font-black uppercase tracking-widest hover:bg-slate-100 transition"
-              >
-                Keep User
-              </button>
+        <div className="fixed inset-0 bg-plum-dark/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
+          <div className="luxury-card max-w-sm w-full bg-violet-deep border-ivory-warm/20 shadow-luxury animate-luxury">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-400 border border-rose-500/20">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+              </div>
+              <h3 className="text-xl font-black text-ivory-warm mb-2">Revoke Access?</h3>
+              <p className="text-sm font-medium text-ivory-warm/50 mb-8">This action will permanently remove <span className="text-blush-soft font-bold">{deleteTarget.username}</span> from the executive registry.</p>
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="flex-1 py-3 rounded-2xl border border-ivory-warm/10 text-[10px] font-black text-ivory-warm uppercase tracking-widest hover:bg-white/5 transition-all"
+                >
+                  Retain
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 py-3 rounded-2xl bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 shadow-lg shadow-rose-500/20 transition-all disabled:opacity-50"
+                >
+                  {deleting ? 'Revoking...' : 'Revoke Now'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

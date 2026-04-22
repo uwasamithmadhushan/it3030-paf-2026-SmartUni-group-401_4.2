@@ -31,13 +31,14 @@ export const createAsset = (data) => api.post('/assets', data);
 export const updateAsset = (id, data) => api.put(`/assets/${id}`, data);
 export const deleteAsset = (id) => api.delete(`/assets/${id}`);
 
-// Bookings Management Integration
-// Follows RESTful standards for resource reservation and moderation
-export const createBooking = (data) => api.post('/bookings', data);
-export const getMyBookings = () => api.get('/bookings/my');
-export const getAllBookings = (status) => api.get('/bookings', { params: status ? { status } : {} });
-export const getBookingById = (id) => api.get(`/bookings/${id}`);
-export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
-export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
+// Incident Tickets
+export const getAllTickets = () => api.get('/tickets');
+export const getTicketById = (id) => api.get(`/tickets/${id}`);
+export const createTicket = (data) => api.post('/tickets', data);
+export const updateTicket = (id, data) => api.put(`/tickets/${id}`, data);
+export const deleteTicket = (id) => api.delete(`/tickets/${id}`);
+
+// Bookings
+export const getMyBookings = () => api.get('/bookings/me');
 
 export default api;
