@@ -110,34 +110,37 @@ export default function UserListPage() {
 
         {/* Pending Admin Approvals */}
         {pendingAdmins.length > 0 && (
-          <div className="mb-8 bg-amber-50 border border-amber-100 rounded-3xl overflow-hidden shadow-sm">
-            <div className="px-8 py-4 border-b border-amber-100 flex items-center gap-3 bg-amber-100/30">
-              <span className="text-lg">🛡️</span>
-              <span className="text-sm font-black text-amber-900 uppercase tracking-widest">Pending Admin Approvals ({pendingAdmins.length})</span>
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl overflow-hidden">
+            <div className="px-6 py-3 border-b border-yellow-200 flex items-center gap-2">
+              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-semibold text-yellow-800">Pending Admin Approvals ({pendingAdmins.length})</span>
             </div>
-            <div className="divide-y divide-amber-100">
+            <div className="divide-y divide-yellow-100">
               {pendingAdmins.map((u) => (
-                <div key={u.id} className="px-8 py-6 flex items-center justify-between gap-4 hover:bg-amber-100/10 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-200 flex items-center justify-center text-amber-900 text-sm font-black shadow-inner">
+                <div key={u.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-yellow-200 flex items-center justify-center text-yellow-800 text-xs font-bold flex-shrink-0">
                       {u.username?.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-black text-slate-800">{u.username}</p>
-                      <p className="text-xs text-slate-500 font-bold">{u.email}</p>
+                      <p className="font-medium text-gray-800">{u.username}</p>
+                      <p className="text-xs text-gray-500">{u.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full font-semibold">PENDING</span>
                     <button
                       onClick={() => handleApprove(u)}
                       disabled={approving === u.id}
-                      className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition shadow-lg shadow-amber-200"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 transition"
                     >
-                      {approving === u.id ? 'Approving…' : '✓ Grant Access'}
+                      {approving === u.id ? 'Approving…' : '✓ Approve'}
                     </button>
                     <button
                       onClick={() => setDeleteTarget(u)}
-                      className="px-4 py-2.5 rounded-xl text-xs font-black text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
                     >
                       Reject
                     </button>
@@ -190,8 +193,8 @@ export default function UserListPage() {
                           {u.role}
                         </span>
                       </td>
-                      <td className="px-10 py-6 text-right">
-                        <div className="flex items-center justify-end gap-3">
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setDeleteTarget(u)}
                             disabled={u.id === user?.id}

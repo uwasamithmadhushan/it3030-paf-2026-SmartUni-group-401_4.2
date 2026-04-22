@@ -13,18 +13,6 @@ import AssetForm from './pages/AssetForm';
 import BookingForm from './pages/BookingForm';
 import MyBookings from './pages/MyBookings';
 import AdminBookings from './pages/AdminBookings';
-import CreateTicketPage from './pages/CreateTicketPage';
-import TicketListPage from './pages/TicketListPage';
-import TicketDetailsPage from './pages/TicketDetailsPage';
-import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-
-function DashboardRouter() {
-  const { user } = useAuth();
-  if (user?.role === 'ADMIN') return <AdminDashboardPage />;
-  if (user?.role === 'TECHNICIAN') return <TechnicianDashboardPage />;
-  return <UserDashboardPage />;
-}
 
 function App() {
   return (
