@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { loginUser, loginWithGoogle } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogIn, 
@@ -14,8 +15,7 @@ import {
   Globe,
   Zap,
   Activity,
-  Shield,
-  Fingerprint
+  Shield
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -58,6 +58,23 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const { data } = await loginWithGoogle(credentialResponse.credential);
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
+      navigate(from, { replace: true });
+    } catch (err) {
+      setServerError(err.response?.data?.message || 'Google Authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    setServerError('Google Login was unsuccessful. Please try again.');
   };
 
   return (
@@ -197,22 +214,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="relative my-14">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-luna-aqua/5"></div></div>
-          <div className="relative flex justify-center text-[10px] font-black tracking-[0.5em] uppercase">
-            <span className="bg-luna-midnight px-8 text-text-muted border border-luna-aqua/10 rounded-full py-2">Biometric / SSO Sync</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-           <button className="luna-button-outline !py-4 flex items-center justify-center gap-4 group">
-              <Globe size={18} className="text-luna-aqua group-hover:rotate-12 transition-transform" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Federated Auth</span>
-           </button>
-           <button className="luna-button-outline !py-4 flex items-center justify-center gap-4 group">
-              <Fingerprint size={18} className="text-luna-aqua group-hover:scale-110 transition-transform" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Bio-Verification</span>
-           </button>
+        <div className="flex justify-center">
+           <GoogleLogin
+             onSuccess={handleGoogleSuccess}
+             onError={handleGoogleFailure}
+             theme="filled_black"
+             shape="pill"
+             size="large"
+             text="signin_with"
+           />
         </div>
 
         <p className="text-center text-sm font-medium text-text-muted mt-14">

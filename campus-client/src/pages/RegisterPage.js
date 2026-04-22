@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerUser } from '../services/api';
+import { registerUser, loginWithGoogle } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserPlus, 
@@ -11,7 +13,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   Sparkles,
-  Fingerprint,
   Zap,
   Globe,
   Layers,
@@ -27,10 +28,28 @@ const ROLES = [
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ username: '', email: '', password: '', role: 'USER' });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const { data } = await loginWithGoogle(credentialResponse.credential);
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setServerError(err.response?.data?.message || 'Google Authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    setServerError('Google Login was unsuccessful. Please try again.');
+  };
 
   const validate = () => {
     const e = {};
@@ -105,7 +124,7 @@ export default function RegisterPage() {
 
            <div className="space-y-6">
               <IdentityFeature icon={<ShieldCheck size={20} />} label="Encrypted Sync" />
-              <IdentityFeature icon={<Fingerprint size={20} />} label="Biometric Audit" />
+              <IdentityFeature icon={<Globe size={20} />} label="Universal Login" />
               <IdentityFeature icon={<Zap size={20} />} label="Velocity Dispatch" />
            </div>
 
@@ -233,7 +252,25 @@ export default function RegisterPage() {
                </button>
             </div>
 
-            <div className="text-center pt-8 border-t border-luna-aqua/5">
+            <div className="relative my-10">
+               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-luna-aqua/5"></div></div>
+               <div className="relative flex justify-center text-[10px] font-black tracking-[0.5em] uppercase">
+                 <span className="bg-luna-midnight px-8 text-text-muted border border-luna-aqua/10 rounded-full py-2">Or Register With</span>
+               </div>
+            </div>
+
+            <div className="flex justify-center">
+               <GoogleLogin
+                 onSuccess={handleGoogleSuccess}
+                 onError={handleGoogleFailure}
+                 theme="filled_black"
+                 shape="pill"
+                 size="large"
+                 text="signup_with"
+               />
+            </div>
+
+            <div className="text-center pt-8 mt-8 border-t border-luna-aqua/5">
                <p className="text-xs font-medium text-text-muted">
                  Existing Operator?{' '}
                  <Link to="/login" className="text-luna-aqua font-black hover:text-white transition-colors flex items-center justify-center gap-2 mt-4 uppercase tracking-[0.2em] group">
