@@ -5,6 +5,10 @@ import com.example.demo.models.*;
 import com.example.demo.repositories.IncidentTicketRepository;
 import com.example.demo.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +31,7 @@ public class IncidentTicketService {
 
     private final IncidentTicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final MongoTemplate mongoTemplate;
     private final Path root = Paths.get("uploads");
 
     private String generateTicketCode() {
@@ -182,29 +187,79 @@ public class IncidentTicketService {
         return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public List<TicketResponse> getTickets(User user) {
-        List<IncidentTicket> tickets;
-        if (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TECHNICIAN) {
-            tickets = ticketRepository.findAll();
-        } else {
-            tickets = ticketRepository.findByCreatedBy(user.getId());
+    public List<TicketResponse> getTickets(User user, String status, String priority, String category, String search, String sort) {
+        Query query = new Query();
+        if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.TECHNICIAN) {
+            query.addCriteria(Criteria.where("createdBy").is(user.getId()));
         }
-        return tickets.stream().map(this::mapToResponse).collect(Collectors.toList());
-    }
-
-    public List<TicketResponse> getMyTickets(User user) {
-        return ticketRepository.findByCreatedBy(user.getId()).stream()
+        applyFilters(query, status, priority, category, search, sort);
+        return mongoTemplate.find(query, IncidentTicket.class).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<TicketResponse> getAssignedTickets(User user) {
+    public List<TicketResponse> getMyTickets(User user, String status, String priority, String category, String search, String sort) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("createdBy").is(user.getId()));
+        applyFilters(query, status, priority, category, search, sort);
+        return mongoTemplate.find(query, IncidentTicket.class).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<TicketResponse> getAssignedTickets(User user, String status, String priority, String category, String search, String sort) {
         if (user.getRole() != UserRole.TECHNICIAN && user.getRole() != UserRole.ADMIN) {
             throw new AccessDeniedException("Only technicians and admins can view assigned tickets");
         }
-        return ticketRepository.findByAssignedTechnician(user.getId()).stream()
+
+        Query query = new Query();
+        query.addCriteria(Criteria.where("assignedTechnician").is(user.getId()));
+        applyFilters(query, status, priority, category, search, sort);
+        return mongoTemplate.find(query, IncidentTicket.class).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void applyFilters(Query query, String status, String priority, String category, String search, String sort) {
+        if (status != null && !status.equalsIgnoreCase("ALL")) {
+            query.addCriteria(Criteria.where("status").is(status.toUpperCase()));
+        }
+        if (priority != null && !priority.equalsIgnoreCase("ALL")) {
+            query.addCriteria(Criteria.where("priority").is(priority.toUpperCase()));
+        }
+        if (category != null && !category.equalsIgnoreCase("ALL")) {
+            query.addCriteria(Criteria.where("category").is(category.toUpperCase()));
+        }
+        if (search != null && !search.isEmpty()) {
+            Criteria searchCriteria = new Criteria().orOperator(
+                Criteria.where("ticketCode").regex(search, "i"),
+                Criteria.where("title").regex(search, "i"),
+                Criteria.where("location").regex(search, "i"),
+                Criteria.where("category").regex(search, "i")
+            );
+            query.addCriteria(searchCriteria);
+        }
+
+        if (sort != null) {
+            switch (sort) {
+                case "NEWEST":
+                    query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+                    break;
+                case "OLDEST":
+                    query.with(Sort.by(Sort.Direction.ASC, "createdAt"));
+                    break;
+                case "PRIORITY_HIGH_TO_LOW":
+                    query.with(Sort.by(Sort.Direction.DESC, "priority"));
+                    break;
+                case "RECENTLY_UPDATED":
+                    query.with(Sort.by(Sort.Direction.DESC, "updatedAt"));
+                    break;
+                default:
+                    query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+            }
+        } else {
+            query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
     }
 
     public DashboardStatsResponse getTechnicianDashboardStats(User user) {

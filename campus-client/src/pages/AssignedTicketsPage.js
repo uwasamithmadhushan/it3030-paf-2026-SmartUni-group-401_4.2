@@ -1,59 +1,54 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAssignedTickets, updateTicketStatus } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useToast } from '../context/ToastContext';
+import TechnicianFilters from '../components/technician/TechnicianFilters';
 import { 
-  Wrench, Search, Clock, MapPin, Activity, Layers, CheckCircle2, 
-  ChevronRight, ArrowRight, ShieldCheck, ClipboardList, AlertTriangle
+  Wrench, Clock, MapPin, CheckCircle2, 
+  ArrowRight, ShieldCheck, ClipboardList, AlertTriangle
 } from 'lucide-react';
 
 export default function AssignedTicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [filterParams, setFilterParams] = useState(null);
   
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const fetchTickets = async (showLoading = true) => {
+  const fetchTickets = useCallback(async (params = filterParams, showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const { data } = await getAssignedTickets();
+      const { data } = await getAssignedTickets(params);
       setTickets(data);
     } catch (error) {
       addToast('Failed to sync assignments', 'error');
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [filterParams, addToast]);
 
   useEffect(() => {
-    fetchTickets(true);
-    const interval = setInterval(() => fetchTickets(false), 30000);
+    fetchTickets(filterParams, true);
+    const interval = setInterval(() => fetchTickets(filterParams, false), 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [filterParams, fetchTickets]);
+
+  const handleFilterChange = (newFilters) => {
+    setFilterParams(newFilters);
+  };
 
   const handleStatusUpdate = async (id, status) => {
     try {
       await updateTicketStatus(id, { status });
       addToast(`Status updated to ${status}`, 'success');
-      fetchTickets(false);
+      fetchTickets(filterParams, false);
     } catch (error) {
       addToast('Status update failed', 'error');
     }
   };
-
-  const filteredTickets = useMemo(() => {
-    return tickets.filter(t => {
-      const matchesSearch = (t.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || 
-                           (t.id?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [tickets, searchTerm, statusFilter]);
 
   if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Accessing Assignment Matrix..." />;
 
@@ -74,52 +69,16 @@ export default function AssignedTicketsPage() {
         </motion.div>
       </div>
 
-      {/* Filters */}
-      <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/5 !p-10">
-        <div className="flex flex-col xl:flex-row gap-10 items-end">
-          <div className="flex-1 min-w-[320px] group">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Incident Scan Archive</label>
-            <div className="relative">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={22} />
-              <input 
-                type="text" 
-                placeholder="Search ticket title or ID..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="luna-input !pl-16 !py-5"
-              />
-            </div>
-          </div>
-          
-          <div className="w-full xl:w-72 group">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Operational Status</label>
-            <div className="relative">
-              <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={22} />
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="luna-input !pl-16 !py-5 appearance-none cursor-pointer"
-              >
-                <option value="ALL" className="bg-luna-midnight">All Operational States</option>
-                <option value="OPEN" className="bg-luna-midnight">Open Request</option>
-                <option value="IN_PROGRESS" className="bg-luna-midnight">In Progress</option>
-                <option value="RESOLVED" className="bg-luna-midnight">Resolved</option>
-                <option value="CLOSED" className="bg-luna-midnight">Closed</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-6 py-5 bg-luna-aqua/5 border border-luna-aqua/10 rounded-3xl">
-             <Activity size={20} className="text-luna-aqua animate-pulse" />
-             <span className="text-[10px] font-black text-white uppercase tracking-widest">{filteredTickets.length} Deployments Found</span>
-          </div>
-        </div>
-      </div>
+      {/* Filters Section */}
+      <TechnicianFilters 
+        onFilterChange={handleFilterChange} 
+        resultsCount={tickets.length} 
+      />
 
       {/* Ticket Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence mode="popLayout">
-          {filteredTickets.map((t, idx) => (
+          {tickets.map((t, idx) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, y: 20 }}
@@ -128,62 +87,62 @@ export default function AssignedTicketsPage() {
               className="luna-card group hover:border-luna-aqua/30 flex flex-col relative overflow-hidden !p-0"
             >
               {/* Card Header Background */}
-              <div className="h-32 bg-luna-midnight/60 relative overflow-hidden border-b border-luna-aqua/5">
+              <div className="h-20 bg-luna-midnight/60 relative overflow-hidden border-b border-luna-aqua/5">
                  <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
                  <div className="absolute inset-0 bg-gradient-to-t from-luna-midnight to-transparent" />
-                 <div className="absolute top-8 left-10 flex items-center gap-5">
-                    <span className={`luna-badge !px-4 !py-1 ${t.priority === 'URGENT' || t.priority === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20 luna-glow' : 'bg-luna-steel/20 text-luna-cyan border-luna-aqua/10'}`}>
+                 <div className="absolute top-5 left-6 flex items-center gap-4">
+                    <span className={`luna-badge !px-3 !py-0.5 !text-[8px] ${t.priority === 'URGENT' || t.priority === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20 luna-glow' : 'bg-luna-steel/20 text-luna-cyan border-luna-aqua/10'}`}>
                        {t.priority} DELTA
                     </span>
-                    <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">INC-#{t.id.substring(0, 12)}</span>
+                    <span className="text-[8px] font-black text-text-muted uppercase tracking-[0.4em]">{t.ticketCode || `INC-#${t.id.substring(0, 8)}`}</span>
                  </div>
               </div>
 
-              <div className="p-10 flex-1 flex flex-col">
-                <h3 className="text-3xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-4">{t.title}</h3>
+              <div className="p-6 flex-1 flex flex-col">
+                <h3 className="text-xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-3 truncate">{t.title}</h3>
                 
-                <div className="flex flex-wrap gap-8 items-center mb-10 text-[10px] font-black text-text-muted uppercase tracking-widest">
-                   <div className="flex items-center gap-2">
-                      <Clock size={14} className="text-luna-aqua" /> Created: {new Date(t.createdAt).toLocaleDateString()}
+                <div className="flex flex-wrap gap-4 items-center mb-6 text-[8px] font-black text-text-muted uppercase tracking-widest">
+                   <div className="flex items-center gap-1.5">
+                      <Clock size={12} className="text-luna-aqua" /> {new Date(t.createdAt).toLocaleDateString()}
                    </div>
-                   <div className="flex items-center gap-2">
-                      <MapPin size={14} className="text-luna-aqua" /> Sector: {t.location || 'Central Nexus'}
+                   <div className="flex items-center gap-1.5">
+                      <MapPin size={12} className="text-luna-aqua" /> {t.location || 'Central Nexus'}
                    </div>
                 </div>
 
-                <div className="p-8 rounded-[2rem] bg-luna-midnight/60 border border-luna-aqua/5 mb-10 group/assignment hover:border-luna-aqua/20 transition-all">
-                   <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-4">Operational Status</p>
-                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-                      <div className="flex items-center gap-5">
-                        <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-transform ${
+                <div className="p-4 rounded-2xl bg-luna-midnight/60 border border-luna-aqua/5 mb-6 group/assignment hover:border-luna-aqua/20 transition-all">
+                   <p className="text-[8px] font-black text-text-muted uppercase tracking-widest mb-3">Status</p>
+                   <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-transform ${
                           t.status === 'RESOLVED' ? 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20' : 
                           t.status === 'IN_PROGRESS' ? 'bg-luna-cyan/10 text-luna-cyan border-luna-cyan/20' :
                           'bg-luna-steel/10 text-text-muted border-luna-steel/20'
                         }`}>
-                            {t.status === 'RESOLVED' ? <CheckCircle2 size={24} /> : t.status === 'IN_PROGRESS' ? <Wrench size={24} /> : <AlertTriangle size={24} />}
+                            {t.status === 'RESOLVED' ? <CheckCircle2 size={18} /> : t.status === 'IN_PROGRESS' ? <Wrench size={18} /> : <AlertTriangle size={18} />}
                         </div>
                         <div>
-                            <p className="text-lg font-black text-white tracking-tight">{t.status.replace('_', ' ')}</p>
+                            <p className="text-sm font-black text-white tracking-tight">{t.status.replace('_', ' ')}</p>
                         </div>
                       </div>
                       
                       {t.status === 'OPEN' && (
                         <button 
-                          onClick={() => handleStatusUpdate(t.id, 'IN_PROGRESS')}
-                          className="luna-button !px-6 !py-3 !text-xs !rounded-xl bg-luna-cyan/10 hover:bg-luna-cyan/20 text-luna-cyan"
+                          onClick={(e) => { e.stopPropagation(); handleStatusUpdate(t.id, 'IN_PROGRESS'); }}
+                          className="luna-button !px-4 !py-2 !text-[9px] !rounded-lg bg-luna-cyan/10 hover:bg-luna-cyan/20 text-luna-cyan"
                         >
-                          Start Work
+                          Start
                         </button>
                       )}
                    </div>
                 </div>
 
-                <div className="mt-auto pt-10 border-t border-luna-aqua/5 flex justify-end">
+                <div className="mt-auto pt-6 border-t border-luna-aqua/5 flex justify-end">
                    <button 
                       onClick={() => navigate(`/tickets/${t.id}`)}
-                      className="w-16 h-16 luna-glass rounded-3xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all shadow-xl shadow-luna-aqua/5 group/inspect"
+                      className="w-10 h-10 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all shadow-xl shadow-luna-aqua/5 group/inspect"
                    >
-                      <ArrowRight size={24} className="group-hover/inspect:translate-x-2 transition-transform" />
+                      <ArrowRight size={18} className="group-hover/inspect:translate-x-1.5 transition-transform" />
                    </button>
                 </div>
               </div>
@@ -202,7 +161,7 @@ export default function AssignedTicketsPage() {
         </AnimatePresence>
       </div>
 
-      {filteredTickets.length === 0 && (
+      {tickets.length === 0 && !loading && (
         <div className="py-48 text-center luna-card border-dashed border-luna-aqua/10 flex flex-col items-center gap-10 opacity-20">
           <div className="w-32 h-32 luna-glass rounded-[3rem] flex items-center justify-center text-luna-aqua">
              <ClipboardList size={64} />
@@ -211,7 +170,6 @@ export default function AssignedTicketsPage() {
              <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">No Assignments</h3>
              <p className="text-base font-medium text-text-muted mt-4">No active assignments match your current filters.</p>
           </div>
-          <button onClick={() => {setSearchTerm(''); setStatusFilter('ALL');}} className="luna-button-outline !px-12 !py-4">Reset Filters</button>
         </div>
       )}
     </div>
