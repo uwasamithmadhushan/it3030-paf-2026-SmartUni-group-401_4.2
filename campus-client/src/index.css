@@ -11,7 +11,7 @@
   --luna-steel: #26658C;
   --luna-navy: #023859;
   --luna-midnight: #011C40;
-  
+
   /* Semantic Mappings */
   --bg-gradient: linear-gradient(135deg, var(--luna-midnight), var(--luna-navy));
   --surface-glass: rgba(2, 56, 89, 0.4);
@@ -48,14 +48,14 @@ body {
     border: 1px solid var(--border-light);
     box-shadow: 0 8px 32px 0 rgba(1, 28, 64, 0.5);
   }
-  
+
   .luna-button {
     @apply px-8 py-3 rounded-xl font-bold transition-all duration-500 active:scale-95 flex items-center justify-center gap-2;
     background: linear-gradient(135deg, var(--luna-steel), var(--luna-navy));
     color: white;
     border: 1px solid rgba(167, 235, 242, 0.2);
   }
-  
+
   .luna-button:hover {
     background: linear-gradient(135deg, var(--luna-cyan), var(--luna-steel));
     box-shadow: 0 0 20px rgba(167, 235, 242, 0.3);
@@ -86,7 +86,7 @@ body {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-light);
   }
-  
+
   .luna-card:hover {
     border-color: rgba(167, 235, 242, 0.3);
     box-shadow: 0 12px 40px 0 rgba(1, 28, 64, 0.7);
@@ -170,9 +170,17 @@ body {
 
 /* Animations */
 @keyframes glow {
-  0% { box-shadow: 0 0 5px rgba(167, 235, 242, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(167, 235, 242, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(167, 235, 242, 0.2); }
+  0% {
+    box-shadow: 0 0 5px rgba(167, 235, 242, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(167, 235, 242, 0.4);
+  }
+
+  100% {
+    box-shadow: 0 0 5px rgba(167, 235, 242, 0.2);
+  }
 }
 
 .luna-glow {
@@ -180,9 +188,17 @@ body {
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .luna-float {

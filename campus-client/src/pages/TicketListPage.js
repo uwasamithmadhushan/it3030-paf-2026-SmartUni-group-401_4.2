@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllTickets } from '../services/api';
+import { getAllTickets, getMyTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,12 +37,18 @@ export default function TicketListPage() {
 
   const fetchTickets = async () => {
     try {
-      const { data } = await getAllTickets();
-      let filtered = data;
+      let data;
       if (user.role === 'USER') {
-        filtered = data.filter(t => t.createdById === user.id);
-      } else if (user.role === 'TECHNICIAN') {
-        filtered = data.filter(t => t.assignedTechnician === user.username);
+        const res = await getMyTickets();
+        data = res.data;
+      } else {
+        const res = await getAllTickets();
+        data = res.data;
+      }
+      
+      let filtered = data;
+      if (user.role === 'TECHNICIAN') {
+        filtered = data.filter(t => t.assignedTechnicianId === user.id);
       }
       setTickets(filtered);
     } catch (err) {
@@ -62,10 +68,10 @@ export default function TicketListPage() {
 
   if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Registry..." />;
 
-  const statusFilters = ['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED'];
+  const statusFilters = ['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'];
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-12">
+    <div className="max-w-[1600px] mx-auto space-y-12 pb-20">
       
       {/* Executive Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-luna-aqua/10">
@@ -83,14 +89,16 @@ export default function TicketListPage() {
            <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity incident monitoring and operational resource tracking.</p>
         </motion.div>
         
-        <motion.button 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate('/tickets/new')} 
-          className="luna-button !px-10 !py-4 flex items-center gap-4 shadow-2xl shadow-luna-aqua/20"
-        >
-          <Plus size={20} /> Register Discrepancy
-        </motion.button>
+        {user.role === 'USER' && (
+          <motion.button 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => navigate('/tickets/new')} 
+            className="luna-button !px-10 !py-4 flex items-center gap-4 shadow-2xl shadow-luna-aqua/20"
+          >
+            <Plus size={20} /> Register Discrepancy
+          </motion.button>
+        )}
       </div>
 
       {/* Intelligence Control Bar */}
@@ -145,7 +153,7 @@ export default function TicketListPage() {
                       <span className={`luna-badge !px-4 !py-1 ${getStatusStyles(ticket.status)}`}>
                         {ticket.status.replace('_', ' ')}
                       </span>
-                      <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">ID: #{ticket.id.substring(0, 12)}</span>
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">Code: {ticket.ticketCode}</span>
                     </div>
                     <h3 className="text-2xl font-black text-white group-hover:text-luna-aqua transition-colors truncate tracking-tight">{ticket.title}</h3>
                     <div className="flex flex-wrap items-center gap-8 mt-5 text-text-muted font-black text-[10px] uppercase tracking-[0.2em]">
@@ -174,9 +182,9 @@ export default function TicketListPage() {
               <div className="absolute bottom-0 left-0 h-1 bg-luna-aqua/5 w-full">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: ticket.status === 'RESOLVED' ? '100%' : ticket.status === 'IN_PROGRESS' ? '50%' : '10%' }}
+                  animate={{ width: ticket.status === 'CLOSED' || ticket.status === 'RESOLVED' ? '100%' : ticket.status === 'IN_PROGRESS' ? '50%' : '10%' }}
                   transition={{ duration: 1, ease: "circOut" }}
-                  className={`h-full bg-luna-aqua ${ticket.status === 'RESOLVED' ? 'luna-glow' : ''}`} 
+                  className={`h-full bg-luna-aqua ${ticket.status === 'RESOLVED' || ticket.status === 'CLOSED' ? 'luna-glow' : ''}`} 
                 />
               </div>
             </motion.div>
@@ -222,13 +230,15 @@ const getStatusStyles = (status) => {
     case 'OPEN': return 'bg-luna-steel/10 text-luna-cyan border-luna-cyan/20';
     case 'IN_PROGRESS': return 'bg-luna-cyan/10 text-luna-cyan border-luna-cyan/20';
     case 'RESOLVED': return 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20 luna-glow';
+    case 'CLOSED': return 'bg-text-muted/10 text-text-muted border-text-muted/20';
+    case 'REJECTED': return 'bg-red-500/10 text-red-400 border-red-500/20';
     default: return 'bg-white/5 text-text-muted border-white/5';
   }
 };
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
-    case 'CRITICAL': return { text: 'text-red-400' };
+    case 'URGENT': return { text: 'text-red-400' };
     case 'HIGH': return { text: 'text-luna-aqua' };
     case 'MEDIUM': return { text: 'text-luna-cyan' };
     default: return { text: 'text-text-muted' };

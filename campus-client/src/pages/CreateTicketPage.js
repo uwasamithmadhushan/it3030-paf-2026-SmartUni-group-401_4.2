@@ -20,7 +20,9 @@ import {
   Zap,
   Activity,
   Globe,
-  Plus
+  Plus,
+  User,
+  Mail
 } from 'lucide-react';
 
 export default function CreateTicketPage() {
@@ -31,11 +33,13 @@ export default function CreateTicketPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'IT_SUPPORT',
+    category: 'ELECTRICAL',
     priority: 'MEDIUM',
     resourceId: '',
     location: '',
-    contactDetails: '',
+    preferredContactName: '',
+    preferredContactEmail: '',
+    preferredContactPhone: '',
     attachments: []
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -184,11 +188,13 @@ export default function CreateTicketPage() {
                                 onChange={handleChange}
                                 className="luna-input !pl-16 appearance-none cursor-pointer"
                               >
-                                <option value="IT_SUPPORT">IT Infrastructure</option>
-                                <option value="MAINTENANCE">Facility Maintenance</option>
-                                <option value="SECURITY">Campus Security</option>
-                                <option value="LAB_EQUIPMENT">Laboratory Systems</option>
-                                <option value="OTHER">General Request</option>
+                                <option value="ELECTRICAL">Electrical</option>
+                                <option value="NETWORK">Network</option>
+                                <option value="FURNITURE">Furniture</option>
+                                <option value="EQUIPMENT">Equipment</option>
+                                <option value="CLEANING">Cleaning</option>
+                                <option value="SAFETY">Safety</option>
+                                <option value="OTHER">Other</option>
                               </select>
                             </div>
                           </div>
@@ -203,10 +209,10 @@ export default function CreateTicketPage() {
                                 onChange={handleChange}
                                 className="luna-input !pl-16 appearance-none cursor-pointer"
                               >
-                                <option value="LOW">Tier 4: Baseline</option>
-                                <option value="MEDIUM">Tier 3: Nominal</option>
-                                <option value="HIGH">Tier 2: Urgent</option>
-                                <option value="CRITICAL">Tier 1: Critical</option>
+                                <option value="LOW">Tier 4: Low</option>
+                                <option value="MEDIUM">Tier 3: Medium</option>
+                                <option value="HIGH">Tier 2: High</option>
+                                <option value="URGENT">Tier 1: Urgent</option>
                               </select>
                             </div>
                           </div>
@@ -256,15 +262,46 @@ export default function CreateTicketPage() {
                        </div>
 
                        <div className="group">
-                          <label className="luna-label">Synchronized Contact</label>
+                          <label className="luna-label">Preferred Contact Name</label>
+                          <div className="relative">
+                            <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <input
+                              required
+                              name="preferredContactName"
+                              value={formData.preferredContactName}
+                              onChange={handleChange}
+                              placeholder="Name..."
+                              className="luna-input !pl-16"
+                            />
+                          </div>
+                       </div>
+
+                       <div className="group">
+                          <label className="luna-label">Preferred Contact Email</label>
+                          <div className="relative">
+                            <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <input
+                              required
+                              type="email"
+                              name="preferredContactEmail"
+                              value={formData.preferredContactEmail}
+                              onChange={handleChange}
+                              placeholder="Email address..."
+                              className="luna-input !pl-16"
+                            />
+                          </div>
+                       </div>
+
+                       <div className="group">
+                          <label className="luna-label">Preferred Contact Phone</label>
                           <div className="relative">
                             <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <input
                               required
-                              name="contactDetails"
-                              value={formData.contactDetails}
+                              name="preferredContactPhone"
+                              value={formData.preferredContactPhone}
                               onChange={handleChange}
-                              placeholder="Personal terminal comms..."
+                              placeholder="Phone number..."
                               className="luna-input !pl-16"
                             />
                           </div>

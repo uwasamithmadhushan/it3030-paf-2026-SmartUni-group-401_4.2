@@ -21,6 +21,7 @@ import BookingForm from './pages/BookingForm';
 import MyBookings from './pages/MyBookings';
 import AdminBookings from './pages/AdminBookings';
 import TechnicianAssignmentsPage from './pages/TechnicianAssignmentsPage';
+import AssignedTicketsPage from './pages/AssignedTicketsPage';
 import ProfilePage from './pages/ProfilePage';
 import ResourceListPage from './pages/ResourceListPage';
 import ResourceDetailsPage from './pages/ResourceDetailsPage';
@@ -79,7 +80,7 @@ const AppRoutes = () => {
         <Route path="/admin/facilities" element={<ProtectedRoute allowedRoles={['ADMIN']}><AssetList /></ProtectedRoute>} />
 
         {/* Technician only */}
-        <Route path="/assignments" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><TechnicianAssignmentsPage /></ProtectedRoute>} />
+        <Route path="/assignments" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><AssignedTicketsPage /></ProtectedRoute>} />
         
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>

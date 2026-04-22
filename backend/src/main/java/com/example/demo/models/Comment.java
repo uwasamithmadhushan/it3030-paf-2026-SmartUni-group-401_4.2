@@ -14,6 +14,7 @@ public class Comment {
     private String id = UUID.randomUUID().toString();
     private String userId;
     private String username;
+    private UserRole userRole;
     private String text;
     private LocalDateTime timestamp = LocalDateTime.now();
 }

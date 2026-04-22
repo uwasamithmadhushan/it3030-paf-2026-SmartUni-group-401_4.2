@@ -62,7 +62,7 @@ public class GoogleAuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String token = jwtUtil.generateToken(userDetails);
 
-        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole());
+        return new AuthResponse(user.getId(), token, user.getUsername(), user.getEmail(), user.getRole());
     }
 
     private GoogleIdToken.Payload verifyToken(String idTokenString) {
