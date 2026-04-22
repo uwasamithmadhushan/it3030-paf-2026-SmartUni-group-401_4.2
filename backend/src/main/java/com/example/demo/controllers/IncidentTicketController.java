@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 import java.security.Principal;
 import java.util.List;
@@ -22,13 +23,51 @@ public class IncidentTicketController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> getTickets(Principal principal) {
+    public ResponseEntity<List<TicketResponse>> getTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
-        return ResponseEntity.ok(ticketService.getTickets(user));
+        return ResponseEntity.ok(ticketService.getTickets(user, status, priority, category, search, sort));
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<TicketResponse>> getMyTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.getMyTickets(user, status, priority, category, search, sort));
+    }
+
+    @GetMapping("/assigned/me")
+    @PreAuthorize("hasRole('TECHNICIAN') or hasRole('ADMIN')")
+    public ResponseEntity<List<TicketResponse>> getAssignedTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.getAssignedTickets(user, status, priority, category, search, sort));
+    }
+
+    @GetMapping("/technician/dashboard")
+    @PreAuthorize("hasRole('TECHNICIAN') or hasRole('ADMIN')")
+    public ResponseEntity<DashboardStatsResponse> getTechnicianDashboardStats(Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.getTechnicianDashboardStats(user));
     }
 
     @PostMapping
-    public ResponseEntity<TicketResponse> createTicket(@RequestBody TicketRequest request, Principal principal) {
+    public ResponseEntity<TicketResponse> createTicket(@Valid @RequestBody TicketRequest request, Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
         return ResponseEntity.ok(ticketService.createTicket(request, user.getId()));
     }
@@ -39,6 +78,15 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.getTicketById(id, user));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<TicketResponse> updateTicket(
+            @PathVariable String id,
+            @Valid @RequestBody TicketRequest request,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.updateTicket(id, request, user));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable String id, Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
@@ -46,7 +94,7 @@ public class IncidentTicketController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}/assign")
+    @PatchMapping("/{id}/assign")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TicketResponse> assignTechnician(
             @PathVariable String id, 
@@ -54,7 +102,7 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.assignTechnician(id, request.getTechnicianId()));
     }
 
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIAN')")
     public ResponseEntity<TicketResponse> updateStatus(
             @PathVariable String id, 
@@ -62,6 +110,26 @@ public class IncidentTicketController {
             Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
         return ResponseEntity.ok(ticketService.updateStatus(id, request, user.getId()));
+    }
+
+    @PatchMapping("/{id}/resolve")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIAN')")
+    public ResponseEntity<TicketResponse> resolveTicket(
+            @PathVariable String id, 
+            @Valid @RequestBody ResolveRequest request,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.resolveTicket(id, request, user.getId()));
+    }
+
+    @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIAN')")
+    public ResponseEntity<TicketResponse> rejectTicket(
+            @PathVariable String id, 
+            @Valid @RequestBody RejectRequest request,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.rejectTicket(id, request, user.getId()));
     }
 
     @PostMapping("/{id}/comments")
