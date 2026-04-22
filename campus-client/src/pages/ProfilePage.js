@@ -23,7 +23,8 @@ import {
   Globe,
   Bell,
   LogOut,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 
 export default function ProfilePage() {
