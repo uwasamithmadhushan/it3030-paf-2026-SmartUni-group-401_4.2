@@ -6,26 +6,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'plum-dark': '#190019',
-        'violet-deep': '#2B124C',
-        'wine-muted': '#522B5B',
-        'mauve-dusty': '#854F6C',
-        'blush-soft': '#DFB6B2',
-        'ivory-warm': '#FBE4D8',
+        luna: {
+          aqua: '#A7EBF2',
+          cyan: '#54ACBF',
+          steel: '#26658C',
+          navy: '#023859',
+          midnight: '#011C40',
+        },
+        text: {
+          muted: '#8FBACC',
+        }
+      },
+      animation: {
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       backgroundImage: {
-        'luxury-gradient': 'linear-gradient(135deg, #190019 0%, #2B124C 100%)',
-        'glass-gradient': 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01))',
+        'luna-gradient': 'linear-gradient(135deg, #011C40 0%, #023859 100%)',
+        'luna-glass': 'linear-gradient(135deg, rgba(167, 235, 242, 0.05) 0%, rgba(167, 235, 242, 0.01) 100%)',
       },
       borderRadius: {
         'luxury': '2rem',
       },
       boxShadow: {
-        'luxury': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        'soft': '0 10px 30px rgba(0, 0, 0, 0.2)',
+        'luna-glow': '0 0 20px rgba(167, 235, 242, 0.15)',
+        'luna-glow-strong': '0 0 40px rgba(167, 235, 242, 0.3)',
       }
     },
   },
   plugins: [],
 }
-

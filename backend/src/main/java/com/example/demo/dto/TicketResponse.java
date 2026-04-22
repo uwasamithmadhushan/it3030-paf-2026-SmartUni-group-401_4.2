@@ -17,21 +17,33 @@ import java.util.List;
 @AllArgsConstructor
 public class TicketResponse {
     private String id;
+    private String ticketCode;
     private String title;
     private String description;
     private String category;
     private String resourceId;
     private String location;
-    private String contactDetails;
+    
+    private String preferredContactName;
+    private String preferredContactEmail;
+    private String preferredContactPhone;
+    
     private TicketPriority priority;
     private TicketStatus status;
     private String createdById;
     private String createdByUsername;
     private String assignedTechnicianId;
     private String assignedTechnicianName;
+    
+    private String resolutionNotes;
+    private String rejectionReason;
+    
     private List<Attachment> attachments;
     private List<TechnicianUpdate> updates;
     private List<Comment> comments;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime resolvedAt;
+    private LocalDateTime closedAt;
 }

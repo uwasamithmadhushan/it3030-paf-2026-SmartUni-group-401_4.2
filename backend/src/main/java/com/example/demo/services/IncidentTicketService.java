@@ -14,9 +14,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -26,18 +29,27 @@ public class IncidentTicketService {
     private final UserRepository userRepository;
     private final Path root = Paths.get("uploads");
 
+    private String generateTicketCode() {
+        return "TCK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
     public TicketResponse createTicket(TicketRequest request, String userId) {
         if (request.getAttachments() != null && request.getAttachments().size() > 3) {
             throw new RuntimeException("Maximum 3 attachments allowed");
         }
 
         IncidentTicket ticket = new IncidentTicket();
+        ticket.setTicketCode(generateTicketCode());
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
         ticket.setCategory(request.getCategory());
         ticket.setResourceId(request.getResourceId());
         ticket.setLocation(request.getLocation());
-        ticket.setContactDetails(request.getContactDetails());
+        
+        ticket.setPreferredContactName(request.getPreferredContactName());
+        ticket.setPreferredContactEmail(request.getPreferredContactEmail());
+        ticket.setPreferredContactPhone(request.getPreferredContactPhone());
+        
         ticket.setPriority(request.getPriority());
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setCreatedBy(userId);
@@ -48,6 +60,29 @@ public class IncidentTicketService {
         
         IncidentTicket saved = ticketRepository.save(ticket);
         return mapToResponse(saved);
+    }
+
+    public TicketResponse updateTicket(String id, TicketRequest request, User user) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setCategory(request.getCategory());
+        ticket.setResourceId(request.getResourceId());
+        ticket.setLocation(request.getLocation());
+        
+        ticket.setPreferredContactName(request.getPreferredContactName());
+        ticket.setPreferredContactEmail(request.getPreferredContactEmail());
+        ticket.setPreferredContactPhone(request.getPreferredContactPhone());
+        
+        ticket.setPriority(request.getPriority());
+        
+        return mapToResponse(ticketRepository.save(ticket));
     }
 
     public void deleteTicket(String id, User user) {
@@ -68,6 +103,7 @@ public class IncidentTicketService {
         Comment comment = new Comment();
         comment.setUserId(user.getId());
         comment.setUsername(user.getUsername());
+        comment.setUserRole(user.getRole());
         comment.setText(text);
         
         ticket.getComments().add(comment);
@@ -156,6 +192,68 @@ public class IncidentTicketService {
         return tickets.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    public List<TicketResponse> getMyTickets(User user) {
+        return ticketRepository.findByCreatedBy(user.getId()).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<TicketResponse> getAssignedTickets(User user) {
+        if (user.getRole() != UserRole.TECHNICIAN && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Only technicians and admins can view assigned tickets");
+        }
+        return ticketRepository.findByAssignedTechnician(user.getId()).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public DashboardStatsResponse getTechnicianDashboardStats(User user) {
+        if (user.getRole() != UserRole.TECHNICIAN && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied");
+        }
+        
+        List<IncidentTicket> tickets = ticketRepository.findByAssignedTechnician(user.getId());
+        
+        long totalAssigned = tickets.size();
+        long openTickets = tickets.stream().filter(t -> t.getStatus() == TicketStatus.OPEN).count();
+        long inProgressTickets = tickets.stream().filter(t -> t.getStatus() == TicketStatus.IN_PROGRESS).count();
+        long urgentTickets = tickets.stream().filter(t -> t.getPriority() == TicketPriority.URGENT).count();
+        
+        LocalDate today = LocalDate.now();
+        LocalDate weekAgo = today.minusDays(7);
+        
+        long resolvedToday = tickets.stream()
+            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null)
+            .filter(t -> t.getResolvedAt().toLocalDate().isEqual(today))
+            .count();
+            
+        long resolvedThisWeek = tickets.stream()
+            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null)
+            .filter(t -> !t.getResolvedAt().toLocalDate().isBefore(weekAgo))
+            .count();
+            
+        Map<String, Long> ticketsByStatus = tickets.stream()
+            .collect(Collectors.groupingBy(t -> t.getStatus().name(), Collectors.counting()));
+            
+        Map<String, Long> ticketsByPriority = tickets.stream()
+            .collect(Collectors.groupingBy(t -> t.getPriority().name(), Collectors.counting()));
+            
+        Map<String, Long> weeklyCompletedTickets = tickets.stream()
+            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null)
+            .filter(t -> !t.getResolvedAt().toLocalDate().isBefore(weekAgo))
+            .collect(Collectors.groupingBy(t -> t.getResolvedAt().toLocalDate().toString(), Collectors.counting()));
+            
+        double avgResolutionTime = tickets.stream()
+            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null && t.getCreatedAt() != null)
+            .mapToLong(t -> ChronoUnit.HOURS.between(t.getCreatedAt(), t.getResolvedAt()))
+            .average().orElse(0.0);
+            
+        return new DashboardStatsResponse(
+            totalAssigned, openTickets, inProgressTickets, resolvedToday, urgentTickets, resolvedThisWeek,
+            ticketsByStatus, ticketsByPriority, weeklyCompletedTickets, avgResolutionTime
+        );
+    }
+
     public TicketResponse getTicketById(String id, User user) {
         IncidentTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
@@ -191,8 +289,16 @@ public class IncidentTicketService {
         IncidentTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
+        if (request.getStatus() == TicketStatus.CLOSED && ticket.getStatus() != TicketStatus.RESOLVED) {
+            throw new RuntimeException("A ticket can only be CLOSED after it has been RESOLVED.");
+        }
+
         ticket.setStatus(request.getStatus());
         
+        if (request.getStatus() == TicketStatus.CLOSED) {
+            ticket.setClosedAt(LocalDateTime.now());
+        }
+
         if (request.getNote() != null && !request.getNote().isEmpty()) {
             TechnicianUpdate update = new TechnicianUpdate(technicianId, request.getNote(), LocalDateTime.now());
             ticket.getUpdates().add(update);
@@ -201,9 +307,46 @@ public class IncidentTicketService {
         return mapToResponse(ticketRepository.save(ticket));
     }
 
+    public TicketResponse resolveTicket(String id, ResolveRequest request, String technicianId) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (ticket.getStatus() != TicketStatus.IN_PROGRESS && ticket.getStatus() != TicketStatus.OPEN) {
+             throw new RuntimeException("Ticket must be OPEN or IN_PROGRESS to be resolved");
+        }
+
+        ticket.setStatus(TicketStatus.RESOLVED);
+        ticket.setResolutionNotes(request.getResolutionNotes());
+        ticket.setResolvedAt(LocalDateTime.now());
+        
+        TechnicianUpdate update = new TechnicianUpdate(technicianId, "Resolved: " + request.getResolutionNotes(), LocalDateTime.now());
+        ticket.getUpdates().add(update);
+
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
+    public TicketResponse rejectTicket(String id, RejectRequest request, String technicianId) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+             throw new RuntimeException("Only OPEN tickets can be rejected");
+        }
+
+        ticket.setStatus(TicketStatus.REJECTED);
+        ticket.setRejectionReason(request.getRejectionReason());
+        ticket.setClosedAt(LocalDateTime.now()); // Close it immediately
+
+        TechnicianUpdate update = new TechnicianUpdate(technicianId, "Rejected: " + request.getRejectionReason(), LocalDateTime.now());
+        ticket.getUpdates().add(update);
+
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
     private TicketResponse mapToResponse(IncidentTicket ticket) {
         TicketResponse response = new TicketResponse();
         response.setId(ticket.getId());
+        response.setTicketCode(ticket.getTicketCode());
         response.setTitle(ticket.getTitle());
         response.setDescription(ticket.getDescription());
         response.setCategory(ticket.getCategory());
@@ -213,12 +356,21 @@ public class IncidentTicketService {
         response.setAssignedTechnicianId(ticket.getAssignedTechnician());
         response.setResourceId(ticket.getResourceId());
         response.setLocation(ticket.getLocation());
-        response.setContactDetails(ticket.getContactDetails());
+        
+        response.setPreferredContactName(ticket.getPreferredContactName());
+        response.setPreferredContactEmail(ticket.getPreferredContactEmail());
+        response.setPreferredContactPhone(ticket.getPreferredContactPhone());
+        
+        response.setResolutionNotes(ticket.getResolutionNotes());
+        response.setRejectionReason(ticket.getRejectionReason());
+        
         response.setComments(ticket.getComments());
         response.setAttachments(ticket.getAttachments());
         response.setUpdates(ticket.getUpdates());
         response.setCreatedAt(ticket.getCreatedAt());
         response.setUpdatedAt(ticket.getUpdatedAt());
+        response.setResolvedAt(ticket.getResolvedAt());
+        response.setClosedAt(ticket.getClosedAt());
 
         userRepository.findById(ticket.getCreatedBy())
                 .ifPresent(u -> response.setCreatedByUsername(u.getUsername()));

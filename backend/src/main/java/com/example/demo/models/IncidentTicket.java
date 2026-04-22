@@ -21,17 +21,25 @@ public class IncidentTicket {
     @Id
     private String id;
 
+    private String ticketCode;
     private String title;
     private String description;
     private String category;
     private String resourceId;
     private String location;
-    private String contactDetails;
+    
+    private String preferredContactName;
+    private String preferredContactEmail;
+    private String preferredContactPhone;
+    
     private TicketPriority priority;
     private TicketStatus status;
 
     private String createdBy; // User ID
     private String assignedTechnician; // User ID (can be null)
+    
+    private String resolutionNotes;
+    private String rejectionReason;
 
     private List<Attachment> attachments = new ArrayList<>();
     private List<TechnicianUpdate> updates = new ArrayList<>();
@@ -42,4 +50,7 @@ public class IncidentTicket {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+    
+    private LocalDateTime resolvedAt;
+    private LocalDateTime closedAt;
 }

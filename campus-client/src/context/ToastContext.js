@@ -8,7 +8,7 @@ export const useToast = () => useContext(ToastContext);
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info') => {
+  const showToast = useCallback((message, type = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -21,7 +21,7 @@ export const ToastProvider = ({ children }) => {
   };
 
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={{ showToast, addToast: showToast }}>
       {children}
       <div className="fixed bottom-8 right-8 z-[100] space-y-4 w-80">
         <AnimatePresence>
