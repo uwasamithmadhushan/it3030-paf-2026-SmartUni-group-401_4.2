@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { loginUser, googleLogin } from '../services/api';
+import { loginUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,8 +13,9 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const registered = location.state?.registered;
+  const pendingApproval = location.state?.pendingApproval;
   const from = location.state?.from || '/dashboard';
-  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -37,10 +37,15 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { data } = await loginUser(form);
-      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
+      login(data.token, { username: data.username, email: data.email, role: data.role });
       navigate(from, { replace: true });
     } catch (err) {
-      setServerError(err.response?.status === 401 ? 'Invalid credentials.' : 'Login failed.');
+      const msg = err.response?.data?.message;
+      if (msg) {
+        setServerError(msg);
+      } else {
+        setServerError(err.response?.status === 401 ? 'Invalid username or password.' : 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,60 +61,64 @@ export default function LoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h1 className="text-3xl font-black text-ivory-warm tracking-tight">Luxury Entry</h1>
-            <p className="text-sm font-medium text-blush-soft mt-2 uppercase tracking-widest">Smart Campus Concierge</p>
+            <h1 className="text-2xl font-bold text-gray-800">Welcome back</h1>
+            <p className="text-sm text-gray-500 mt-1">Sign in to Smart Campus</p>
           </div>
 
+          {registered && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Account created! Please sign in.
+            </div>
+          )}
+
+          {pendingApproval && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800 flex items-start gap-2">
+              <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span>Your admin account is <strong>pending approval</strong>. An existing admin must approve it before you can sign in.</span>
+            </div>
+          )}
+
           {serverError && (
-            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs font-bold text-rose-400 flex items-center gap-3">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
               {serverError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div>
-              <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-2 ml-4">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
                 type="text"
                 name="username"
                 value={form.username}
                 onChange={handleChange}
-                placeholder="Ex: beauty.admin"
-                className="luxury-input"
+                placeholder="Your username"
+                autoComplete="username"
+                className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${errors.username ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
               />
-              {errors.username && <p className="mt-2 text-[10px] font-bold text-rose-400 ml-4">{errors.username}</p>}
+              {errors.username && <p className="mt-1 text-xs text-red-500">{errors.username}</p>}
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-2 ml-4">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="luxury-input pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-blush-soft hover:text-ivory-warm transition-colors focus:outline-none"
-                >
-                  {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-              {errors.password && <p className="mt-2 text-[10px] font-bold text-rose-400 ml-4">{errors.password}</p>}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Your password"
+                autoComplete="current-password"
+                className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+              />
+              {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
             </div>
 
             <button
@@ -117,13 +126,13 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-              {loading ? 'Authenticating...' : 'Sign In to Portal'}
+              {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
 
-          <p className="text-center text-xs font-medium text-ivory-warm/40 mt-8">
-            New here?{' '}
-            <Link to="/register" className="text-blush-soft font-black hover:text-ivory-warm transition-colors underline decoration-ivory-warm/20 underline-offset-4">Create Account</Link>
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-indigo-600 font-medium hover:underline">Register</Link>
           </p>
         </div>
       </div>

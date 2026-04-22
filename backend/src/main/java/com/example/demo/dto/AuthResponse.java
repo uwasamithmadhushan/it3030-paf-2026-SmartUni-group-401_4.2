@@ -6,15 +6,13 @@ import lombok.Data;
 @Data
 public class AuthResponse {
 
-    private String id;
     private String token;
     private String username;
     private String email;
     private UserRole role;
     private boolean pending;
 
-    public AuthResponse(String id, String token, String username, String email, UserRole role) {
-        this.id = id;
+    public AuthResponse(String token, String username, String email, UserRole role) {
         this.token = token;
         this.username = username;
         this.email = email;
@@ -22,8 +20,7 @@ public class AuthResponse {
         this.pending = false;
     }
 
-    public AuthResponse(String id, String token, String username, String email, UserRole role, boolean pending) {
-        this.id = id;
+    public AuthResponse(String token, String username, String email, UserRole role, boolean pending) {
         this.token = token;
         this.username = username;
         this.email = email;

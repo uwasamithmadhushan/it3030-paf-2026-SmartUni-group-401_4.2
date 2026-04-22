@@ -24,12 +24,6 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
     }
 
-    @ExceptionHandler(BookingConflictException.class)
-    public ResponseEntity<Map<String, Object>> handleBookingConflict(
-            BookingConflictException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
-    }
-
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUsernameNotFound(
             UsernameNotFoundException ex, HttpServletRequest request) {

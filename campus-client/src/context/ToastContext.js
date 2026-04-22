@@ -1,19 +1,16 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
-const ToastContext = createContext();
-
-export const useToast = () => useContext(ToastContext);
+const ToastContext = createContext(null);
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
   const addToast = useCallback((message, type = 'info') => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, 3000);
   }, []);
 
   const removeToast = (id) => {
@@ -23,31 +20,29 @@ export const ToastProvider = ({ children }) => {
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
-      <div className="fixed bottom-8 right-8 z-[100] space-y-4 w-80">
-        <AnimatePresence>
-          {toasts.map((toast) => (
-            <motion.div
-              key={toast.id}
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-              className={`p-5 rounded-2xl shadow-luxury backdrop-blur-xl border flex items-center justify-between gap-4 ${
-                toast.type === 'error' 
-                  ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
-                  : 'bg-violet-deep/80 border-ivory-warm/10 text-ivory-warm'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${toast.type === 'error' ? 'bg-rose-400' : 'bg-blush-soft'}`} />
-                <p className="text-xs font-bold uppercase tracking-widest">{toast.message}</p>
-              </div>
-              <button onClick={() => removeToast(toast.id)} className="opacity-40 hover:opacity-100 transition-opacity">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`flex items-center justify-between min-w-[300px] px-4 py-3 rounded-lg shadow-lg border animate-slide-in ${
+              toast.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' :
+              toast.type === 'error' ? 'bg-red-50 text-red-800 border-red-200' :
+              'bg-blue-50 text-blue-800 border-blue-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {toast.type === 'success' && <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
+              {toast.type === 'error' && <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>}
+              <span className="text-sm font-medium">{toast.message}</span>
+            </div>
+            <button onClick={() => removeToast(toast.id)} className="ml-4 text-gray-400 hover:text-gray-600">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+            </button>
+          </div>
+        ))}
       </div>
     </ToastContext.Provider>
   );
 };
+
+export const useToast = () => useContext(ToastContext);

@@ -14,12 +14,9 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
 
     List<Booking> findByStatus(BookingStatus status);
 
-    // Finds APPROVED or PENDING bookings for a resource that overlap with [start, end).
-    // Overlap condition: existingStart < newEnd AND existingEnd > newStart
-    @Query("{ 'resourceId': ?0, " +
-           "'status': { $in: ['APPROVED', 'PENDING'] }, " +
-           "'startTime': { $lt: ?2 }, " +
-           "'endTime': { $gt: ?1 } }")
+    // Finds APPROVED bookings for a resource that overlap with [start, end)
+    @Query("{ 'resourceId': ?0, 'status': 'APPROVED', " +
+           "'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }")
     List<Booking> findConflictingBookings(String resourceId,
                                           LocalDateTime start,
                                           LocalDateTime end);

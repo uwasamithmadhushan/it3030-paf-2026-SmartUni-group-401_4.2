@@ -1,32 +1,21 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import UserListPage from './pages/UserListPage';
 import AssetList from './pages/AssetList';
 import AssetForm from './pages/AssetForm';
-import TicketListPage from './pages/TicketListPage';
-import DashboardPage from './pages/DashboardPage';
-
-import { ToastProvider } from './context/ToastContext';
-
-const DashboardRedirect = () => {
-  const { user } = useAuth();
-  if (user?.role === 'ADMIN') return <AdminDashboardPage />;
-  if (user?.role === 'TECHNICIAN') return <TechnicianDashboardPage />;
-  return <UserDashboardPage />;
-}
+import BookingForm from './pages/BookingForm';
+import MyBookings from './pages/MyBookings';
+import AdminBookings from './pages/AdminBookings';
 
 function App() {
-  const { user } = useAuth();
-
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
     <ToastProvider>
       <AuthProvider>
       <BrowserRouter>
@@ -97,37 +86,11 @@ function App() {
             }
           />
 
-          {/* Technician only */}
-          <Route
-            path="/assignments"
-            element={
-              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
-                <MainLayout><TechnicianAssignmentsPage /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/schedule"
-            element={
-              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
-                <MainLayout><TechnicianSchedulePage /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
-                <MainLayout><TechnicianReportsPage /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-
           {/* Admin only */}
           <Route
             path="/admin/bookings"
             element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ProtectedRoute adminOnly>
                 <MainLayout><AdminBookings /></MainLayout>
               </ProtectedRoute>
             }
@@ -135,7 +98,7 @@ function App() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ProtectedRoute adminOnly>
                 <MainLayout><UserListPage /></MainLayout>
               </ProtectedRoute>
             }
@@ -143,7 +106,7 @@ function App() {
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ProtectedRoute adminOnly>
                 <MainLayout><AdminDashboardPage /></MainLayout>
               </ProtectedRoute>
             }
@@ -176,7 +139,6 @@ function App() {
       </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
-    </GoogleOAuthProvider>
   );
 }
 

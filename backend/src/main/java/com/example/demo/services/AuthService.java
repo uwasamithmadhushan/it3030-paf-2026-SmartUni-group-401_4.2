@@ -49,13 +49,13 @@ public class AuthService {
 
         if (pendingApproval) {
             // Return response with no token – awaiting existing admin's approval
-            return new AuthResponse(user.getId(), null, user.getUsername(), user.getEmail(), user.getRole(), true);
+            return new AuthResponse(null, user.getUsername(), user.getEmail(), user.getRole(), true);
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String token = jwtUtil.generateToken(userDetails);
 
-        return new AuthResponse(user.getId(), token, user.getUsername(), user.getEmail(), user.getRole());
+        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -74,6 +74,6 @@ public class AuthService {
             throw new IllegalArgumentException("Your account is pending admin approval. Please wait for an existing admin to approve it.");
         }
 
-        return new AuthResponse(user.getId(), token, user.getUsername(), user.getEmail(), user.getRole());
+        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole());
     }
 }
