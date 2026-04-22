@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 
-export default function MainLayout({ children }) {
+export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
@@ -12,34 +12,39 @@ export default function MainLayout({ children }) {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
-    <div className="min-h-screen bg-plum-dark flex overflow-hidden font-['Outfit']">
-      {/* Sidebar - Always visible on desktop, slide-in on mobile */}
+    <div className="min-h-screen bg-luna-midnight flex overflow-hidden font-['Outfit']">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-luna-steel/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-luna-cyan/10 blur-[120px]" />
+      </div>
+      
+      {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden lg:ml-72 relative">
         {/* Mobile Header (Overlay) */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-violet-deep/80 backdrop-blur-md border-b border-ivory-warm/10 z-50">
-          <button onClick={toggleSidebar} className="text-ivory-warm">
+        <div className="lg:hidden flex items-center justify-between p-4 luna-glass border-b border-luna-aqua/10 z-50">
+          <button onClick={toggleSidebar} className="text-luna-aqua">
              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
              </svg>
           </button>
-          <span className="text-ivory-warm font-bold tracking-widest uppercase text-xs">Smart Campus</span>
-          <div className="w-8 h-8 rounded-lg bg-mauve-dusty flex items-center justify-center text-xs font-bold text-ivory-warm">
+          <span className="text-white font-black tracking-widest uppercase text-xs">Smart<span className="text-luna-aqua">Uni</span></span>
+          <div className="w-8 h-8 rounded-lg bg-luna-steel flex items-center justify-center text-xs font-bold text-white luna-glow">
             {user?.username?.substring(0, 1).toUpperCase()}
           </div>
         </div>
         
         {/* Desktop Premium Header */}
-        <header className="hidden lg:flex px-8 h-20 items-center justify-between bg-violet-deep/40 backdrop-blur-md border-b border-ivory-warm/5 shrink-0 z-40">
+        <header className="hidden lg:flex px-8 h-20 items-center justify-between luna-glass border-b border-luna-aqua/5 shrink-0 z-40">
           <div className="relative w-96">
-            <svg className="w-4 h-4 text-ivory-warm/40 absolute left-4 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-luna-aqua/40 absolute left-4 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input 
               type="text" 
-              placeholder="Luxury search..." 
-              className="w-full pl-11 pr-4 py-2.5 bg-plum-dark/40 border border-ivory-warm/10 rounded-xl text-sm focus:ring-2 focus:ring-blush-soft/30 transition-all outline-none text-ivory-warm placeholder:text-ivory-warm/30"
+              placeholder="Luna Search..." 
+              className="luna-input pl-11"
             />
           </div>
 
@@ -54,12 +59,12 @@ export default function MainLayout({ children }) {
 
             <div className="relative">
               <div className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-mauve-dusty to-wine-muted flex items-center justify-center font-bold text-ivory-warm text-sm shadow-soft group-hover:shadow-luxury transition-all">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-luna-steel to-luna-navy flex items-center justify-center font-bold text-white text-sm shadow-soft group-hover:shadow-lg transition-all luna-glow">
                   {user?.username?.substring(0, 2).toUpperCase() || 'U'}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-ivory-warm leading-tight">{user?.username || 'Guest'}</span>
-                  <span className="text-[9px] font-black text-blush-soft uppercase tracking-wider">{user?.role || 'User'}</span>
+                  <span className="text-sm font-black text-white leading-tight">{user?.username || 'Guest'}</span>
+                  <span className="text-[9px] font-black text-luna-aqua uppercase tracking-wider">{user?.role || 'User'}</span>
                 </div>
               </div>
             </div>
@@ -76,7 +81,7 @@ export default function MainLayout({ children }) {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="h-full"
             >
-              {children}
+              <Outlet />
             </motion.div>
           </AnimatePresence>
         </main>

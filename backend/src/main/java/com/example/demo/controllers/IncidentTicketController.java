@@ -39,6 +39,15 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.getTicketById(id, user));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<TicketResponse> updateTicket(
+            @PathVariable String id,
+            @RequestBody TicketRequest request,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.updateTicket(id, request, user));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable String id, Principal principal) {
         User user = userService.findUserByUsername(principal.getName());

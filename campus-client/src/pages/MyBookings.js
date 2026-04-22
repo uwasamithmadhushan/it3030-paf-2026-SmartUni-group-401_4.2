@@ -1,22 +1,36 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getMyBookings, cancelBooking } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmationModal from '../components/ConfirmationModal';
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  Trash2, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle,
+  Plus,
+  RefreshCw,
+  ChevronRight,
+  ShieldCheck,
+  Zap,
+  Users,
+  Activity,
+  Globe,
+  Layers,
+  ArrowRight
+} from 'lucide-react';
 
 const STATUS_STYLES = {
-  PENDING: 'bg-amber-50/80 text-amber-600 border-amber-200/50',
-  APPROVED: 'bg-emerald-50/80 text-emerald-600 border-emerald-200/50',
-  REJECTED: 'bg-rose-50/80 text-rose-600 border-rose-200/50',
-  CANCELLED: 'bg-slate-50/80 text-slate-600 border-slate-200/50',
+  PENDING: 'bg-luna-steel/10 text-luna-cyan border-luna-cyan/20',
+  APPROVED: 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20 luna-glow',
+  REJECTED: 'bg-red-500/10 text-red-400 border-red-500/20',
+  CANCELLED: 'bg-luna-navy/40 text-text-muted border-luna-aqua/5',
 };
-
-/**
- * Helper: formatDT
- * Demonstrates separation of concerns by extracting date formatting logic.
- */
 
 function formatDT(iso) {
   return new Date(iso).toLocaleString(undefined, {
@@ -26,11 +40,6 @@ function formatDT(iso) {
 }
 
 export default function MyBookings() {
-  /**
-   * MyBookings Component
-   * Purpose: Provides a student-centric view of all resource reservations.
-   * Features: Real-time status tracking, cancellation workflow, and responsive layout.
-   */
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [bookings, setBookings] = useState([]);
@@ -46,7 +55,7 @@ export default function MyBookings() {
       const res = await getMyBookings();
       setBookings(res.data);
     } catch {
-      setError('Failed to load bookings.');
+      setError('Failed to synchronize reservation archive.');
     } finally {
       setLoading(false);
     }
@@ -61,164 +70,191 @@ export default function MyBookings() {
       setBookings((prev) =>
         prev.map((b) => b.id === id ? { ...b, status: 'CANCELLED' } : b)
       );
-      addToast('Booking cancelled successfully', 'success');
+      addToast('Reservation successfully revoked', 'success');
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to cancel booking.', 'error');
+      addToast('Revocation failed', 'error');
     } finally {
       setCancelling(null);
+      setConfirmModal({ isOpen: false, bookingId: null });
     }
   };
 
+  if (loading && bookings.length === 0) return <LoadingSpinner fullScreen message="Accessing Reservation Registry..." />;
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="relative pb-10"
-    >
-      {/* Header Section */}
-      <div className="bg-[#10B981] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-8 shadow-sm">
-        <div className="text-white text-center md:text-left">
-          <h1 className="text-2xl font-black mb-1">My Resource Bookings</h1>
-          <p className="text-white/80 text-sm font-medium">Track and manage your campus facility reservations.</p>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="max-w-[1600px] mx-auto space-y-12">
+      
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-luna-aqua/10">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+           <div className="flex items-center gap-3 mb-4">
+              <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
+                <Globe size={12} className="text-luna-aqua animate-pulse" />
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Temporal Access Matrix</span>
+              </div>
+           </div>
+           <h1 className="text-6xl font-black text-white tracking-tighter leading-none">My <span className="text-luna-aqua">Bookings</span></h1>
+           <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity resource allocation & strategic scheduling intelligence.</p>
+        </motion.div>
+        
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4"
+        >
           <button
             onClick={load}
-            className="w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-xl transition-all text-white active:scale-95"
-            title="Refresh"
+            className="w-14 h-14 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all shadow-xl shadow-luna-aqua/5"
+            title="Sync Registry"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={() => navigate('/facilities')}
-            className="inline-flex items-center gap-2 bg-white text-[#10B981] px-6 py-2.5 rounded-xl text-sm font-black transition-all hover:bg-gray-50 hover:shadow-lg active:scale-95"
+            className="luna-button !px-10 !py-4 shadow-2xl shadow-luna-aqua/20"
           >
-            <span className="text-lg leading-none">+</span>
-            <span>New Booking</span>
+            <Plus size={20} /> Initialize Reservation
           </button>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Content Section */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 space-y-4">
-          <div className="w-12 h-12 border-4 border-[#10B981]/20 border-t-[#10B981] rounded-full animate-spin"></div>
-          <p className="text-slate-400 font-bold text-sm tracking-widest uppercase">Loading Bookings...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-8 text-center">
-          <p className="text-rose-600 font-bold">{error}</p>
-          <button onClick={load} className="mt-4 text-[#10B981] font-bold hover:underline">Try Again</button>
-        </div>
-      ) : bookings.length === 0 ? (
-        <EmptyState 
-          title="No Bookings Found" 
-          /* UX: Providing a clear call-to-action (CTA) for empty states */
-          message="You haven't reserved any campus facilities yet. Browse the available spaces to get started."
-          onAction={() => navigate('/facilities')}
-          actionText="Browse Facilities"
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {bookings.map((b) => (
-            /* 
-               Motion Component: layout prop enables automatic layout animations 
-               when items are added, removed, or reordered.
-            */
-            <motion.div
-              layout
-              key={b.id}
-              className="group bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 flex flex-col md:flex-row items-center gap-6"
+      {error && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 bg-red-500/10 border border-red-500/20 rounded-[2.5rem] flex items-center gap-6"
+        >
+           <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-400">
+              <Zap size={24} />
+           </div>
+           <span className="text-base font-black text-red-400 uppercase tracking-widest">{error}</span>
+        </motion.div>
+      )}
+
+      {/* Reservation Grid */}
+      <div className="grid grid-cols-1 gap-8">
+        <AnimatePresence mode="popLayout">
+          {bookings.map((b, idx) => (
+            <motion.div 
+              key={b.id} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04 }}
+              className="luna-card group flex flex-col xl:flex-row xl:items-center justify-between gap-12 !p-0 overflow-hidden hover:border-luna-aqua/30 transition-all"
             >
-              {/* Left: Resource Info */}
-              <div className="flex-1 min-w-0 w-full">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm ${STATUS_STYLES[b.status] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+              <div className="p-10 flex-1 min-w-0">
+                <div className="flex items-center gap-5 mb-6">
+                  <span className={`luna-badge !px-4 !py-1 ${STATUS_STYLES[b.status] || 'bg-luna-navy/40 text-text-muted'}`}>
                     {b.status.replace('_', ' ')}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg tracking-wider">
-                    ID: #{b.id.substring(0, 8)}
-                  </span>
+                  <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">RES-#{b.id.substring(0, 12)}</span>
                 </div>
-                <h3 className="text-lg font-black text-slate-800 group-hover:text-[#10B981] transition-colors truncate">
-                  {b.resourceName || b.resourceId}
+                
+                <h3 className="text-4xl font-black text-white tracking-tighter group-hover:text-luna-aqua transition-colors mb-4 truncate">
+                  {b.resourceName || 'Executive Resource'}
                 </h3>
-                <p className="text-sm text-slate-500 font-medium mb-4 line-clamp-1 italic">
+                
+                <p className="text-lg font-medium text-text-muted italic mb-10 max-w-3xl border-l-2 border-luna-aqua/20 pl-6 leading-relaxed">
                   "{b.purpose}"
                 </p>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm text-[#10B981]">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter">Time Slot</p>
-                      <p className="text-xs font-bold text-slate-600">{formatDT(b.startTime)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm text-indigo-500">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter">Capacity</p>
-                      <p className="text-xs font-bold text-slate-600">{b.expectedAttendees} Attendees</p>
-                    </div>
-                  </div>
+                <div className="flex flex-wrap gap-12 items-center">
+                  <IntelligenceMetric icon={<Clock size={20} />} label="Temporal Slot" value={formatDT(b.startTime)} />
+                  <div className="w-px h-10 bg-luna-aqua/10 hidden md:block" />
+                  <IntelligenceMetric icon={<Users size={20} />} label="Personnel Scale" value={`${b.expectedAttendees} Members`} />
+                  <div className="w-px h-10 bg-luna-aqua/10 hidden md:block" />
+                  <IntelligenceMetric icon={<MapPin size={20} />} label="Physical Sector" value={b.location || 'Central Nexus'} />
                 </div>
-
-                {b.status === 'REJECTED' && b.rejectionReason && (
-                  <div className="mt-4 flex items-center gap-2 p-3 bg-rose-50 border border-rose-100 rounded-xl">
-                    <svg className="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    <p className="text-xs font-bold text-rose-600">Rejection reason: {b.rejectionReason}</p>
-                  </div>
-                )}
               </div>
 
-              {/* Right: Actions */}
-              {(b.status === 'PENDING' || b.status === 'APPROVED') && (
-                <div className="shrink-0 flex items-center gap-2 w-full md:w-auto">
+              <div className="p-10 bg-luna-midnight/40 xl:border-l xl:border-luna-aqua/10 flex flex-col sm:flex-row xl:flex-col justify-center gap-6 min-w-[280px]">
+                {(b.status === 'PENDING' || b.status === 'APPROVED') && (
                   <button
                     onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id })}
                     disabled={cancelling === b.id}
-                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-black text-xs rounded-xl transition-all border border-rose-100 hover:border-transparent active:scale-95 disabled:opacity-50"
+                    className="w-full px-8 py-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 shadow-lg hover:shadow-red-500/20"
                   >
-                    {cancelling === b.id ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    )}
-                    <span>Cancel Booking</span>
+                    {cancelling === b.id ? 'Abort Protocol...' : 'Revoke Request'}
                   </button>
+                )}
+                <button 
+                  onClick={() => navigate(`/facilities/${b.assetId || b.facilityId}`)}
+                  className="w-full px-8 py-4 bg-luna-aqua/5 text-luna-aqua border border-luna-aqua/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-luna-aqua hover:text-luna-midnight transition-all flex items-center justify-center gap-3"
+                >
+                  Resource Intel <ChevronRight size={16} />
+                </button>
+              </div>
+
+              {b.status === 'REJECTED' && b.rejectionReason && (
+                <div className="absolute top-10 right-10 flex items-center gap-3 px-5 py-2 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                  <AlertCircle size={16} className="text-red-400" />
+                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest leading-none">Rejection Reason: {b.rejectionReason}</p>
                 </div>
               )}
+              
+              {/* Animated Progress Indicator */}
+              <div className="absolute bottom-0 left-0 h-1 bg-luna-aqua/5 w-full">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: b.status === 'APPROVED' ? '100%' : b.status === 'PENDING' ? '50%' : '5%' }}
+                  transition={{ duration: 1, ease: "circOut" }}
+                  className={`h-full ${b.status === 'APPROVED' ? 'bg-luna-aqua luna-glow' : 'bg-luna-cyan'}`} 
+                />
+              </div>
             </motion.div>
           ))}
-          <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] pt-4">
-            {bookings.length} Total Bookings Recorded
-          </p>
-        </div>
-      )}
+        </AnimatePresence>
+
+        {bookings.length === 0 && (
+          <div className="py-40 text-center luna-card border-dashed border-luna-aqua/10 flex flex-col items-center gap-8 opacity-20">
+            <div className="w-32 h-32 luna-glass rounded-[3rem] flex items-center justify-center text-luna-aqua">
+               <Calendar size={64} />
+            </div>
+            <div>
+               <h3 className="text-3xl font-black text-white tracking-tighter italic uppercase">No active reservations recorded</h3>
+               <p className="text-base font-medium text-text-muted mt-4">Registry archive search yielded zero synchronized entries.</p>
+            </div>
+            <button onClick={() => navigate('/facilities')} className="luna-button-outline !px-12 !py-4">Initialize Resource Hunt</button>
+          </div>
+        )}
+      </div>
 
       <ConfirmationModal 
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal({ isOpen: false, bookingId: null })}
         onConfirm={() => handleCancel(confirmModal.bookingId)}
-        title="Cancel Booking"
-        message="Are you sure you want to cancel this booking? This action will release the resource for others to book."
-        confirmText="Cancel Booking"
+        title="Revoke Temporal Reservation"
+        message="Are you sure you want to release this campus resource back into the global pool? This action will immediately update the availability archive and notify synchronized nodes."
+        confirmText="Confirm Revocation"
         type="danger"
       />
-    </motion.div>
+
+      {/* Footer Status Feed */}
+      <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
+         <div className="flex items-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
+            Scheduling Engine Operational
+         </div>
+         <div className="flex items-center gap-8">
+            <span>Archive Sync: Nominal</span>
+            <span>Uptime: 1042:18:22</span>
+         </div>
+      </div>
+    </div>
   );
 }
 
-/**
- * End of MyBookings Module
- * This component completes the student-facing portion of the 
- * Booking Management Feature, ensuring a seamless facility reservation experience.
- */
+const IntelligenceMetric = ({ icon, label, value }) => (
+  <div className="flex items-center gap-4 group/metric">
+    <div className="w-12 h-12 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua group-hover/metric:luna-glow transition-all">
+      {icon}
+    </div>
+    <div>
+      <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] mb-1">{label}</p>
+      <p className="text-base font-black text-white group-hover/metric:text-luna-aqua transition-colors">{value}</p>
+    </div>
+  </div>
+);

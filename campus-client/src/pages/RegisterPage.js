@@ -1,8 +1,29 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  UserPlus, 
+  Mail, 
+  Lock, 
+  User, 
+  ArrowRight, 
+  ShieldCheck,
+  ShieldAlert,
+  Sparkles,
+  Fingerprint,
+  Zap,
+  Globe,
+  Layers,
+  ChevronRight,
+  Activity
+} from 'lucide-react';
 
-const ROLES = ['USER', 'ADMIN', 'TECHNICIAN'];
+const ROLES = [
+  { value: 'USER', label: 'Student Hub', desc: 'Personal resource monitoring' },
+  { value: 'TECHNICIAN', label: 'Field Specialist', desc: 'Operational mission dispatch' },
+  { value: 'ADMIN', label: 'System Executive', desc: 'Global infrastructure oversight' }
+];
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -13,9 +34,9 @@ export default function RegisterPage() {
 
   const validate = () => {
     const e = {};
-    if (!form.username.trim()) e.username = 'Username is required';
-    if (!form.email.trim()) e.email = 'Email is required';
-    if (!form.password) e.password = 'Password is required';
+    if (!form.username.trim()) e.username = 'Identity identifier required';
+    if (!form.email.trim()) e.email = 'Secure email channel required';
+    if (!form.password) e.password = 'Security token required';
     return e;
   };
 
@@ -38,100 +59,216 @@ export default function RegisterPage() {
         navigate('/login', { state: { registered: true } });
       }
     } catch (err) {
-      setServerError('Registration failed. Identity already exists or server error.');
+      setServerError('Identity conflict detected. Registry aborted.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-plum-dark flex items-center justify-center p-6 relative overflow-hidden font-['Outfit']">
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-violet-deep/30 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] bg-wine-muted/20 rounded-full blur-[100px]" />
+    <div className="min-h-screen bg-luna-midnight flex items-center justify-center p-8 relative overflow-hidden">
+      
+      {/* Superior Background Pulse */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.08, 0.03] }}
+          transition={{ duration: 12, repeat: Infinity }}
+          className="absolute top-[-15%] right-[-10%] w-[50%] h-[50%] rounded-full bg-luna-aqua blur-[160px]" 
+        />
+        <motion.div 
+          animate={{ scale: [1.2, 1, 1.2], opacity: [0.02, 0.06, 0.02] }}
+          transition={{ duration: 18, repeat: Infinity }}
+          className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full bg-luna-cyan blur-[160px]" 
+        />
+      </div>
 
-      <div className="w-full max-w-lg relative z-10 animate-luxury">
-        <div className="bg-wine-muted/20 backdrop-blur-3xl rounded-luxury shadow-luxury border border-ivory-warm/10 p-10 lg:p-12">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-black text-ivory-warm tracking-tighter">New Membership</h1>
-            <p className="text-sm font-medium text-blush-soft mt-2 uppercase tracking-widest">Join the SmartUni Executive Tier</p>
+      <div className="w-full max-w-5xl relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        {/* Left Side: Mission Context */}
+        <div className="lg:col-span-5 space-y-12 hidden lg:block">
+           <motion.div
+             initial={{ opacity: 0, x: -30 }}
+             animate={{ opacity: 1, x: 0 }}
+             transition={{ duration: 0.8 }}
+           >
+              <div className="flex items-center gap-3 mb-8">
+                 <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
+                 <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Protocol Initialize</span>
+              </div>
+              <h1 className="text-6xl font-black text-white tracking-tighter leading-none mb-8">
+                Nexus <span className="text-luna-aqua">Registry</span>
+              </h1>
+              <p className="text-text-muted text-xl font-medium leading-relaxed max-w-md border-l-2 border-luna-aqua/20 pl-8">
+                Synchronize your identity with the SmartUni high-end infrastructure matrix. Access state-of-the-art campus intelligence.
+              </p>
+           </motion.div>
+
+           <div className="space-y-6">
+              <IdentityFeature icon={<ShieldCheck size={20} />} label="Encrypted Sync" />
+              <IdentityFeature icon={<Fingerprint size={20} />} label="Biometric Audit" />
+              <IdentityFeature icon={<Zap size={20} />} label="Velocity Dispatch" />
+           </div>
+
+           <div className="pt-12 border-t border-luna-aqua/10">
+              <div className="flex items-center gap-4 text-white/20">
+                 <Globe size={24} />
+                 <Layers size={24} />
+                 <Activity size={24} />
+              </div>
+           </div>
+        </div>
+
+        {/* Right Side: Registration Portal */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="lg:col-span-7 luna-card !p-0 overflow-hidden shadow-2xl shadow-luna-aqua/10 backdrop-blur-3xl !bg-luna-midnight/80 border-luna-aqua/10"
+        >
+          {/* Form Header */}
+          <div className="bg-luna-midnight/40 px-12 py-10 border-b border-luna-aqua/10 flex justify-between items-center">
+             <div className="flex items-center gap-6">
+                <div className="w-14 h-14 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua luna-glow border-luna-aqua/20">
+                   <UserPlus size={24} />
+                </div>
+                <div>
+                   <h2 className="text-2xl font-black text-white tracking-tight">Identity Request</h2>
+                   <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mt-1">Operator Profile Calibration</p>
+                </div>
+             </div>
+             <Sparkles className="text-luna-aqua/20" size={32} />
           </div>
 
-          {serverError && (
-            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs font-bold text-rose-400">
-              {serverError}
-            </div>
-          )}
+          <form onSubmit={handleSubmit} className="p-12 space-y-10">
+            <AnimatePresence mode="wait">
+              {serverError && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 bg-red-500/10 border border-red-500/20 rounded-[2rem] text-[10px] font-black text-red-400 uppercase tracking-[0.2em] flex items-center gap-4"
+                >
+                  <ShieldAlert size={18} />
+                  {serverError}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-               <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-1 ml-4">Username</label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={form.username}
-                    onChange={handleChange}
-                    placeholder="Ex: beauty.admin"
-                    className="luxury-input"
-                  />
-                  {errors.username && <p className="mt-1 text-[9px] font-bold text-rose-400 ml-4">{errors.username}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="group">
+                  <label className="luna-label !ml-2">Operator ID</label>
+                  <div className="relative">
+                     <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
+                     <input
+                       type="text"
+                       name="username"
+                       value={form.username}
+                       onChange={handleChange}
+                       placeholder="Identity identifier..."
+                       className="luna-input !pl-16 !py-4"
+                     />
+                  </div>
+                  {errors.username && <p className="mt-2 text-[9px] font-black text-red-400 uppercase tracking-widest ml-2">{errors.username}</p>}
                </div>
-               <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-1 ml-4">Account Role</label>
-                  <select
-                    name="role"
-                    value={form.role}
-                    onChange={handleChange}
-                    className="luxury-input cursor-pointer"
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
+
+               <div className="group">
+                  <label className="luna-label !ml-2">Operational Protocol</label>
+                  <div className="relative">
+                     <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
+                     <select
+                       name="role"
+                       value={form.role}
+                       onChange={handleChange}
+                       className="luna-input !pl-16 !py-4 appearance-none cursor-pointer"
+                     >
+                       {ROLES.map((r) => (
+                         <option key={r.value} value={r.value} className="bg-luna-midnight text-white">{r.label}</option>
+                       ))}
+                     </select>
+                  </div>
                </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-1 ml-4">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="email@excellence.com"
-                className="luxury-input"
-              />
-              {errors.email && <p className="mt-1 text-[9px] font-bold text-rose-400 ml-4">{errors.email}</p>}
+            <div className="group">
+              <label className="luna-label !ml-2">Communication Channel</label>
+              <div className="relative">
+                 <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
+                 <input
+                   type="email"
+                   name="email"
+                   value={form.email}
+                   onChange={handleChange}
+                   placeholder="secure.comms@nexus.com"
+                   className="luna-input !pl-16 !py-4"
+                 />
+              </div>
+              {errors.email && <p className="mt-2 text-[9px] font-black text-red-400 uppercase tracking-widest ml-2">{errors.email}</p>}
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-[10px] font-black text-blush-soft uppercase tracking-widest mb-1 ml-4">Secure Password</label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="luxury-input"
-              />
-              {errors.password && <p className="mt-1 text-[9px] font-bold text-rose-400 ml-4">{errors.password}</p>}
+            <div className="group">
+              <label className="luna-label !ml-2">Security Token</label>
+              <div className="relative">
+                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
+                 <input
+                   type="password"
+                   name="password"
+                   value={form.password}
+                   onChange={handleChange}
+                   placeholder="••••••••••••"
+                   className="luna-input !pl-16 !py-4"
+                 />
+              </div>
+              {errors.password && <p className="mt-2 text-[9px] font-black text-red-400 uppercase tracking-widest ml-2">{errors.password}</p>}
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full luxury-button mt-4"
-            >
-              {loading ? 'Creating Identity...' : 'Confirm Registration'}
-            </button>
+            <div className="pt-8">
+               <button
+                 type="submit"
+                 disabled={loading}
+                 className="w-full luna-button !py-5 shadow-2xl shadow-luna-aqua/20 group relative overflow-hidden"
+               >
+                 <span className="relative z-10 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em]">
+                   {loading ? 'Processing Registry...' : 'Initialize Identity'}
+                   {!loading && <ArrowRight size={20} className="group-hover:translate-x-3 transition-transform" />}
+                 </span>
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+               </button>
+            </div>
+
+            <div className="text-center pt-8 border-t border-luna-aqua/5">
+               <p className="text-xs font-medium text-text-muted">
+                 Existing Operator?{' '}
+                 <Link to="/login" className="text-luna-aqua font-black hover:text-white transition-colors flex items-center justify-center gap-2 mt-4 uppercase tracking-[0.2em] group">
+                   Sign In To Portal <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                 </Link>
+               </p>
+            </div>
           </form>
+        </motion.div>
+      </div>
 
-          <p className="text-center text-xs font-medium text-ivory-warm/40 mt-8">
-            Already a member?{' '}
-            <Link to="/login" className="text-blush-soft font-black hover:text-ivory-warm transition-colors underline decoration-ivory-warm/20 underline-offset-4">Sign In</Link>
-          </p>
-        </div>
+      {/* Security Status Line */}
+      <div className="fixed bottom-10 right-10 flex items-center gap-6 opacity-30 pointer-events-none">
+         <div className="flex items-center gap-3">
+            <Zap size={14} className="text-luna-aqua" />
+            <span className="text-[9px] font-black text-white uppercase tracking-[0.4em]">Audit Active</span>
+         </div>
+         <div className="w-1 h-1 rounded-full bg-white/20" />
+         <div className="flex items-center gap-3">
+            <ShieldCheck size={14} className="text-luna-aqua" />
+            <span className="text-[9px] font-black text-white uppercase tracking-[0.4em]">System Verified</span>
+         </div>
       </div>
     </div>
   );
 }
+
+const IdentityFeature = ({ icon, label }) => (
+  <motion.div 
+    whileHover={{ x: 10 }}
+    className="flex items-center gap-4 p-5 rounded-3xl bg-luna-midnight/40 border border-luna-aqua/5 hover:border-luna-aqua/20 transition-all cursor-default group"
+  >
+     <div className="w-10 h-10 luna-glass rounded-xl flex items-center justify-center text-luna-aqua group-hover:luna-glow transition-all shrink-0">
+        {icon}
+     </div>
+     <span className="text-sm font-black text-white uppercase tracking-widest">{label}</span>
+  </motion.div>
+);

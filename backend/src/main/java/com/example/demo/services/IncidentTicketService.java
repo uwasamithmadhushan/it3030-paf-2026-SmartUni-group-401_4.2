@@ -50,6 +50,25 @@ public class IncidentTicketService {
         return mapToResponse(saved);
     }
 
+    public TicketResponse updateTicket(String id, TicketRequest request, User user) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setCategory(request.getCategory());
+        ticket.setResourceId(request.getResourceId());
+        ticket.setLocation(request.getLocation());
+        ticket.setContactDetails(request.getContactDetails());
+        ticket.setPriority(request.getPriority());
+        
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
     public void deleteTicket(String id, User user) {
         IncidentTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));

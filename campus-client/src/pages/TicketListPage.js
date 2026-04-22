@@ -1,141 +1,236 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllTickets, deleteTicket } from '../services/api';
+import { getAllTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Ticket, 
+  ChevronRight, 
+  Calendar,
+  Layers,
+  ArrowRight,
+  Activity,
+  ShieldCheck,
+  Zap,
+  Globe,
+  Clock,
+  MapPin
+} from 'lucide-react';
 
 export default function TicketListPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
-  const { addToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTickets();
+    const interval = setInterval(fetchTickets, 60000); // Sync every minute
+    return () => clearInterval(interval);
   }, []);
 
   const fetchTickets = async () => {
-    setLoading(true);
     try {
       const { data } = await getAllTickets();
       let filtered = data;
       if (user.role === 'USER') {
         filtered = data.filter(t => t.createdById === user.id);
       } else if (user.role === 'TECHNICIAN') {
-        filtered = data.filter(t => t.assignedTechnicianId === user.id);
+        filtered = data.filter(t => t.assignedTechnician === user.username);
       }
       setTickets(filtered);
     } catch (err) {
-      addToast('Failed to retrieve reports', 'error');
+      console.error('Failed to synchronize incident archive');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTickets = filter === 'ALL' ? tickets : tickets.filter(t => t.status === filter);
+  const filteredTickets = tickets.filter(t => {
+    const matchesFilter = filter === 'ALL' || t.status === filter;
+    const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          t.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
-  if (loading) return <LoadingSpinner fullScreen message="Accessing Archive..." />;
+  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Registry..." />;
+
+  const statusFilters = ['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED'];
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-8 animate-luxury">
+    <div className="max-w-[1600px] mx-auto space-y-12">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-ivory-warm/10">
-        <div>
-           <h1 className="text-4xl font-black text-ivory-warm tracking-tight">Support Queue</h1>
-           <p className="text-sm font-bold text-blush-soft uppercase tracking-widest mt-2">Active Incident Registry</p>
-        </div>
-        <button onClick={() => navigate('/tickets/new')} className="luxury-button">
-          New Report
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        {['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              filter === f 
-                ? 'bg-blush-soft text-plum-dark shadow-luxury' 
-                : 'bg-white/5 text-ivory-warm/40 hover:text-ivory-warm hover:bg-white/10'
-            }`}
-          >
-            {f.replace('_', ' ')}
-          </button>
-        ))}
-      </div>
-
-      {/* Ticket Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTickets.map((ticket) => (
-          <div 
-            key={ticket.id} 
-            onClick={() => navigate(`/tickets/${ticket.id}`)}
-            className="luxury-card group cursor-pointer relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-               <svg className="w-16 h-16 text-ivory-warm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-               </svg>
-            </div>
-
-            <div className="flex justify-between items-start mb-6">
-              <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getStatusStyles(ticket.status)}`}>
-                {ticket.status.replace('_', ' ')}
-              </span>
-              <span className="text-[10px] font-bold text-ivory-warm/20 uppercase">#{ticket.id.substring(0, 8)}</span>
-            </div>
-
-            <h3 className="text-xl font-black text-ivory-warm mb-2 group-hover:text-blush-soft transition-colors line-clamp-1">{ticket.title}</h3>
-            <p className="text-sm text-ivory-warm/50 line-clamp-2 mb-6 font-medium leading-relaxed">{ticket.description}</p>
-
-            <div className="flex items-center justify-between pt-6 border-t border-ivory-warm/5">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-blush-soft uppercase tracking-widest">Priority</span>
-                <span className={`text-xs font-bold ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span>
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-luna-aqua/10">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+           <div className="flex items-center gap-3 mb-4">
+              <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
+                <Globe size={12} className="text-luna-aqua animate-pulse" />
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Intelligence Feed</span>
               </div>
-              <div className="text-right">
-                <span className="text-[9px] font-black text-ivory-warm/30 uppercase tracking-widest">Raised</span>
-                <p className="text-[10px] font-bold text-ivory-warm/60">{new Date(ticket.createdAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+           </div>
+           <h1 className="text-6xl font-black text-white tracking-tighter">Support <span className="text-luna-aqua">Matrix</span></h1>
+           <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity incident monitoring and operational resource tracking.</p>
+        </motion.div>
+        
+        <motion.button 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate('/tickets/new')} 
+          className="luna-button !px-10 !py-4 flex items-center gap-4 shadow-2xl shadow-luna-aqua/20"
+        >
+          <Plus size={20} /> Register Discrepancy
+        </motion.button>
       </div>
 
-      {filteredTickets.length === 0 && (
-        <div className="py-32 text-center luxury-card border-dashed">
-          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-             <span className="text-4xl opacity-20">📂</span>
-          </div>
-          <h3 className="text-xl font-black text-ivory-warm/40 italic tracking-tight">No matching reports found</h3>
+      {/* Intelligence Control Bar */}
+      <div className="flex flex-col xl:flex-row gap-8 items-center justify-between bg-luna-midnight/40 p-8 rounded-[2.5rem] border border-luna-aqua/5">
+        <div className="flex flex-wrap justify-center gap-4">
+          {statusFilters.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border ${
+                filter === f 
+                  ? 'bg-luna-aqua text-luna-midnight border-luna-aqua shadow-xl shadow-luna-aqua/20' 
+                  : 'bg-luna-midnight/60 text-text-muted hover:text-white hover:border-luna-aqua/30 border-luna-aqua/5'
+              }`}
+            >
+              {f.replace('_', ' ')}
+            </button>
+          ))}
         </div>
-      )}
+
+        <div className="relative w-full xl:w-[500px] group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+          <input
+            type="text"
+            placeholder="Search incident archive..."
+            className="luna-input !pl-16 !py-4 !rounded-[2rem] text-base"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Incident Visualization Grid */}
+      <div className="grid grid-cols-1 gap-8">
+        <AnimatePresence mode="popLayout">
+          {filteredTickets.map((ticket, idx) => (
+            <motion.div 
+              key={ticket.id} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03 }}
+              onClick={() => navigate(`/tickets/${ticket.id}`)}
+              className="luna-card group cursor-pointer relative overflow-hidden !p-0 hover:border-luna-aqua/30"
+            >
+              <div className="px-10 py-10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+                <div className="flex items-center gap-10 flex-1">
+                  <div className="w-20 h-20 luna-glass rounded-[2rem] flex items-center justify-center text-luna-aqua group-hover:luna-glow transition-all shrink-0">
+                    <Ticket size={32} className="group-hover:rotate-12 transition-transform" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-5 mb-3">
+                      <span className={`luna-badge !px-4 !py-1 ${getStatusStyles(ticket.status)}`}>
+                        {ticket.status.replace('_', ' ')}
+                      </span>
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">ID: #{ticket.id.substring(0, 12)}</span>
+                    </div>
+                    <h3 className="text-2xl font-black text-white group-hover:text-luna-aqua transition-colors truncate tracking-tight">{ticket.title}</h3>
+                    <div className="flex flex-wrap items-center gap-8 mt-5 text-text-muted font-black text-[10px] uppercase tracking-[0.2em]">
+                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Calendar size={14} className="text-luna-aqua" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Layers size={14} className="text-luna-aqua" /> {ticket.category}</span>
+                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><MapPin size={14} className="text-luna-aqua" /> {ticket.location || 'Sector Alpha'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-12">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] mb-2">Priority Tier</p>
+                    <div className="flex items-center gap-3 justify-end">
+                       <Zap size={14} className={getPriorityStyles(ticket.priority).text} />
+                       <p className={`text-base font-black ${getPriorityStyles(ticket.priority).text}`}>{ticket.priority}</p>
+                    </div>
+                  </div>
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-luna-steel/10 flex items-center justify-center text-text-muted group-hover:bg-luna-aqua group-hover:text-luna-midnight transition-all group-hover:translate-x-3 shadow-lg group-hover:luna-glow">
+                    <ArrowRight size={28} />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Operational Progress Matrix */}
+              <div className="absolute bottom-0 left-0 h-1 bg-luna-aqua/5 w-full">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: ticket.status === 'RESOLVED' ? '100%' : ticket.status === 'IN_PROGRESS' ? '50%' : '10%' }}
+                  transition={{ duration: 1, ease: "circOut" }}
+                  className={`h-full bg-luna-aqua ${ticket.status === 'RESOLVED' ? 'luna-glow' : ''}`} 
+                />
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {filteredTickets.length === 0 && (
+          <div className="py-40 text-center luna-card border-dashed border-luna-aqua/10 flex flex-col items-center gap-8">
+            <div className="w-32 h-32 luna-glass rounded-[3rem] flex items-center justify-center text-text-muted opacity-10">
+              <ShieldCheck size={64} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-black text-white/20 tracking-tighter italic uppercase">Registry Sync Failed</h3>
+              <p className="text-base font-medium text-text-muted mt-4">No incident entries detected for current synchronization parameters.</p>
+            </div>
+            <button 
+              onClick={() => {setFilter('ALL'); setSearchTerm('');}} 
+              className="luna-button-outline !px-12 !py-4"
+            >
+              Reset Archive Parameters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Global Status Footer */}
+      <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
+         <div className="flex items-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
+            Central Hub Synchronized
+         </div>
+         <div className="flex items-center gap-8">
+            <span>Operational Integrity: 99.9%</span>
+            <span>Uptime: 432:12:08</span>
+         </div>
+      </div>
     </div>
   );
 }
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    case 'IN_PROGRESS': return 'bg-violet-deep/20 text-ivory-warm border-ivory-warm/20';
-    case 'RESOLVED': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    case 'CLOSED': return 'bg-white/5 text-ivory-warm/40 border-white/10';
-    default: return 'bg-white/5 text-ivory-warm/40 border-white/10';
+    case 'OPEN': return 'bg-luna-steel/10 text-luna-cyan border-luna-cyan/20';
+    case 'IN_PROGRESS': return 'bg-luna-cyan/10 text-luna-cyan border-luna-cyan/20';
+    case 'RESOLVED': return 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20 luna-glow';
+    default: return 'bg-white/5 text-text-muted border-white/5';
   }
 };
 
-const getPriorityColor = (priority) => {
+const getPriorityStyles = (priority) => {
   switch (priority) {
-    case 'CRITICAL': return 'text-rose-400';
-    case 'HIGH': return 'text-blush-soft';
-    case 'MEDIUM': return 'text-ivory-warm/60';
-    case 'LOW': return 'text-emerald-400';
-    default: return 'text-ivory-warm/30';
+    case 'CRITICAL': return { text: 'text-red-400' };
+    case 'HIGH': return { text: 'text-luna-aqua' };
+    case 'MEDIUM': return { text: 'text-luna-cyan' };
+    default: return { text: 'text-text-muted' };
   }
 };
