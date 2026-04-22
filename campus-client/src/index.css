@@ -5,19 +5,35 @@
 @tailwind utilities;
 
 :root {
-  --plum-dark: #190019;
-  --violet-deep: #2B124C;
-  --wine-muted: #522B5B;
-  --mauve-dusty: #854F6C;
-  --blush-soft: #DFB6B2;
-  --ivory-warm: #FBE4D8;
+  /* Luna-inspired Blue Monochrome Palette */
+  --luna-aqua: #A7EBF2;
+  --luna-cyan: #54ACBF;
+  --luna-steel: #26658C;
+  --luna-navy: #023859;
+  --luna-midnight: #011C40;
+  
+  /* Semantic Mappings */
+  --bg-gradient: linear-gradient(135deg, var(--luna-midnight), var(--luna-navy));
+  --surface-glass: rgba(2, 56, 89, 0.4);
+  --border-light: rgba(167, 235, 242, 0.1);
+  --text-main: #FFFFFF;
+  --text-muted: rgba(167, 235, 242, 0.7);
+  --accent: var(--luna-aqua);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   font-family: 'Outfit', sans-serif;
-  background-color: var(--plum-dark);
-  color: var(--ivory-warm);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -25,73 +41,150 @@ body {
 
 /* Luxury Utilities */
 @layer components {
-  .glass-panel {
-    @apply bg-wine-muted/20 backdrop-blur-xl border border-ivory-warm/10 shadow-luxury;
+  .luna-glass {
+    background: var(--surface-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 8px 32px 0 rgba(1, 28, 64, 0.5);
   }
   
-  .luxury-button {
-    @apply px-8 py-3 rounded-full font-bold transition-all duration-500 active:scale-95 shadow-soft;
-    background: linear-gradient(135deg, var(--mauve-dusty), var(--wine-muted));
-    color: var(--ivory-warm);
+  .luna-button {
+    @apply px-8 py-3 rounded-xl font-bold transition-all duration-500 active:scale-95 flex items-center justify-center gap-2;
+    background: linear-gradient(135deg, var(--luna-steel), var(--luna-navy));
+    color: white;
+    border: 1px solid rgba(167, 235, 242, 0.2);
   }
   
-  .luxury-button:hover {
-    @apply shadow-luxury;
-    background: linear-gradient(135deg, var(--wine-muted), var(--mauve-dusty));
+  .luna-button:hover {
+    background: linear-gradient(135deg, var(--luna-cyan), var(--luna-steel));
+    box-shadow: 0 0 20px rgba(167, 235, 242, 0.3);
     transform: translateY(-2px);
   }
 
-  .luxury-input {
-    @apply w-full bg-violet-deep/30 border border-ivory-warm/10 rounded-2xl px-6 py-3 text-ivory-warm placeholder-ivory-warm/40 focus:outline-none focus:ring-2 focus:ring-blush-soft/50 transition-all duration-300;
+  .luna-button-outline {
+    @apply px-8 py-3 rounded-xl font-bold transition-all duration-500 active:scale-95 border flex items-center justify-center gap-2;
+    border-color: var(--luna-steel);
+    color: var(--luna-aqua);
+    background: transparent;
   }
 
-  .luxury-card {
-    @apply bg-wine-muted/30 border border-ivory-warm/5 rounded-luxury p-8 shadow-soft hover:shadow-luxury transition-all duration-500;
+  .luna-button-outline:hover {
+    background: rgba(38, 101, 140, 0.1);
+    border-color: var(--luna-aqua);
+    box-shadow: 0 0 15px rgba(167, 235, 242, 0.1);
+  }
+
+  .luna-input {
+    @apply w-full bg-luna-midnight/40 border border-luna-aqua/10 rounded-xl px-6 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-luna-aqua/30 transition-all duration-300;
+  }
+
+  .luna-card {
+    @apply rounded-3xl p-8 transition-all duration-500;
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-light);
+  }
+  
+  .luna-card:hover {
+    border-color: rgba(167, 235, 242, 0.3);
+    box-shadow: 0 12px 40px 0 rgba(1, 28, 64, 0.7);
+  }
+
+  .luna-sidebar {
+    background: rgba(1, 28, 64, 0.8);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-light);
+  }
+
+  .luna-nav-link {
+    @apply flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 text-text-muted;
+  }
+
+  .luna-nav-link:hover {
+    @apply bg-luna-steel/20 text-luna-aqua;
+  }
+
+  .luna-nav-link.active {
+    @apply bg-luna-steel/40 text-white font-bold;
+    box-shadow: inset 0 0 10px rgba(167, 235, 242, 0.1);
+  }
+
+  .luna-badge {
+    @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    background: rgba(167, 235, 242, 0.1);
+    color: var(--luna-aqua);
+    border: 1px solid rgba(167, 235, 242, 0.2);
+  }
+
+  .luna-stat-card {
+    @apply luna-card flex flex-col gap-2;
+  }
+
+  .luna-stat-value {
+    @apply text-3xl font-black tracking-tight;
+    color: var(--luna-aqua);
+    text-shadow: 0 0 10px rgba(167, 235, 242, 0.3);
+  }
+
+  .luna-table {
+    @apply w-full border-separate border-spacing-y-2;
+  }
+
+  .luna-table th {
+    @apply px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-text-muted;
+  }
+
+  .luna-table tr {
+    @apply transition-all duration-300;
+  }
+
+  .luna-table td {
+    @apply px-6 py-4 first:rounded-l-2xl last:rounded-r-2xl bg-luna-navy/20 border-y border-white/5 first:border-l last:border-r;
+  }
+
+  .luna-table tr:hover td {
+    @apply bg-luna-steel/20 border-white/10;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--plum-dark);
+  background: var(--luna-midnight);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--wine-muted);
+  background: var(--luna-navy);
   border-radius: 10px;
+  border: 2px solid var(--luna-midnight);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--mauve-dusty);
+  background: var(--luna-steel);
 }
 
 /* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(167, 235, 242, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(167, 235, 242, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(167, 235, 242, 0.2); }
 }
 
-.animate-luxury {
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.luna-glow {
+  animation: glow 3s infinite ease-in-out;
 }
 
-@layer utilities {
-  @keyframes slide-in {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes scale-up {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  .animate-slide-in { animation: slide-in 0.3s ease-out; }
-  .animate-fade-in { animation: fade-in 0.2s ease-out; }
-  .animate-scale-up { animation: scale-up 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.luna-float {
+  animation: float 6s infinite ease-in-out;
 }

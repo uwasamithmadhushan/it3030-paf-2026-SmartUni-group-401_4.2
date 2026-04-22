@@ -1,250 +1,286 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { getAllTickets, updateTicketStatus } from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getAllTickets, updateTicketStatus, getAllUsers, assignTechnician } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { 
+  ShieldCheck, 
+  RefreshCw, 
+  Search, 
+  Filter, 
+  Clock, 
+  MapPin, 
+  Zap, 
+  CheckCircle2, 
+  AlertCircle, 
+  ChevronRight,
+  ClipboardList,
+  Layers,
+  MoreVertical,
+  Activity,
+  Users,
+  Globe,
+  ArrowRight,
+  Sparkles,
+  UserPlus
+} from 'lucide-react';
 
-const AssignmentSkeleton = () => (
-  <tr className="animate-pulse border-b border-slate-50">
-    <td className="px-8 py-6">
-      <div className="h-3 bg-slate-100 rounded w-16 mb-2"></div>
-      <div className="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
-      <div className="h-3 bg-slate-100 rounded w-1/2"></div>
-    </td>
-    <td className="px-8 py-6"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
-    <td className="px-8 py-6"><div className="h-6 bg-slate-100 rounded-full w-16"></div></td>
-    <td className="px-8 py-6"><div className="h-10 bg-slate-100 rounded w-20"></div></td>
-    <td className="px-8 py-6"><div className="h-4 bg-slate-100 rounded w-16"></div></td>
-    <td className="px-8 py-6 text-right"><div className="h-10 bg-slate-100 rounded-xl w-24 ml-auto"></div></td>
-  </tr>
-);
-
-const TechnicianAssignmentsPage = () => {
+export default function TechnicianAssignmentsPage() {
   const [tickets, setTickets] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [assigning, setAssigning] = useState(null);
   
   const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchTickets(true);
-      const interval = setInterval(() => fetchTickets(false), 30000);
-      return () => clearInterval(interval);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  const fetchTickets = async (showLoading = true) => {
+  const fetchData = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const { data } = await getAllTickets();
-      setTickets(data.filter(t => t.assignedTechnicianId === user.id));
+      const [ticketsRes, usersRes] = await Promise.all([
+        getAllTickets(),
+        getAllUsers()
+      ]);
+      setTickets(ticketsRes.data.filter(t => t.status !== 'CLOSED'));
+      setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
     } catch (error) {
-      addToast('Error fetching assignments', 'error');
+      addToast('Dispatch synchronization failed', 'error');
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  const handleStatusUpdate = async (id, status) => {
+  useEffect(() => {
+    fetchData(true);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const handleAssign = async (ticketId, technicianId) => {
+    if (!technicianId) return;
+    setAssigning(ticketId);
     try {
-      await updateTicketStatus(id, { status, note: `Technician updated status to ${status}` });
-      addToast(`Status updated to ${status.replace('_', ' ')}`, 'success');
-      fetchTickets();
-    } catch (error) {
-      addToast('Failed to update status', 'error');
+      await assignTechnician(ticketId, { technicianId });
+      addToast('Specialist successfully deployed', 'success');
+      fetchData(false);
+    } catch (err) {
+      addToast('Deployment protocol failed', 'error');
+    } finally {
+      setAssigning(null);
     }
   };
 
   const filteredTickets = useMemo(() => {
     return tickets.filter(t => {
-      const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (t.location && t.location.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSearch = (t.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || 
+                           (t.id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                           (t.assignedTechnician?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
-      const matchesPriority = priorityFilter === 'ALL' || t.priority === priorityFilter;
-      return matchesSearch && matchesStatus && matchesPriority;
+      return matchesSearch && matchesStatus;
     });
-  }, [tickets, searchTerm, statusFilter, priorityFilter]);
+  }, [tickets, searchTerm, statusFilter]);
+
+  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Accessing Dispatch Hub..." />;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="p-8 max-w-[1600px] mx-auto space-y-8"
-    >
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Work Order Management</h1>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Manage and update your assigned incident reports</p>
-        </div>
-        <div className="flex items-center gap-3">
-           <div className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black uppercase tracking-widest border border-indigo-100">
-              {filteredTickets.length} Jobs Total
+    <div className="max-w-[1600px] mx-auto space-y-12 pb-20">
+      
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-luna-aqua/10">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+           <div className="flex items-center gap-3 mb-4">
+              <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
+                <Globe size={12} className="text-luna-aqua animate-pulse" />
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Mission Dispatch Matrix</span>
+              </div>
            </div>
-           <button onClick={fetchTickets} className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl transition-all border border-slate-100">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+           <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Mission <span className="text-luna-aqua">Dispatch</span></h1>
+           <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity specialist deployment and field operation oversight.</p>
+        </motion.div>
+        
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-6"
+        >
+           <div className="px-8 py-4 luna-glass rounded-3xl flex items-center gap-4 shadow-xl shadow-luna-aqua/5">
+              <Users size={20} className="text-luna-aqua" />
+              <div className="text-left">
+                 <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Active Specialists</p>
+                 <p className="text-xl font-black text-white tracking-tight">{technicians.length} Nodes</p>
+              </div>
+           </div>
+           <button onClick={() => fetchData(true)} className="w-16 h-16 luna-glass rounded-3xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all shadow-xl shadow-luna-aqua/5">
+              <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
            </button>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Filters Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-        <div className="relative col-span-2">
-          <input 
-            type="text" 
-            placeholder="Search by ID, title or location..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
-          />
-          <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-        </div>
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="ALL">All Statuses</option>
-          <option value="OPEN">Open</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="RESOLVED">Resolved</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="ON_HOLD">On Hold</option>
-        </select>
-        <select 
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="ALL">All Priorities</option>
-          <option value="CRITICAL">Critical</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="LOW">Low</option>
-        </select>
-      </div>
-
-      {/* Main Table */}
-      <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden min-h-[400px]">
-        <table className="w-full text-left table-fixed">
-          <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-1/3">Job Details</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-40">Location</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">Priority</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">SLA Time</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">Status</th>
-              <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest w-48">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              [...Array(5)].map((_, i) => <AssignmentSkeleton key={i} />)
-            ) : (
-              filteredTickets.map(t => (
-              <tr key={t.id} className="hover:bg-slate-50/50 transition-all group">
-                <td className="px-8 py-6">
-                  <p className="text-xs font-black text-indigo-600 mb-0.5">#{t.id.substring(0, 8)}</p>
-                  <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 cursor-pointer transition-colors" onClick={() => navigate(`/tickets/${t.id}`)}>{t.title}</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Reported: {new Date(t.createdAt).toLocaleDateString()}</p>
-                </td>
-                <td className="px-8 py-6">
-                   <p className="text-sm font-bold text-slate-700">📍 {t.location || 'General Site'}</p>
-                </td>
-                <td className="px-8 py-6">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black border ${getPriorityStyles(t.priority)}`}>{t.priority}</span>
-                </td>
-                <td className="px-8 py-6">
-                   <div className="flex flex-col gap-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Remaining</p>
-                      <p className="text-sm font-black text-slate-900">1h 45m</p>
-                   </div>
-                </td>
-                <td className="px-8 py-6">
-                   <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${t.status === 'IN_PROGRESS' ? 'bg-amber-500 animate-pulse' : t.status === 'RESOLVED' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{t.status.replace('_', ' ')}</span>
-                   </div>
-                </td>
-                <td className="px-8 py-6 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                     <StatusDropdown 
-                        currentStatus={t.status} 
-                        onUpdate={(newStatus) => handleStatusUpdate(t.id, newStatus)} 
-                     />
-                     <button 
-                        onClick={() => navigate(`/tickets/${t.id}`)} 
-                        className="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
-                     >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                     </button>
-                  </div>
-                </td>
-              </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        {filteredTickets.length === 0 && (
-           <div className="py-20 text-center">
-              <p className="text-slate-400 font-bold italic">No matching assignments found.</p>
-           </div>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-function getPriorityStyles(priority) {
-  switch (priority) {
-    case 'CRITICAL': return 'bg-rose-50 text-rose-600 border-rose-100';
-    case 'HIGH': return 'bg-orange-50 text-orange-600 border-orange-100';
-    case 'MEDIUM': return 'bg-amber-50 text-amber-600 border-amber-100';
-    case 'LOW': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-    default: return 'bg-slate-50 text-slate-400 border-slate-100';
-  }
-}
-
-function StatusDropdown({ currentStatus, onUpdate }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const options = ['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'RESOLVED', 'COMPLETED'];
-
-  return (
-    <div className="relative">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-white hover:border-emerald-300 transition-all shadow-sm active:scale-95"
-      >
-        {currentStatus.replace('_', ' ')}
-        <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-      </button>
-
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-          <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-2xl border border-slate-100 py-2 z-50 animate-scale-up">
-            {options.map(opt => (
-              <button
-                key={opt}
-                onClick={() => { onUpdate(opt); setIsOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors ${currentStatus === opt ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-500'}`}
-              >
-                {opt.replace('_', ' ')}
-              </button>
-            ))}
+      {/* Advanced Scan Matrix */}
+      <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/5 !p-10">
+        <div className="flex flex-col xl:flex-row gap-10 items-end">
+          <div className="flex-1 min-w-[320px] group">
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Incident Scan Archive</label>
+            <div className="relative">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={22} />
+              <input 
+                type="text" 
+                placeholder="Locate incident dossiers or specialists..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="luna-input !pl-16 !py-5"
+              />
+            </div>
           </div>
-        </>
+          
+          <div className="w-full xl:w-72 group">
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Operational Status</label>
+            <div className="relative">
+              <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={22} />
+              <select 
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="luna-input !pl-16 !py-5 appearance-none cursor-pointer"
+              >
+                <option value="ALL" className="bg-luna-midnight">All Operational States</option>
+                <option value="OPEN" className="bg-luna-midnight">Open Request</option>
+                <option value="IN_PROGRESS" className="bg-luna-midnight">Field Deployment</option>
+                <option value="RESOLVED" className="bg-luna-midnight">Incident Resolved</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 px-6 py-5 bg-luna-aqua/5 border border-luna-aqua/10 rounded-3xl">
+             <Activity size={20} className="text-luna-aqua animate-pulse" />
+             <span className="text-[10px] font-black text-white uppercase tracking-widest">{filteredTickets.length} Potential Dispatches</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dispatch Deployment Matrix */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+        <AnimatePresence mode="popLayout">
+          {filteredTickets.map((t, idx) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04 }}
+              className="luna-card group hover:border-luna-aqua/30 flex flex-col relative overflow-hidden !p-0"
+            >
+              {/* Card Header Background */}
+              <div className="h-32 bg-luna-midnight/60 relative overflow-hidden border-b border-luna-aqua/5">
+                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-luna-midnight to-transparent" />
+                 <div className="absolute top-8 left-10 flex items-center gap-5">
+                    <span className={`luna-badge !px-4 !py-1 ${t.priority === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20 luna-glow' : 'bg-luna-steel/20 text-luna-cyan border-luna-aqua/10'}`}>
+                       {t.priority} DELTA
+                    </span>
+                    <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">INC-#{t.id.substring(0, 12)}</span>
+                 </div>
+                 <Sparkles size={24} className="absolute right-8 top-8 text-luna-aqua/10 group-hover:text-luna-aqua/30 transition-colors" />
+              </div>
+
+              <div className="p-10 flex-1 flex flex-col">
+                <h3 className="text-3xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-4">{t.title}</h3>
+                
+                <div className="flex flex-wrap gap-8 items-center mb-10 text-[10px] font-black text-text-muted uppercase tracking-widest">
+                   <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-luna-aqua" /> Logged: {new Date(t.createdAt).toLocaleDateString()}
+                   </div>
+                   <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-luna-aqua" /> Sector: {t.location || 'Central Nexus'}
+                   </div>
+                </div>
+
+                <div className="p-8 rounded-[2rem] bg-luna-midnight/60 border border-luna-aqua/5 mb-10 group/assignment hover:border-luna-aqua/20 transition-all">
+                   <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-4">Current Personnel Assignment</p>
+                   <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-2xl bg-luna-aqua/10 border border-luna-aqua/20 flex items-center justify-center text-luna-aqua luna-glow group-hover/assignment:scale-110 transition-transform">
+                         <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                         <p className="text-lg font-black text-white tracking-tight">{t.assignedTechnician || 'Awaiting Specialist Deployment...'}</p>
+                         <p className="text-[9px] font-black text-luna-cyan uppercase tracking-widest mt-1">{t.assignedTechnician ? 'Specialist Active' : 'Unassigned Intelligence Node'}</p>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="mt-auto pt-10 border-t border-luna-aqua/5 flex flex-col sm:flex-row items-end gap-6">
+                   <div className="flex-1 w-full group/dispatch">
+                      <label className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.3em] block mb-4 ml-2">Override Dispatch Deployment</label>
+                      <div className="relative">
+                        <UserPlus className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within/dispatch:text-luna-aqua transition-colors" size={20} />
+                        <select 
+                          className="luna-input !pl-16 !py-4 appearance-none cursor-pointer"
+                          onChange={(e) => handleAssign(t.id, e.target.value)}
+                          defaultValue=""
+                        >
+                          <option value="" className="bg-luna-midnight">Select Field Specialist Personnel...</option>
+                          {technicians.map(tech => (
+                            <option key={tech.id} value={tech.id} className="bg-luna-midnight text-white">{tech.username} ({tech.email})</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
+                           <ChevronRight size={18} className="rotate-90" />
+                        </div>
+                      </div>
+                   </div>
+                   <button 
+                      onClick={() => navigate(`/tickets/${t.id}`)}
+                      className="w-16 h-16 luna-glass rounded-3xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all shadow-xl shadow-luna-aqua/5 group/inspect"
+                   >
+                      {assigning === t.id ? <Zap size={24} className="animate-spin" /> : <ArrowRight size={24} className="group-hover/inspect:translate-x-2 transition-transform" />}
+                   </button>
+                </div>
+              </div>
+
+              {/* Animated Progress Accent */}
+              <div className="absolute bottom-0 left-0 h-1 bg-luna-aqua/5 w-full">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: t.status === 'RESOLVED' ? '100%' : t.status === 'IN_PROGRESS' ? '60%' : '10%' }}
+                  transition={{ duration: 1, ease: "circOut" }}
+                  className={`h-full ${t.status === 'RESOLVED' ? 'bg-luna-aqua luna-glow' : 'bg-luna-cyan'}`} 
+                />
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {filteredTickets.length === 0 && (
+        <div className="py-48 text-center luna-card border-dashed border-luna-aqua/10 flex flex-col items-center gap-10 opacity-20">
+          <div className="w-32 h-32 luna-glass rounded-[3rem] flex items-center justify-center text-luna-aqua">
+             <ClipboardList size={64} />
+          </div>
+          <div>
+             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Dispatch Registry Silent</h3>
+             <p className="text-base font-medium text-text-muted mt-4">No active incident dossiers currently require specialist deployment synchronization.</p>
+          </div>
+          <button onClick={() => setSearchTerm('')} className="luna-button-outline !px-12 !py-4">Reset Dispatch Scan</button>
+        </div>
       )}
+
+      {/* Superior Status Footer */}
+      <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
+         <div className="flex items-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
+            Dispatch Command Center Operational
+         </div>
+         <div className="flex items-center gap-8">
+            <span>Specialist Sync: Active</span>
+            <span>Uptime: 4380:12:55</span>
+         </div>
+      </div>
     </div>
   );
 }
-
-export default TechnicianAssignmentsPage;

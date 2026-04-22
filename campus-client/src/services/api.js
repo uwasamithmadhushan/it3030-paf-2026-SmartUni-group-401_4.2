@@ -23,8 +23,17 @@ export const getAllUsers = () => api.get('/users');
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/users/${id}`);
 export const approveUser = (id) => api.put(`/users/${id}/approve`);
+export const updateUserRole = (id, role) => api.put(`/users/${id}/role`, { role });
 
-// Assets / Facilities
+// Resources / Facilities Catalogue
+export const getAllResources = (params) => api.get('/resources', { params });
+export const getResourceById = (id) => api.get(`/resources/${id}`);
+export const createResource = (data) => api.post('/resources', data);
+export const updateResource = (id, data) => api.put(`/resources/${id}`, data);
+export const updateResourceStatus = (id, status) => api.patch(`/resources/${id}/status`, { status });
+export const deleteResource = (id) => api.delete(`/resources/${id}`);
+
+// Assets (Legacy or Generic)
 export const getAllAssets = (params) => api.get('/assets', { params });
 export const getAssetById = (id) => api.get(`/assets/${id}`);
 export const createAsset = (data) => api.post('/assets', data);
@@ -37,8 +46,24 @@ export const getTicketById = (id) => api.get(`/tickets/${id}`);
 export const createTicket = (data) => api.post('/tickets', data);
 export const updateTicket = (id, data) => api.put(`/tickets/${id}`, data);
 export const deleteTicket = (id) => api.delete(`/tickets/${id}`);
+export const updateTicketStatus = (id, data) => api.put(`/tickets/${id}/status`, data);
+export const assignTechnician = (id, data) => api.put(`/tickets/${id}/assign`, data);
+export const addComment = (id, text) => api.post(`/tickets/${id}/comments`, text, {
+  headers: { 'Content-Type': 'text/plain' }
+});
+export const uploadAttachment = (id, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post(`/tickets/${id}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+};
 
 // Bookings
-export const getMyBookings = () => api.get('/bookings/me');
+export const getMyBookings = () => api.get('/bookings/my');
+export const getAllBookings = (status) => api.get('/bookings', { params: { status } });
+export const createBooking = (data) => api.post('/bookings', data);
+export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
+export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
 
 export default api;

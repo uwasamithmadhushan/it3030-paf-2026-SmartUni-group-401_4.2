@@ -1,12 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTicketById, assignTechnician, updateTicketStatus, getAllUsers, addComment, deleteComment, updateComment, deleteTicket, uploadAttachment, deleteAttachment } from '../services/api';
+import { 
+  getTicketById, 
+  assignTechnician, 
+  updateTicketStatus, 
+  getAllUsers, 
+  addComment, 
+  deleteTicket, 
+  uploadAttachment 
+} from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmationModal from '../components/ConfirmationModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  MessageSquare, 
+  User, 
+  Clock, 
+  ShieldAlert, 
+  Paperclip, 
+  Send, 
+  Trash2, 
+  Settings,
+  MapPin,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  Zap,
+  Layers,
+  ShieldCheck,
+  ChevronRight,
+  Globe,
+  Plus
+} from 'lucide-react';
 
-const TicketDetailsPage = () => {
+export default function TicketDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();   
   const { user } = useAuth();
@@ -44,23 +74,20 @@ const TicketDetailsPage = () => {
         setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
       }
     } catch (error) {
-      addToast('Failed to load ticket details', 'error');
+      addToast('Failed to load incident intelligence', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleAssignAction = () => {
-    if (!selectedTech) {
-      addToast('Please select a technician first', 'info');
-      return;
-    }
+    if (!selectedTech) return;
     const techName = technicians.find(t => t.id === selectedTech)?.username;
     setModalState({
       isOpen: true,
       type: 'assign',
       title: 'Confirm Assignment',
-      message: `Are you sure you want to assign this ticket to ${techName}?`,
+      message: `Assign this incident dossier to Specialist ${techName}?`,
       data: selectedTech
     });
   };
@@ -69,20 +96,9 @@ const TicketDetailsPage = () => {
     setModalState({
       isOpen: true,
       type: 'status',
-      title: 'Update Ticket Status',
-      message: newStatus === 'REJECTED' ? 'Reason for rejection?' : `Move this ticket to ${newStatus.replace('_', ' ')}?`,
-      data: newStatus,
-      isInput: newStatus === 'REJECTED'
-    });
-  };
-
-  const handleDeleteAction = () => {
-    setModalState({
-      isOpen: true,
-      type: 'delete_ticket',
-      title: 'Delete Ticket',
-      message: 'Are you sure you want to permanently remove this ticket?',
-      data: null
+      title: 'Update Status',
+      message: `Synchronize incident status to ${newStatus.replace('_', ' ')}?`,
+      data: newStatus
     });
   };
 
@@ -90,25 +106,19 @@ const TicketDetailsPage = () => {
     try {
       if (modalState.type === 'assign') {
         await assignTechnician(id, { technicianId: modalState.data });
-        addToast('Technician assigned successfully', 'success');
+        addToast('Specialist successfully assigned', 'success');
       } else if (modalState.type === 'status') {
-        await updateTicketStatus(id, { 
-          status: modalState.data,
-          note: modalState.reason || `Status updated to ${modalState.data} by ${user.username}` 
-        });
-        addToast(`Ticket status updated to ${modalState.data}`, 'success');
-      } else if (modalState.type === 'edit_comment') {
-        await updateComment(id, modalState.data.id, modalState.reason);
-        addToast('Comment updated successfully', 'success');
+        await updateTicketStatus(id, { status: modalState.data });
+        addToast(`Status synchronized to ${modalState.data}`, 'success');
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
-        addToast('Ticket deleted successfully', 'success');
+        addToast('Incident record purged', 'success');
         navigate('/tickets');
         return;
       }
       fetchData();
     } catch (error) {
-      addToast('Requested action failed', 'error');
+      addToast('Action sequence failed', 'error');
     }
   };
 
@@ -120,45 +130,11 @@ const TicketDetailsPage = () => {
       await addComment(id, newComment);
       setNewComment('');
       fetchData();
-      addToast('Comment added', 'success');
+      addToast('Personnel transmission logged', 'success');
     } catch (error) {
-      addToast('Failed to add comment', 'error');
+      addToast('Transmission failure', 'error');
     } finally {
       setCommenting(false);
-    }
-  };
-
-  const handleEditCommentAction = (comment) => {
-    setModalState({
-      isOpen: true,
-      type: 'edit_comment',
-      title: 'Edit Comment',
-      message: 'Modify your comment below:',
-      data: comment,
-      isInput: true,
-      initialValue: comment.text
-    });
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Delete this comment?')) return;
-    try {
-      await deleteComment(id, commentId);
-      addToast('Comment deleted', 'success');
-      fetchData();
-    } catch (error) {
-      addToast('Failed to delete comment', 'error');
-    }
-  };
-
-  const handleDeleteAttachment = async (filename) => {
-    try {
-      const actualFilename = filename.split('/').pop();
-      await deleteAttachment(id, actualFilename);
-      fetchData();
-      addToast('Attachment removed', 'success');
-    } catch (error) {
-      addToast('Failed to delete attachment', 'error');
     }
   };
 
@@ -169,322 +145,263 @@ const TicketDetailsPage = () => {
     try {
       await uploadAttachment(id, file);
       fetchData();
-      addToast('File uploaded successfully', 'success');
+      addToast('Digital artifact uploaded', 'success');
     } catch (error) {
-      addToast(error.response?.data?.message || 'Upload failed', 'error');
+      addToast('Artifact transmission failed', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <LoadingSpinner fullScreen />;
+  if (loading && !ticket) return <LoadingSpinner fullScreen message="Accessing Incident Archive..." />;
   if (!ticket) return (
-    <div className="p-20 text-center">
-      <div className="text-6xl mb-4">😿</div>
-      <h2 className="text-2xl font-bold">Ticket not found</h2>
-      <button onClick={() => navigate('/tickets')} className="mt-4 text-indigo-600 font-bold hover:underline">Back to List</button>
+    <div className="p-40 text-center flex flex-col items-center gap-8">
+      <XCircle size={80} className="text-luna-aqua opacity-20" />
+      <h2 className="text-4xl font-black text-white tracking-tighter">Incident Not Found</h2>
+      <button onClick={() => navigate('/tickets')} className="luna-button-outline">Return to Registry</button>
     </div>
   );
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Navigation & Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
+    <div className="max-w-[1600px] mx-auto space-y-12">
+      
+      {/* Header Area */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-luna-aqua/10">
+        <div className="flex items-center gap-8">
           <button 
             onClick={() => navigate('/tickets')} 
-            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+            className="w-14 h-14 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            <ArrowLeft size={24} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Ticket #{ticket.id.substring(0, 8)}</h1>
-            <p className="text-sm text-slate-500">View and manage incident details</p>
+            <div className="flex items-center gap-4 mb-3">
+              <span className={`luna-badge ${getStatusStyles(ticket.status)}`}>{ticket.status.replace('_', ' ')}</span>
+              <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Ref: #{ticket.id.substring(0, 12)}</span>
+            </div>
+            <h1 className="text-5xl font-black text-white tracking-tighter leading-none">{ticket.title}</h1>
           </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+           <div className="px-5 py-2 rounded-2xl bg-luna-aqua/5 border border-luna-aqua/10 flex items-center gap-3">
+              <Activity size={16} className={getPriorityStyles(ticket.priority).icon} />
+              <span className={`text-[10px] font-black uppercase tracking-widest ${getPriorityStyles(ticket.priority).text}`}>{ticket.priority} Priority Delta</span>
+           </div>
+           {user.role === 'ADMIN' && (
+             <button 
+               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Purge Record', message: 'Permanently remove this incident dossier from the central registry?' })}
+               className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20"
+             >
+               <Trash2 size={20} />
+             </button>
+           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Main Content Area (Left Column - spans 2) */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+        
+        {/* Core Intelligence Panel */}
+        <div className="xl:col-span-8 space-y-12">
           
-          {/* Primary Info Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 overflow-hidden relative">
-            <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-r ${getStatusBannerGradient(ticket.status)}`}></div>
-            
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pt-2">
-              <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${getStatusStyles(ticket.status)}`}>
-                <span className={`w-1.5 h-1.5 rounded-full mr-2 ${getStatusDotColor(ticket.status)}`}></span>
-                {ticket.status.replace('_', ' ')}
-              </span>
-              <span className="text-xs font-bold text-slate-400">
-                Logged: {new Date(ticket.createdAt).toLocaleString([], {month:'short', day:'numeric', hour: '2-digit', minute:'2-digit'})}
-              </span>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="luna-card !p-0 overflow-hidden"
+          >
+            <div className="p-10 border-b border-luna-aqua/10 bg-luna-midnight/40 flex justify-between items-center">
+               <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
+                 <ShieldAlert size={18} className="text-luna-aqua" /> Discrepancy Narrative
+               </h3>
+               <Zap size={18} className="text-luna-aqua/20" />
             </div>
 
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">{ticket.title}</h2>
-            
-            <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 mb-8">
-              <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                {ticket.description}
-              </p>
-            </div>
+            <div className="p-12">
+               <p className="text-white font-medium text-xl leading-relaxed border-l-2 border-luna-aqua/20 pl-10 mb-12">
+                 {ticket.description}
+               </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-slate-50 rounded-xl border border-slate-100">
-              <DetailItem label="Category" value={ticket.category} />
-              <DetailItem label="Location" value={ticket.location || 'N/A'} />
-              <DetailItem label="Contact" value={ticket.contactDetails || 'N/A'} />
-              <DetailItem 
-                label="Priority" 
-                value={ticket.priority} 
-                valueClass={`font-bold ${getPriorityColor(ticket.priority)}`} 
-              />
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-10 luna-glass rounded-[2.5rem] border-luna-aqua/5">
+                 <IntelItem icon={<Layers size={16} />} label="Category" value={ticket.category} />
+                 <IntelItem icon={<MapPin size={16} />} label="Sector" value={ticket.location || 'Central Alpha'} />
+                 <IntelItem icon={<Globe size={16} />} label="Asset Sync" value={ticket.resourceId?.substring(0, 12) || 'Agnostic'} />
+                 <IntelItem icon={<Clock size={16} />} label="Temporal Log" value={new Date(ticket.createdAt).toLocaleDateString()} />
+               </div>
             </div>
-            
-            <div className="mt-6 flex flex-wrap gap-6 pt-6 border-t border-slate-100">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reporter</span>
-                <span className="text-sm font-bold text-slate-900">{ticket.createdByUsername || 'System User'}</span>
-              </div>
-              {ticket.resourceId && (
-                <div className="flex flex-col gap-1 border-l border-slate-200 pl-6">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Related Asset</span>
-                  <span className="text-sm font-bold text-[#5B5CE6]">{ticket.resourceId.substring(0,8)}</span>
-                </div>
-              )}
-            </div>
-          </div>
+          </motion.div>
 
-          {/* Discussion Thread */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-            <h3 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-4">Discussion Thread</h3>
+          {/* Communication Thread */}
+          <div className="luna-card !p-0 overflow-hidden">
+            <div className="p-10 border-b border-luna-aqua/10 bg-luna-midnight/40 flex justify-between items-center">
+               <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
+                  <MessageSquare size={18} className="text-luna-aqua" /> Personnel Transmission Log
+               </h3>
+               <span className="text-[10px] font-black text-luna-aqua uppercase tracking-widest">{ticket.comments?.length || 0} Threads</span>
+            </div>
             
-            <div className="space-y-6 mb-8">
-              {ticket.comments && ticket.comments.length > 0 ? (
-                ticket.comments.map((comment, i) => {
-                  const isMyComment = comment.userId === user.id;
-                  return (
-                    <div key={i} className={`flex gap-4 items-start group ${isMyComment ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isMyComment ? 'bg-[#5B5CE6] text-white' : 'bg-slate-100 text-slate-600'}`}>
-                        {comment.username.charAt(0).toUpperCase()}
-                      </div>
-                      <div className={`relative max-w-[85%] p-4 rounded-2xl border ${isMyComment ? 'bg-indigo-50 border-indigo-100 rounded-tr-sm' : 'bg-slate-50 border-slate-100 rounded-tl-sm'}`}>
-                        <div className={`flex justify-between items-center mb-2 gap-4 ${isMyComment ? 'flex-row-reverse' : ''}`}>
-                          <span className={`text-xs font-bold ${isMyComment ? 'text-indigo-900' : 'text-slate-900'}`}>{comment.username}</span>
-                          <span className="text-[10px] font-bold text-slate-400">{new Date(comment.timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</span>
+            <div className="p-10 space-y-10">
+              <div className="space-y-10 mb-10 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+                {ticket.comments && ticket.comments.length > 0 ? (
+                  ticket.comments.map((comment, i) => {
+                    const isMe = comment.userId === user.id;
+                    return (
+                      <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, x: isMe ? 20 : -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`flex gap-6 ${isMe ? 'flex-row-reverse' : ''}`}
+                      >
+                        <div className={`w-12 h-12 rounded-[1.25rem] flex items-center justify-center font-black text-sm shrink-0 border ${isMe ? 'bg-luna-aqua text-luna-midnight border-luna-aqua luna-glow' : 'bg-luna-midnight border-luna-aqua/20 text-luna-aqua'}`}>
+                          {comment.username.charAt(0).toUpperCase()}
                         </div>
-                        <p className={`text-sm ${isMyComment ? 'text-indigo-900 text-right' : 'text-slate-700'}`}>{comment.text}</p>
-                        
-                        {(user.role === 'ADMIN' || isMyComment) && (
-                          <div className={`absolute -top-3 ${isMyComment ? '-left-3' : '-right-3'} flex gap-1 opacity-0 group-hover:opacity-100 transition-all bg-white shadow-sm border border-slate-200 rounded-full p-0.5`}>
-                            {isMyComment && (
-                              <button 
-                                onClick={() => handleEditCommentAction(comment)}
-                                className="w-6 h-6 text-slate-400 rounded-full flex items-center justify-center hover:text-[#5B5CE6] hover:bg-indigo-50 transition-colors"
-                                title="Edit"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                              </button>
-                            )}
-                            <button 
-                              onClick={() => handleDeleteComment(comment.id)}
-                              className="w-6 h-6 text-slate-400 rounded-full flex items-center justify-center hover:text-red-600 hover:bg-red-50 transition-colors"
-                              title="Delete"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                        <div className={`p-8 rounded-[2.5rem] border ${isMe ? 'bg-luna-aqua/5 border-luna-aqua/30' : 'bg-luna-midnight/40 border-luna-aqua/10'} max-w-[85%]`}>
+                          <div className="flex justify-between items-center mb-4 gap-8">
+                            <span className="text-xs font-black text-white uppercase tracking-widest">{comment.username}</span>
+                            <span className="text-[10px] font-black text-text-muted uppercase tracking-tighter">{new Date(comment.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <p className="text-slate-500 text-sm font-medium">No comments yet. Start the discussion!</p>
-                </div>
-              )}
-            </div>
+                          <p className="text-base text-text-muted font-medium leading-relaxed">{comment.text}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className="py-24 text-center opacity-10 flex flex-col items-center gap-6">
+                    <MessageSquare size={64} />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">No Personnel Transmissions</p>
+                  </div>
+                )}
+              </div>
 
-            <form onSubmit={handleAddComment} className="relative">
-              <div className="bg-white rounded-xl border border-slate-200 focus-within:border-[#5B5CE6] overflow-hidden transition-colors shadow-sm">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Type your message here..."
-                  className="w-full p-4 bg-transparent border-none focus:ring-0 text-sm resize-none m-0 outline-none"
-                  rows="3"
-                ></textarea>
-                <div className="flex justify-between items-center px-4 py-3 bg-slate-50 border-t border-slate-100">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase hidden sm:inline">Press Post to send</span>
+              <form onSubmit={handleAddComment} className="pt-10 border-t border-luna-aqua/5">
+                <div className="relative group">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Log mission details..."
+                    className="luna-input !p-8 !pr-40 !rounded-[2.5rem] min-h-[160px] resize-none text-base leading-relaxed"
+                  />
                   <button 
                     type="submit"
                     disabled={commenting || !newComment.trim()}
-                    className="px-6 py-2 bg-[#5B5CE6] text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors ml-auto"
+                    className="absolute right-6 bottom-6 luna-button !px-10 !py-4 shadow-xl shadow-luna-aqua/20"
                   >
-                    Post Comment
+                    <Send size={20} /> Transmit
                   </button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-
         </div>
 
-        {/* Right Sidebar (Action Center & Meta) */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* Operational Command Sidebar */}
+        <div className="xl:col-span-4 space-y-12">
           
-          {/* Action Center */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 className="font-bold text-slate-900 mb-6 border-b border-slate-100 pb-4">Action Center</h3>
+          <div className="luna-card !p-10">
+            <h3 className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em] mb-10 pb-6 border-b border-luna-aqua/10 flex items-center justify-between">
+               Mission Parameters <Settings size={14} />
+            </h3>
             
-            <div className="space-y-6">
-              {/* Assignment */}
+            <div className="space-y-10">
+              {/* Assignment Hub */}
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3">Assigned To</label>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm shadow-sm">
-                    {ticket.assignedTechnicianName ? ticket.assignedTechnicianName.charAt(0).toUpperCase() : '?'}
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-6">Assigned Specialist</label>
+                <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-luna-midnight/60 border border-luna-aqua/5 group hover:border-luna-aqua/20 transition-all">
+                  <div className="w-14 h-14 luna-glass rounded-[1.25rem] flex items-center justify-center text-luna-aqua group-hover:luna-glow transition-all">
+                    <User size={28} />
                   </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 block">{ticket.assignedTechnicianName || 'Unassigned'}</span>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">{ticket.assignedTechnicianName ? 'Technician' : 'Pending'}</span>
+                  <div className="min-w-0">
+                    <span className="text-base font-black text-white block truncate tracking-tight">{ticket.assignedTechnician || 'Dispatch Pending'}</span>
+                    <span className="text-[9px] text-luna-cyan font-black uppercase tracking-widest mt-1 block">Field Personnel</span>
                   </div>
                 </div>
               </div>
 
-              {/* Admin Reassign */}
+              {/* Admin Dispatch Override */}
               {user.role === 'ADMIN' && (
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3">Reassign Staff</label>
-                  <div className="space-y-2">
-                    <select 
-                      value={selectedTech}
-                      onChange={(e) => setSelectedTech(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-[#5B5CE6] outline-none"
-                    >
-                      <option value="">Select Technician...</option>
-                      {technicians.map(t => (
-                        <option key={t.id} value={t.id}>{t.username}</option>
-                      ))}
-                    </select>
-                    <button 
-                      onClick={handleAssignAction}
-                      disabled={!selectedTech}
-                      className="w-full py-2.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-colors"
-                    >
-                      Confirm Assignment
-                    </button>
+                <div className="space-y-6 pt-10 border-t border-luna-aqua/5">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block">Dispatch Specialist Override</label>
+                  <div className="relative group">
+                     <select 
+                       value={selectedTech}
+                       onChange={(e) => setSelectedTech(e.target.value)}
+                       className="luna-input !py-4 !pl-12 appearance-none cursor-pointer"
+                     >
+                       <option value="">Awaiting Specialist Selection...</option>
+                       {technicians.map(t => (
+                         <option key={t.id} value={t.id} className="bg-luna-midnight text-white">{t.username}</option>
+                       ))}
+                     </select>
+                     <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" />
                   </div>
+                  <button 
+                    onClick={handleAssignAction}
+                    disabled={!selectedTech}
+                    className="w-full luna-button !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/10"
+                  >
+                    Confirm Dispatch <ChevronRight size={16} />
+                  </button>
                 </div>
               )}
 
-              {/* Status Actions */}
-              {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id)) && (
-                <div className="pt-6 border-t border-slate-100">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3">Update Status</label>
-                  <div className="space-y-2">
+              {/* Specialist Workflow Transition */}
+              {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnician === user.username)) && (
+                <div className="pt-10 border-t border-luna-aqua/5">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-6">Workflow Synchronization</label>
+                  <div className="grid grid-cols-1 gap-4">
                     {ticket.status === 'OPEN' && (
-                      <button onClick={() => handleStatusAction('IN_PROGRESS')} className="w-full py-2.5 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition-colors">
-                        Start Progress
+                      <button onClick={() => handleStatusAction('IN_PROGRESS')} className="w-full luna-button !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/10">
+                        <Activity size={18} /> Initiate Progress
                       </button>
                     )}
                     {ticket.status === 'IN_PROGRESS' && (
-                      <button onClick={() => handleStatusAction('RESOLVED')} className="w-full py-2.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-colors">
-                        Mark Resolved
-                      </button>
-                    )}
-                    {user.role === 'ADMIN' && ticket.status !== 'CLOSED' && ticket.status !== 'REJECTED' && (
-                      <button onClick={() => handleStatusAction('REJECTED')} className="w-full py-2.5 bg-white text-red-600 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors">
-                        Reject Ticket
+                      <button onClick={() => handleStatusAction('RESOLVED')} className="w-full luna-button !bg-luna-cyan !text-luna-midnight !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-cyan/20">
+                        <CheckCircle2 size={18} /> Signal Resolution
                       </button>
                     )}
                     {ticket.status !== 'CLOSED' && (
-                      <button onClick={() => handleStatusAction('CLOSED')} className="w-full py-2.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors">
-                        Close Ticket
+                      <button onClick={() => handleStatusAction('CLOSED')} className="w-full luna-button-outline !py-4 flex items-center justify-center gap-3">
+                        Archive Record
                       </button>
                     )}
                   </div>
                 </div>
               )}
-
-              {/* Delete */}
-              {(user.role === 'ADMIN' || ticket.createdById === user.id) && (
-                <div className="pt-2 text-center">
-                  <button 
-                    onClick={handleDeleteAction}
-                    className="py-2 text-red-600 text-xs font-bold hover:underline"
-                  >
-                    Delete Ticket
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Attachments Panel */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
-              <h3 className="font-bold text-slate-900">Attachments</h3>
-              {(user.role === 'ADMIN' || ticket.createdById === user.id) && ticket.attachments?.length < 3 && (
-                <label className="cursor-pointer text-[#5B5CE6] hover:text-indigo-700 text-xs font-bold uppercase tracking-wider">
-                  + Add File
-                  <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" />
-                </label>
-              )}
+          {/* Digital Artifact Repository */}
+          <div className="luna-card !p-10">
+            <div className="flex items-center justify-between mb-10 border-b border-luna-aqua/10 pb-6">
+              <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Digital Artifacts</h3>
+              <label className="w-10 h-10 luna-glass rounded-xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all cursor-pointer">
+                <Plus size={18} />
+                <input type="file" className="hidden" onChange={handleFileUpload} />
+              </label>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-6">
               {ticket.attachments && ticket.attachments.length > 0 ? (
-                ticket.attachments.map((file, i) => {
-                  const isImg = file.url.match(/\.(jpeg|jpg|gif|png)$/) != null;
-                  return (
-                    <div key={i} className="group relative flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors">
-                      <a href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                          {isImg ? <img src={file.url} alt="thumb" className="w-full h-full object-cover" /> : '📄'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">{file.filename}</p>
-                          <p className="text-[10px] text-slate-500 uppercase tracking-wider">{file.fileType || 'File'}</p>
-                        </div>
-                      </a>
-                      {(user.role === 'ADMIN' || ticket.createdById === user.id) && (
-                        <button 
-                          onClick={() => handleDeleteAttachment(file.url)}
-                          className="w-6 h-6 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-white shadow-sm border border-slate-100"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      )}
+                ticket.attachments.map((file, i) => (
+                  <a 
+                    key={i} 
+                    href={file.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="flex items-center gap-6 p-6 rounded-[2rem] bg-luna-midnight/40 border border-luna-aqua/5 hover:border-luna-aqua/30 transition-all group"
+                  >
+                    <div className="w-12 h-12 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua group-hover:luna-glow transition-all">
+                      <Paperclip size={18} />
                     </div>
-                  );
-                })
-              ) : (
-                <p className="text-xs text-slate-500 text-center py-4 bg-slate-50 rounded-lg border border-dashed border-slate-200 font-medium">No attachments</p>
-              )}
-            </div>
-          </div>
-          
-          {/* Audit Timeline */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 className="font-bold text-slate-900 mb-6 border-b border-slate-100 pb-4">Timeline</h3>
-            <div className="relative pl-4 space-y-6 before:absolute before:left-[5px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-              {ticket.updates && ticket.updates.length > 0 ? (
-                ticket.updates.map((update, idx) => (
-                  <div key={idx} className="relative">
-                    <div className="absolute -left-[18.5px] top-1.5 w-2 h-2 rounded-full border border-white bg-[#5B5CE6]"></div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 block mb-1">
-                        {new Date(update.timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
-                      </span>
-                      <p className="text-xs text-slate-900 font-bold">{update.statusUpdate || 'Status Update'}</p>
-                      {update.note && <p className="text-[10px] text-slate-500 mt-0.5">{update.note}</p>}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-white truncate tracking-tight">{file.filename}</p>
+                      <p className="text-[9px] text-text-muted uppercase font-black tracking-widest mt-1">Capture Artifact</p>
                     </div>
-                  </div>
+                  </a>
                 ))
               ) : (
-                <p className="text-xs text-slate-500 italic">No events recorded.</p>
+                <div className="py-16 text-center border-2 border-dashed border-luna-aqua/5 rounded-[2.5rem] opacity-20">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em]">No Artifacts Logged</p>
+                </div>
               )}
             </div>
           </div>
@@ -498,65 +415,36 @@ const TicketDetailsPage = () => {
         onConfirm={performAction}
         title={modalState.title}
         message={modalState.message}
-        type={modalState.type === 'assign' || modalState.data === 'RESOLVED' ? 'info' : 'danger'}
-        confirmText={modalState.type === 'assign' ? 'Assign' : 'Confirm'}
+        type={modalState.type === 'delete_ticket' ? 'danger' : 'info'}
       />
     </div>
   );
-};
+}
 
-/* --- UI Helper Functions --- */
-
-const DetailItem = ({ label, value, valueClass = "font-bold text-slate-900" }) => (
+const IntelItem = ({ icon, label, value }) => (
   <div>
-    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-    <p className={`text-sm truncate ${valueClass}`}>
-      {typeof value === 'string' ? value.replace('_', ' ') : value}
-    </p>
+    <div className="flex items-center gap-2 mb-3 text-luna-cyan opacity-60">
+       {icon}
+       <span className="text-[9px] font-black uppercase tracking-[0.3em]">{label}</span>
+    </div>
+    <p className="text-base font-black text-white truncate tracking-tight">{value || 'Syncing...'}</p>
   </div>
 );
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'OPEN': return 'bg-blue-50 text-blue-700 border border-blue-200';
-    case 'IN_PROGRESS': return 'bg-amber-50 text-amber-700 border border-amber-200';
-    case 'RESOLVED': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-    case 'CLOSED': return 'bg-slate-100 text-slate-600 border border-slate-200';
-    case 'REJECTED': return 'bg-rose-50 text-rose-700 border border-rose-200';
-    default: return 'bg-slate-50 text-slate-500 border border-slate-200';
+    case 'OPEN': return 'bg-luna-steel/10 text-luna-cyan border-luna-cyan/20';
+    case 'IN_PROGRESS': return 'bg-luna-cyan/10 text-luna-cyan border-luna-cyan/20';
+    case 'RESOLVED': return 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20 luna-glow';
+    default: return 'bg-luna-midnight text-text-muted border-luna-aqua/5';
   }
 };
 
-const getStatusDotColor = (status) => {
-  switch (status) {
-    case 'OPEN': return 'bg-blue-500';
-    case 'IN_PROGRESS': return 'bg-amber-500';
-    case 'RESOLVED': return 'bg-emerald-500';
-    case 'CLOSED': return 'bg-slate-400';
-    case 'REJECTED': return 'bg-rose-500';
-    default: return 'bg-slate-400';
-  }
-};
-
-const getStatusBannerGradient = (status) => {
-  switch (status) {
-    case 'OPEN': return 'from-blue-400 to-blue-500';
-    case 'IN_PROGRESS': return 'from-amber-400 to-amber-500';
-    case 'RESOLVED': return 'from-emerald-400 to-green-500';
-    case 'CLOSED': return 'from-slate-300 to-slate-400';
-    case 'REJECTED': return 'from-rose-400 to-red-500';
-    default: return 'from-indigo-400 to-[#5B5CE6]';
-  }
-};
-
-const getPriorityColor = (priority) => {
+const getPriorityStyles = (priority) => {
   switch (priority) {
-    case 'CRITICAL': return 'text-rose-600';
-    case 'HIGH': return 'text-orange-500';
-    case 'MEDIUM': return 'text-amber-500';
-    case 'LOW': return 'text-emerald-500';
-    default: return 'text-slate-500';
+    case 'CRITICAL': return { text: 'text-red-400', icon: <ShieldAlert className="text-red-500 luna-glow" /> };
+    case 'HIGH': return { text: 'text-luna-aqua', icon: <Zap className="text-luna-aqua luna-glow" /> };
+    case 'MEDIUM': return { text: 'text-luna-cyan', icon: <Activity className="text-luna-cyan" /> };
+    default: return { text: 'text-text-muted', icon: <Clock className="text-text-muted" /> };
   }
 };
-
-export default TicketDetailsPage;
