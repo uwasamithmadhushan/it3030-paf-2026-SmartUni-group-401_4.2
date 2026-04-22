@@ -1,7 +1,22 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { loginUser, loginWithGoogle } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  LogIn, 
+  User, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  ArrowRight, 
+  ShieldCheck,
+  Globe,
+  Zap,
+  Activity,
+  Shield
+} from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,8 +33,8 @@ export default function LoginPage() {
 
   const validate = () => {
     const e = {};
-    if (!form.username.trim()) e.username = 'Username is required';
-    if (!form.password) e.password = 'Password is required';
+    if (!form.username.trim()) e.username = 'Identity identifier required';
+    if (!form.password) e.password = 'Security token required';
     return e;
   };
 
@@ -39,107 +54,195 @@ export default function LoginPage() {
       login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
       navigate(from, { replace: true });
     } catch (err) {
-      setServerError(err.response?.status === 401 ? 'Invalid credentials.' : 'Login failed.');
+      setServerError(err.response?.status === 401 ? 'Identity verification failed.' : 'System synchronization error.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const { data } = await loginWithGoogle(credentialResponse.credential);
+      login(data.token, { id: data.id, username: data.username, email: data.email, role: data.role });
+      navigate(from, { replace: true });
+    } catch (err) {
+      setServerError(err.response?.data?.message || 'Google Authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    setServerError('Google Login was unsuccessful. Please try again.');
+  };
+
   return (
-    <div className="min-h-screen bg-[#f0f9f6] flex items-center justify-center p-6 font-['Inter', 'sans-serif']">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl shadow-emerald-900/10 p-10 relative overflow-hidden border border-emerald-50">
+    <div className="min-h-screen flex items-center justify-center p-8 relative overflow-hidden bg-luna-midnight">
+      
+      {/* Dynamic Background Pulse */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.05, 0.1, 0.05]
+          }}
+          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-luna-aqua blur-[160px]" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            opacity: [0.03, 0.08, 0.03]
+          }}
+          transition={{ duration: 15, repeat: Infinity }}
+          className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-luna-cyan blur-[160px]" 
+        />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "circOut" }}
+        className="w-full max-w-xl luna-card relative z-10 p-16 overflow-hidden !bg-luna-midnight/80 backdrop-blur-3xl border-luna-aqua/10"
+      >
+        {/* Superior Status Line */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-luna-aqua to-transparent luna-glow" />
         
-        {/* Top Header Section */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 bg-[#10b981] rounded-full flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/20">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+        <div className="flex flex-col items-center text-center mb-14">
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: 360 }}
+            transition={{ duration: 1 }}
+            className="w-24 h-24 luna-glass rounded-[2rem] flex items-center justify-center mb-8 border-luna-aqua/20 luna-glow shadow-2xl shadow-luna-aqua/20"
+          >
+            <ShieldCheck className="w-12 h-12 text-luna-aqua" />
+          </motion.div>
+          <div className="flex items-center gap-3 mb-4">
+             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
+             <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Secure Gateway Active</span>
           </div>
-          <h1 className="text-3xl font-bold text-[#1e293b] mb-1">Welcome back</h1>
-          <p className="text-sm text-slate-500">Sign in to Smart Campus</p>
+          <h1 className="text-5xl font-black text-white tracking-tighter mb-4 leading-none">
+            Smart<span className="text-luna-aqua">Uni</span> <span className="text-white/20">Nexus</span>
+          </h1>
+          <p className="text-text-muted font-medium text-lg uppercase tracking-widest opacity-60">High-End Identity Access</p>
         </div>
 
-        {serverError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-xs font-bold text-red-600 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-            {serverError}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {serverError && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-10 p-6 bg-red-500/10 border border-red-500/20 rounded-3xl text-xs font-black text-red-400 flex items-center gap-4 uppercase tracking-widest"
+            >
+              <Shield className="w-5 h-5 shrink-0" />
+              {serverError}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-[#334155] ml-1">Username</label>
-            <input
-              type="text"
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              placeholder="student"
-              className="w-full px-4 py-3.5 bg-[#eff6ff] border-none rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-[#10b981] transition-all outline-none text-sm font-medium"
-            />
-            {errors.username && <p className="text-[11px] font-bold text-red-500 ml-1">{errors.username}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-[#334155] ml-1">Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="••••••••••••"
-                className="w-full px-4 py-3.5 bg-[#eff6ff] border-none rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-[#10b981] transition-all outline-none text-sm font-medium pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#10b981] transition-colors focus:outline-none"
-              >
-                {showPassword ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}
-              </button>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div className="space-y-8">
+            <div className="group">
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-2 mb-4 block group-focus-within:text-luna-aqua transition-all">
+                Access Identifier
+              </label>
+              <div className="relative">
+                <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                <input
+                  type="text"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="Enter credential ID..."
+                  className="luna-input !pl-16 !py-5 !rounded-2xl"
+                />
+              </div>
+              {errors.username && <p className="text-[10px] font-black text-red-400 ml-2 mt-2 uppercase tracking-widest">{errors.username}</p>}
             </div>
-            {errors.password && <p className="text-[11px] font-bold text-red-500 ml-1">{errors.password}</p>}
+
+            <div className="group">
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-2 mb-4 block group-focus-within:text-luna-aqua transition-all">
+                Security Token
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="••••••••••••"
+                  className="luna-input !pl-16 !pr-16 !py-5 !rounded-2xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-text-muted hover:text-luna-aqua transition-all focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                </button>
+              </div>
+              {errors.password && <p className="text-[10px] font-black text-red-400 ml-2 mt-2 uppercase tracking-widest">{errors.password}</p>}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between px-2">
+             <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="w-5 h-5 rounded-md border border-luna-aqua/20 bg-luna-midnight flex items-center justify-center group-hover:border-luna-aqua transition-all">
+                   <div className="w-2.5 h-2.5 rounded-sm bg-luna-aqua opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest group-hover:text-white transition-all">Persistence Mode</span>
+             </label>
+             <button type="button" className="text-[10px] font-black text-luna-aqua uppercase tracking-widest hover:text-white transition-all">Token Recovery</button>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-70"
+            className="w-full luna-button !py-5 shadow-2xl shadow-luna-aqua/20 relative overflow-hidden group"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            <motion.div 
+              initial={false}
+              animate={{ x: loading ? 20 : 0 }}
+              className="relative z-10 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em]"
+            >
+              {loading ? 'Verifying Identity...' : 'Initiate Session'}
+              {!loading && <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />}
+            </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
           </button>
         </form>
 
-        <div className="relative my-8">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-          <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest"><span className="bg-white px-4 text-slate-400">OR</span></div>
+        <div className="flex justify-center">
+           <GoogleLogin
+             onSuccess={handleGoogleSuccess}
+             onError={handleGoogleFailure}
+             theme="filled_black"
+             shape="pill"
+             size="large"
+             text="signin_with"
+           />
         </div>
 
-        <button className="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3.5 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors shadow-sm">
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"/>
-          </svg>
-          Sign in with Google
-        </button>
-
-        <p className="text-center text-sm font-medium text-slate-500 mt-8">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-[#10b981] font-bold hover:underline">Register</Link>
+        <p className="text-center text-sm font-medium text-text-muted mt-14">
+          New to the Nexus?{' '}
+          <Link to="/register" className="text-luna-aqua font-black hover:text-white transition-colors underline underline-offset-8 decoration-luna-aqua/30 tracking-tight">
+            Register Operator Identity
+          </Link>
         </p>
+      </motion.div>
+
+      {/* Superior Status Footer */}
+      <div className="fixed bottom-8 left-8 flex items-center gap-6 opacity-30">
+         <div className="flex items-center gap-3">
+            <Zap size={14} className="text-luna-aqua" />
+            <span className="text-[9px] font-black text-white uppercase tracking-[0.3em]">Quantum Encrypted</span>
+         </div>
+         <div className="flex items-center gap-3">
+            <Activity size={14} className="text-luna-aqua" />
+            <span className="text-[9px] font-black text-white uppercase tracking-[0.3em]">Live Node: 401.X</span>
+         </div>
       </div>
     </div>
   );

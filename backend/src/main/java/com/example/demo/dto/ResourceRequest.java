@@ -1,30 +1,23 @@
-package com.example.demo.models;
+package com.example.demo.dto;
 
+import com.example.demo.models.ResourceType;
+import com.example.demo.models.ResourceStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "resources")
-public class Resource {
-
-    @Id
-    private String id;
+public class ResourceRequest {
 
     @NotBlank(message = "Resource code is required")
-    @Indexed(unique = true)
     private String resourceCode;
 
     @NotBlank(message = "Resource name is required")
@@ -48,14 +41,11 @@ public class Resource {
     private String description;
 
     @NotBlank(message = "Available from time is required")
-    private String availableFrom; // format: "HH:mm"
+    private String availableFrom;
 
     @NotBlank(message = "Available to time is required")
-    private String availableTo;   // format: "HH:mm"
+    private String availableTo;
 
     @NotNull(message = "Status is required")
     private ResourceStatus status;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
