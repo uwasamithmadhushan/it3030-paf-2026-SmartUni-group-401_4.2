@@ -172,7 +172,7 @@ export default function TechnicianDashboardPage() {
                       cursor={{fill: 'rgba(167,235,242,0.05)'}}
                       contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }}
                     />
-                    <Bar dataKey="resolved" fill="#A7EBF2" radius={[4, 4, 0, 0]} barSize={32} />
+                    <Bar dataKey="resolved" fill="#A7EBF2" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -194,6 +194,7 @@ export default function TechnicianDashboardPage() {
                       outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
+                      isAnimationActive={false}
                     >
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
