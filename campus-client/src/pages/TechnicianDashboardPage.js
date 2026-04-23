@@ -166,15 +166,16 @@ export default function TechnicianDashboardPage() {
               {hasMounted && (
                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
                   <BarChart data={barData} key={`bar-${barData.length}`}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(167,235,242,0.05)" vertical={false} />
-                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    cursor={{fill: 'rgba(167,235,242,0.05)'}}
-                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }}
-                  />
-                  <Bar dataKey="resolved" fill="#A7EBF2" radius={[4, 4, 0, 0]} barSize={32} />
-                </BarChart>
-              </ResponsiveContainer>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(167,235,242,0.05)" vertical={false} />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                    <Tooltip 
+                      cursor={{fill: 'rgba(167,235,242,0.05)'}}
+                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }}
+                    />
+                    <Bar dataKey="resolved" fill="#A7EBF2" radius={[4, 4, 0, 0]} barSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </div>
@@ -201,8 +202,9 @@ export default function TechnicianDashboardPage() {
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }} />
                   </PieChart>
                 </ResponsiveContainer>
-              </div>
-           </div>
+              )}
+            </div>
+          </div>
 
            <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/10 flex flex-col justify-center !p-10">
               <h3 className="text-xs font-black uppercase tracking-[0.3em] text-text-muted mb-8">
