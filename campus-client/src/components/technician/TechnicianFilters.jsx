@@ -24,13 +24,13 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
   useEffect(() => {
     localStorage.setItem('technician_filters', JSON.stringify(filters));
     onFilterChange(filters);
-  }, [filters]);
+  }, [filters, onFilterChange]);
 
   const handleFilterUpdate = (key, value) => {
     setFilters(prev => ({
       ...prev,
       [key]: value,
-      quickFilterId: null // Reset quick filter if manual filter is changed
+      quickFilterId: null 
     }));
   };
 
@@ -59,16 +59,14 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
 
   return (
     <div className="space-y-8">
-      <div className="luna-card !bg-luna-midnight/60 border-luna-aqua/5 !p-10">
+      <div className="luna-card !bg-luna-midnight/60 border-luna-aqua/5 !p-10 min-h-[440px] flex flex-col">
         <div className="flex flex-col xl:flex-row gap-8 items-start xl:items-end">
-          {/* Search */}
           <SearchBar 
             value={filters.search} 
             onChange={(val) => handleFilterUpdate('search', val)}
             onClear={() => handleFilterUpdate('search', '')}
           />
 
-          {/* Status */}
           <div className="w-full sm:w-56 group">
             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Status Matrix</label>
             <div className="relative">
@@ -85,7 +83,6 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
             </div>
           </div>
 
-          {/* Priority */}
           <div className="w-full sm:w-56 group">
             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Criticality Level</label>
             <div className="relative">
@@ -102,7 +99,6 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
             </div>
           </div>
 
-          {/* Category */}
           <div className="w-full sm:w-56 group">
             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Operational Sector</label>
             <div className="relative">
@@ -119,13 +115,11 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
             </div>
           </div>
 
-          {/* Sort */}
           <SortDropdown 
             value={filters.sort} 
             onChange={(val) => handleFilterUpdate('sort', val)} 
           />
 
-          {/* Reset */}
           <button 
             onClick={handleReset}
             className="w-12 h-12 luna-glass rounded-2xl flex items-center justify-center text-text-muted hover:text-red-400 hover:border-red-500/20 transition-all shrink-0"
@@ -135,14 +129,14 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
           </button>
         </div>
 
-        {/* Results Info & Active Filters */}
-        <div className="mt-8 pt-8 border-t border-luna-aqua/5 flex flex-wrap items-center justify-between gap-6">
-           <div className="flex items-center gap-4">
-              <div className="px-5 py-2 bg-luna-aqua/10 border border-luna-aqua/20 rounded-2xl">
+        {/* Results Info & Active Filters - Fixed Height Section */}
+        <div className="mt-8 pt-8 border-t border-luna-aqua/5 h-16 flex items-center justify-between gap-6">
+           <div className="flex items-center gap-4 h-full">
+              <div className="px-5 py-2 bg-luna-aqua/10 border border-luna-aqua/20 rounded-2xl shrink-0">
                  <span className="text-[11px] font-black text-luna-aqua uppercase tracking-[0.2em]">{resultsCount} Results Synchronized</span>
               </div>
               
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 overflow-hidden">
                  {filters.status !== 'ALL' && <ActiveFilterBadge label={filters.status} onClear={() => handleFilterUpdate('status', 'ALL')} />}
                  {filters.priority !== 'ALL' && <ActiveFilterBadge label={filters.priority} onClear={() => handleFilterUpdate('priority', 'ALL')} />}
                  {filters.category !== 'ALL' && <ActiveFilterBadge label={filters.category} onClear={() => handleFilterUpdate('category', 'ALL')} />}
@@ -151,22 +145,24 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
         </div>
 
         {/* Quick Filters */}
-        <FilterChips 
-          activeFilters={filters.quickFilterId} 
-          onQuickFilter={handleQuickFilter} 
-        />
+        <div className="mt-auto">
+          <FilterChips 
+            activeFilters={filters.quickFilterId} 
+            onQuickFilter={handleQuickFilter} 
+          />
+        </div>
       </div>
     </div>
   );
 };
 
-const ActiveFilterBadge = ({ label, onClear }) => (
+const ActiveFilterBadge = React.memo(({ label, onClear }) => (
   <div className="px-4 py-1.5 bg-luna-midnight border border-luna-aqua/10 rounded-xl flex items-center gap-3">
      <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">{label}</span>
      <button onClick={onClear} className="text-text-muted hover:text-white transition-colors">
         <RotateCcw size={10} />
      </button>
   </div>
-);
+));
 
-export default TechnicianFilters;
+export default React.memo(TechnicianFilters);

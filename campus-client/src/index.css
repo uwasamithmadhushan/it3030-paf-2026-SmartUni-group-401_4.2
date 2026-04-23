@@ -147,6 +147,27 @@ body {
   .luna-table tr:hover td {
     @apply bg-luna-steel/20 border-white/10;
   }
+
+  /* Stability Utilities */
+  .luna-stable-container {
+    min-height: 400px;
+    contain: layout;
+  }
+
+  .luna-skeleton {
+    @apply bg-luna-midnight/40 rounded-2xl overflow-hidden relative;
+  }
+
+  .luna-skeleton::after {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-luna-aqua/5 to-transparent;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 }
 
 /* Custom Scrollbar */
