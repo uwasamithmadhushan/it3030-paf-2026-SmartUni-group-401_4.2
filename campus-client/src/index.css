@@ -19,12 +19,18 @@
   --text-main: #FFFFFF;
   --text-muted: rgba(167, 235, 242, 0.7);
   --accent: var(--luna-aqua);
+
+  /* Advanced Easing & Motion Tokens */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
+  --transition-luna: all 0.5s var(--ease-out-expo);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -37,6 +43,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Prevent scrollbar layout shift */
+  overflow-y: scroll;
+}
+
+.luna-stable-container {
+  contain: layout;
+  min-height: 100%;
 }
 
 /* Luxury Utilities */
@@ -47,6 +60,10 @@ body {
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-light);
     box-shadow: 0 8px 32px 0 rgba(1, 28, 64, 0.5);
+  }
+
+  .luna-glass-dark {
+    @apply bg-luna-midnight/60 backdrop-blur-2xl border border-luna-aqua/5 shadow-2xl;
   }
 
   .luna-button {
@@ -80,16 +97,7 @@ body {
   }
 
   .luna-card {
-    @apply rounded-3xl p-8 transition-all duration-500;
-    background: var(--surface-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-light);
-  }
-
-  .luna-card:hover {
-    border-color: rgba(167, 235, 242, 0.3);
-    box-shadow: 0 12px 40px 0 rgba(1, 28, 64, 0.7);
+    @apply luna-glass-dark p-8 rounded-[2.5rem] transition-all duration-500 hover:border-luna-aqua/20;
   }
 
   .luna-sidebar {
@@ -99,7 +107,7 @@ body {
   }
 
   .luna-nav-link {
-    @apply flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 text-text-muted;
+    @apply flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-300 relative overflow-hidden text-text-muted;
   }
 
   .luna-nav-link:hover {
@@ -146,6 +154,27 @@ body {
 
   .luna-table tr:hover td {
     @apply bg-luna-steel/20 border-white/10;
+  }
+
+  /* Stability Utilities */
+  .luna-stable-container {
+    min-height: 400px;
+    contain: layout;
+  }
+
+  .luna-skeleton {
+    @apply bg-luna-midnight/40 rounded-2xl overflow-hidden relative;
+  }
+
+  .luna-skeleton::after {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-luna-aqua/5 to-transparent;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 }
 
