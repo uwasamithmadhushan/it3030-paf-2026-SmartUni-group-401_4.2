@@ -9,7 +9,12 @@ import {
   Calendar, 
   LogOut, 
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  CheckCircle,
+  Bell,
+  Activity,
+  User,
+  Settings
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
@@ -33,11 +38,9 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     navItems.push(
       { to: '/assignments', label: 'My Jobs', icon: <ShieldAlert size={20} /> },
       { to: '/tickets', label: 'Incident Queue', icon: <Ticket size={20} /> },
-      { to: '/resolved', label: 'Resolved Tickets', icon: <CheckCircle size={20} /> },
       { to: '/schedule', label: 'Schedule', icon: <Calendar size={20} /> },
       { to: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
       { to: '/performance', label: 'Performance', icon: <Activity size={20} /> },
-      { to: '/resources', label: 'Catalogue', icon: <Building2 size={20} /> },
       { to: '/profile', label: 'My Profile', icon: <User size={20} /> },
       { to: '/settings', label: 'Settings', icon: <Settings size={20} /> }
     );
@@ -47,7 +50,10 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     navItems.push({ to: '/tickets', label: 'My Requests', icon: <Ticket size={20} /> });
   }
 
-  navItems.push({ to: '/bookings', label: 'Reservations', icon: <Calendar size={20} /> });
+  // Only show reservations for non-technicians
+  if (user?.role !== 'TECHNICIAN') {
+    navItems.push({ to: '/bookings', label: 'Reservations', icon: <Calendar size={20} /> });
+  }
 
   return (
     <>
@@ -123,5 +129,4 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       </motion.aside>
     </>
   );
-}
 }

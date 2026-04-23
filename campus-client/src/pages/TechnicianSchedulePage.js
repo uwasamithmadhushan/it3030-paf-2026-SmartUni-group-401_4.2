@@ -191,7 +191,7 @@ export default function TechnicianSchedulePage() {
                 <span className="ml-auto text-[10px] font-black text-luna-cyan">{selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
               </h3>
               <div className="space-y-8">
-                 <AnimatePresence mode="wait">
+                 <AnimatePresence mode="popLayout">
                    {ticketsForSelectedDate.length > 0 ? (
                      ticketsForSelectedDate.map((t, i) => (
                       <motion.div 

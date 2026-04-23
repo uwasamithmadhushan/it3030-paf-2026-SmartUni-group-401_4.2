@@ -5,30 +5,36 @@ import MainLayout from './components/MainLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
+import { ToastProvider } from './context/ToastContext';
+import { lazy, Suspense } from 'react';
+import LoadingSpinner from './components/LoadingSpinner';
+
 // Dashboards
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
-import UserDashboardPage from './pages/UserDashboardPage';
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const TechnicianDashboardPage = lazy(() => import('./pages/TechnicianDashboardPage'));
+const UserDashboardPage = lazy(() => import('./pages/UserDashboardPage'));
 
 // Management
-import UserListPage from './pages/UserListPage';
-import AssetList from './pages/AssetList';
-import AssetForm from './pages/AssetForm';
-import TicketListPage from './pages/TicketListPage';
-import PlaceholderPage from './pages/PlaceholderPage';
-import TicketDetailsPage from './pages/TicketDetailsPage';
-import NewTicketPage from './pages/NewTicketPage';
-import BookingForm from './pages/BookingForm';
-import MyBookings from './pages/MyBookings';
-import AdminBookings from './pages/AdminBookings';
-import TechnicianAssignmentsPage from './pages/TechnicianAssignmentsPage';
-import AssignedTicketsPage from './pages/AssignedTicketsPage';
-import ProfilePage from './pages/ProfilePage';
-import ResourceListPage from './pages/ResourceListPage';
-import ResourceDetailsPage from './pages/ResourceDetailsPage';
-import AdminResourcePage from './pages/AdminResourcePage';
+const UserListPage = lazy(() => import('./pages/UserListPage'));
+const AssetList = lazy(() => import('./pages/AssetList'));
+const AssetForm = lazy(() => import('./pages/AssetForm'));
+const TicketListPage = lazy(() => import('./pages/TicketListPage'));
+const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const PerformancePage = lazy(() => import('./pages/PerformancePage'));
+const TicketDetailsPage = lazy(() => import('./pages/TicketDetailsPage'));
+const CreateTicketPage = lazy(() => import('./pages/CreateTicketPage'));
+const BookingForm = lazy(() => import('./pages/BookingForm'));
+const MyBookings = lazy(() => import('./pages/MyBookings'));
+const AdminBookings = lazy(() => import('./pages/AdminBookings'));
+const TechnicianAssignmentsPage = lazy(() => import('./pages/TechnicianAssignmentsPage'));
+const TechnicianSchedulePage = lazy(() => import('./pages/TechnicianSchedulePage'));
+const AssignedTicketsPage = lazy(() => import('./pages/AssignedTicketsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const ResourceListPage = lazy(() => import('./pages/ResourceListPage'));
+const ResourceDetailsPage = lazy(() => import('./pages/ResourceDetailsPage'));
+const AdminResourcePage = lazy(() => import('./pages/AdminResourcePage'));
 
-import { ToastProvider } from './context/ToastContext';
 
 const DashboardRedirect = () => {
   const { user } = useAuth();
@@ -41,8 +47,9 @@ const AppRoutes = () => {
   const { user } = useAuth();
 
   return (
-    <Routes key={user?.id}>
-      {/* Public */}
+    <Suspense fallback={<LoadingSpinner fullScreen message="Initializing SmartUni OS..." />}>
+      <Routes key={user?.id}>
+        {/* Public */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
@@ -82,15 +89,11 @@ const AppRoutes = () => {
 
         {/* Technician only */}
         <Route path="/assignments" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><AssignedTicketsPage /></ProtectedRoute>} />
-        <Route path="/resolved" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Resolved Archive" /></ProtectedRoute>} />
-        <Route path="/schedule" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Mission Schedule" /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Comm Center" /></ProtectedRoute>} />
-        <Route path="/performance" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Efficiency Analytics" /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><PlaceholderPage title="Specialist Profile" /></ProtectedRoute>} />
+        <Route path="/schedule" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><TechnicianSchedulePage /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><NotificationsPage /></ProtectedRoute>} />
+        <Route path="/performance" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PerformancePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><ProfilePage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><PlaceholderPage title="System Configuration" /></ProtectedRoute>} />
-        
-        {/* Unified Ticket Redirect for Techs */}
-        <Route path="/tickets" element={<TicketListPage />} />
         
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>
@@ -98,7 +101,8 @@ const AppRoutes = () => {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-  );
+  </Suspense>
+);
 };
 
 function App() {
