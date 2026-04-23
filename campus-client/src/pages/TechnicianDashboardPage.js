@@ -17,10 +17,12 @@ export default function TechnicianDashboardPage() {
   const [stats, setStats] = useState(null);
   const [recentTickets, setRecentTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    setHasMounted(true);
     if (user?.id) {
       fetchDashboardData(true);
       const interval = setInterval(() => fetchDashboardData(false), 30000);
@@ -161,8 +163,9 @@ export default function TechnicianDashboardPage() {
               <Activity size={16} className="text-luna-aqua" /> Weekly Resolution Pulse
             </h3>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                <BarChart data={barData} key={`bar-${barData.length}`}>
+              {hasMounted && (
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                  <BarChart data={barData} key={`bar-${barData.length}`}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(167,235,242,0.05)" vertical={false} />
                   <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip 
@@ -181,8 +184,9 @@ export default function TechnicianDashboardPage() {
            <div className="luna-card text-center flex flex-col items-center !p-12">
               <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-6 text-luna-aqua">Priority Breakdown</h3>
               <div className="h-48 w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                  <PieChart key={`pie-${pieData.length}`}>
+                {hasMounted && (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                    <PieChart key={`pie-${pieData.length}`}>
                     <Pie
                       data={pieData}
                       innerRadius={60}
