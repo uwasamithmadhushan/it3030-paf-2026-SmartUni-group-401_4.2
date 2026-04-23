@@ -12,6 +12,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 409 &&
+      error.config?.url?.includes('/bookings')
+    ) {
+      const message =
+        error.response.data?.error ||
+        error.response.data?.message ||
+        'This time slot is already booked. Please choose a different time.';
+      return Promise.reject(new Error(message));
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const registerUser = (data) => api.post('/auth/register', data);
 export const loginUser = (data) => api.post('/auth/login', data);
@@ -73,6 +90,7 @@ export const uploadAttachment = (id, file) => {
 export const getMyBookings = () => api.get('/bookings/my');
 export const getAllBookings = (status) => api.get('/bookings', { params: { status } });
 export const createBooking = (data) => api.post('/bookings', data);
+export const getBookingById = (id) => api.get(`/bookings/${id}`);
 export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
 export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
 
