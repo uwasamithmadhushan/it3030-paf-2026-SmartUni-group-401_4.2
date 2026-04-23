@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation, useParams } from 'react-router-dom';
 import { getAssetById, createBooking } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,8 +43,11 @@ function nowPlus(offsetMinutes) {
 
 export default function BookingForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id: urlParamId } = useParams();
   const [searchParams] = useSearchParams();
-  const resourceId = searchParams.get('resourceId');
+  
+  const resourceId = urlParamId || searchParams.get('resourceId') || location.state?.resourceId;
 
   const [resource, setResource] = useState(null);
   const [loadingResource, setLoadingResource] = useState(true);
@@ -107,8 +110,8 @@ export default function BookingForm() {
     try {
       await createBooking({
         resourceId: form.resourceId,
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
+        startTime: form.startTime.length === 16 ? form.startTime + ':00' : form.startTime,
+        endTime: form.endTime.length === 16 ? form.endTime + ':00' : form.endTime,
         purpose: form.purpose,
         expectedAttendees: form.expectedAttendees,
       });

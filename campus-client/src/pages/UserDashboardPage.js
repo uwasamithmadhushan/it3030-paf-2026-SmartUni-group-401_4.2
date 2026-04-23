@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe, getMyBookings, getAllTickets } from '../services/api';
+import { getMe, getMyBookings, getMyTickets } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -38,14 +38,13 @@ export default function UserDashboardPage() {
       const [userRes, bookingsRes, ticketsRes] = await Promise.all([
         getMe(),
         getMyBookings(),
-        getAllTickets()
+        getMyTickets()  // Only fetch this user's own tickets
       ]);
       setUserData(userRes.data);
       setBookings(bookingsRes.data);
-      // Filter for current user's tickets
-      setTickets(ticketsRes.data.filter(t => t.createdById === userRes.data.id));
+      setTickets(ticketsRes.data);  // Backend already filters by user
     } catch (err) {
-      console.error('Failed to synchronize personal intelligence archive');
+      console.error('Failed to load dashboard data:', err);
     } finally {
       setLoading(false);
     }
