@@ -118,14 +118,10 @@ export default function TechnicianDashboardPage() {
             </div>
             
             <div className="divide-y divide-luna-aqua/5">
-              <AnimatePresence>
                 {recentTickets.length > 0 ? (
                   recentTickets.map((t, i) => (
-                    <motion.div 
+                    <div 
                       key={t.id} 
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
                       className="px-10 py-8 flex items-center justify-between hover:bg-luna-aqua/5 transition-all group cursor-pointer" 
                       onClick={() => navigate(`/tickets/${t.id}`)}
                     >
@@ -146,7 +142,7 @@ export default function TechnicianDashboardPage() {
                         </div>
                       </div>
                       <ChevronRight size={24} className="text-text-muted group-hover:text-white transition-all group-hover:translate-x-2" />
-                    </motion.div>
+                    </div>
                   ))
                 ) : (
                   <div className="py-24 text-center opacity-20 flex flex-col items-center gap-4">
@@ -154,7 +150,6 @@ export default function TechnicianDashboardPage() {
                      <p className="text-[10px] font-black uppercase tracking-widest italic">Operational Queue Clear</p>
                   </div>
                 )}
-              </AnimatePresence>
             </div>
           </div>
 
@@ -168,10 +163,6 @@ export default function TechnicianDashboardPage() {
                   <BarChart data={barData} key={`bar-${barData.length}`}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(167,235,242,0.05)" vertical={false} />
                     <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      cursor={{fill: 'rgba(167,235,242,0.05)'}}
-                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }}
-                    />
                     <Bar dataKey="resolved" fill="#A7EBF2" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -200,7 +191,6 @@ export default function TechnicianDashboardPage() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -242,10 +232,7 @@ const KPICard = ({ title, value, icon, color }) => {
   };
 
   return (
-    <motion.div 
-      whileHover={{ y: -10 }}
-      className="luna-card !p-10 group"
-    >
+    <div className="luna-card !p-10 group">
       <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${colorMap[color]}`}>
         {icon}
       </div>
@@ -253,6 +240,6 @@ const KPICard = ({ title, value, icon, color }) => {
         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-3">{title}</p>
         <p className="text-5xl font-black text-white tracking-tighter leading-none">{value}</p>
       </div>
-    </motion.div>
+    </div>
   );
 };
