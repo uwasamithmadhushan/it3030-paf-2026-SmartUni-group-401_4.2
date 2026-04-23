@@ -47,7 +47,7 @@ public class AnalyticsService {
         return counts.stream()
                 .map(c -> {
                     String name = resourceRepository.findById(c.getResourceId())
-                            .map(Resource::getName)
+                    .map(Resource::getResourceName)
                             .orElse("Unknown Resource");
                     double pct = totalBookings > 0
                             ? Math.round((c.getCount() * 1000.0 / totalBookings)) / 10.0
