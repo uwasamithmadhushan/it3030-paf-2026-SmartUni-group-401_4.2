@@ -15,8 +15,9 @@ import UserListPage from './pages/UserListPage';
 import AssetList from './pages/AssetList';
 import AssetForm from './pages/AssetForm';
 import TicketListPage from './pages/TicketListPage';
+import PlaceholderPage from './pages/PlaceholderPage';
 import TicketDetailsPage from './pages/TicketDetailsPage';
-import CreateTicketPage from './pages/CreateTicketPage';
+import NewTicketPage from './pages/NewTicketPage';
 import BookingForm from './pages/BookingForm';
 import MyBookings from './pages/MyBookings';
 import AdminBookings from './pages/AdminBookings';
@@ -81,6 +82,15 @@ const AppRoutes = () => {
 
         {/* Technician only */}
         <Route path="/assignments" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><AssignedTicketsPage /></ProtectedRoute>} />
+        <Route path="/resolved" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Resolved Archive" /></ProtectedRoute>} />
+        <Route path="/schedule" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Mission Schedule" /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Comm Center" /></ProtectedRoute>} />
+        <Route path="/performance" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PlaceholderPage title="Efficiency Analytics" /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><PlaceholderPage title="Specialist Profile" /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><PlaceholderPage title="System Configuration" /></ProtectedRoute>} />
+        
+        {/* Unified Ticket Redirect for Techs */}
+        <Route path="/tickets" element={<TicketListPage />} />
         
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>

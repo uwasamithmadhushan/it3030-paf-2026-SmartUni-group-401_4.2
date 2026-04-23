@@ -87,9 +87,7 @@ body {
     border: 1px solid var(--border-light);
   }
 
-  .luna-card:hover {
-    border-color: rgba(167, 235, 242, 0.3);
-    box-shadow: 0 12px 40px 0 rgba(1, 28, 64, 0.7);
+    @apply luna-glass-dark p-8 rounded-[2.5rem] transition-all duration-500 hover:border-luna-aqua/20;
   }
 
   .luna-sidebar {
@@ -99,7 +97,7 @@ body {
   }
 
   .luna-nav-link {
-    @apply flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 text-text-muted;
+    @apply flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-300 relative overflow-hidden text-text-muted;
   }
 
   .luna-nav-link:hover {
