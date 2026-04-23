@@ -1,38 +1,54 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Zap, AlertTriangle, ShieldCheck, Clock, CheckCircle2, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getAssignedTickets } from '../services/api';
+import { getAssignedTickets, getAllTickets } from '../services/api';
 
 export default function NotificationsPage() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   const fetchLiveAlerts = useCallback(async () => {
     try {
-      // For this demo, we derive notifications from recent tickets and system status
-      const { data } = await getAssignedTickets();
+      let data = [];
+      if (user?.role === 'ADMIN') {
+        const res = await getAllTickets();
+        data = res.data;
+      } else {
+        const res = await getAssignedTickets();
+        data = res.data;
+      }
       
+      const ticketAlerts = data
+        .filter(t => user?.role === 'ADMIN' ? (t.status === 'OPEN' && !t.assignedTechnicianId) : (t.status === 'OPEN' || t.status === 'IN_PROGRESS'))
+        .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+        .map(t => {
+          const isCritical = t.priority === 'URGENT' || t.priority === 'CRITICAL';
+          return {
+            id: t.id,
+            type: 'TICKET_ASSIGNMENT',
+            title: isCritical ? 'Critical Action Required' : 'New Task Assignment',
+            message: user?.role === 'ADMIN' ? `${t.ticketCode || 'Task'}: "${t.title}" requires administrative review or assignment.` : `${t.ticketCode || 'Task'}: "${t.title}" has been assigned to you. Location: ${t.location || 'TBD'}.`,
+            time: new Date(t.updatedAt || t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            icon: isCritical ? <Zap className="text-red-400 animate-pulse" /> : <AlertTriangle className="text-luna-aqua" />,
+            priority: isCritical ? 'CRITICAL' : 'NORMAL'
+          };
+        });
+
       const alerts = [
+        ...ticketAlerts,
         {
           id: 'sys-1',
           type: 'SYSTEM',
           title: 'Mainframe Synchronization Complete',
           message: 'All sectors are now reporting healthy operational status.',
-          time: 'Just now',
-          icon: <ShieldCheck className="text-emerald-400" />,
+          time: 'System',
+          icon: <CheckCircle2 className="text-emerald-400" />,
           priority: 'LOW'
-        },
-        ...data.filter(t => t.priority === 'URGENT').map(t => ({
-          id: t.id,
-          type: 'URGENT_TICKET',
-          title: 'Immediate Action Required',
-          message: `Critical Ticket: ${t.title} requires specialist intervention in ${t.location || 'Sector Alpha'}.`,
-          time: 'Live',
-          icon: <Zap className="text-luna-aqua animate-pulse" />,
-          priority: 'CRITICAL'
-        })).slice(0, 3)
+        }
       ];
 
       setNotifications(alerts);
@@ -45,7 +61,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchLiveAlerts();
-    const interval = setInterval(fetchLiveAlerts, 15000); // High frequency polling for "real-time"
+    const interval = setInterval(fetchLiveAlerts, 5000); 
     return () => clearInterval(interval);
   }, [fetchLiveAlerts]);
 
@@ -81,7 +97,12 @@ export default function NotificationsPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ delay: i * 0.1 }}
-              className={`luna-card !p-8 border-l-4 flex gap-8 group hover:bg-luna-aqua/5 transition-all ${
+              onClick={() => {
+                if (note.type === 'TICKET_ASSIGNMENT') {
+                  navigate(`/tickets/${note.id}`);
+                }
+              }}
+              className={`luna-card !p-8 border-l-4 flex gap-8 group hover:bg-luna-aqua/5 transition-all cursor-pointer ${
                 note.priority === 'CRITICAL' ? 'border-l-red-500 bg-red-500/5' : 'border-l-luna-aqua'
               }`}
             >
