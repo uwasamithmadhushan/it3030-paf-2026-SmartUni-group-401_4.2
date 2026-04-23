@@ -167,8 +167,9 @@ export default function TicketDetailsPage() {
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
         addToast('Incident record purged', 'success');
-        navigate('/tickets');
-        return;
+      } else if (modalState.type === 'delete_comment') {
+        await apiDeleteComment(id, modalState.data);
+        addToast('Transmission purged', 'success');
       }
       fetchData();
       setModalState({ ...modalState, isOpen: false });
@@ -203,17 +204,6 @@ export default function TicketDetailsPage() {
       addToast('Transmission updated', 'success');
     } catch (error) {
       addToast('Update failed', 'error');
-    }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Delete this transmission?')) return;
-    try {
-      await apiDeleteComment(id, commentId);
-      fetchData();
-      addToast('Transmission purged', 'success');
-    } catch (error) {
-      addToast('Purge failed', 'error');
     }
   };
 
@@ -343,12 +333,7 @@ export default function TicketDetailsPage() {
               <div className="space-y-10 mb-10 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
                 {ticket.comments && ticket.comments.length > 0 ? (
                   ticket.comments.map((comment, i) => {
-                    let isRightSide = comment.userId === user.id;
-                    if (comment.userRole) {
-                      const isSupportStaff = user.role === 'ADMIN' || user.role === 'TECHNICIAN';
-                      const isCommentFromSupport = comment.userRole === 'ADMIN' || comment.userRole === 'TECHNICIAN';
-                      isRightSide = isSupportStaff ? isCommentFromSupport : comment.userId === user.id;
-                    }
+                    const isRightSide = comment.userId === user.id;
                     
                     return (
                       <motion.div 
@@ -370,7 +355,7 @@ export default function TicketDetailsPage() {
                                   <button onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.text); }} className="text-luna-aqua hover:text-white transition-colors">
                                     <Edit2 size={12} />
                                   </button>
-                                  <button onClick={() => handleDeleteComment(comment.id)} className="text-red-400 hover:text-red-300 transition-colors">
+                                  <button onClick={() => setModalState({ isOpen: true, type: 'delete_comment', title: 'Purge Transmission', message: 'Permanently remove this transmission from the personnel log?', data: comment.id })} className="text-red-400 hover:text-red-300 transition-colors">
                                     <Trash2 size={12} />
                                   </button>
                                 </div>
@@ -554,7 +539,7 @@ export default function TicketDetailsPage() {
         onConfirm={performAction}
         title={modalState.title}
         message={modalState.message}
-        type={modalState.type === 'delete_ticket' || modalState.type === 'reject' ? 'danger' : 'info'}
+        type={['delete_ticket', 'reject', 'delete_comment'].includes(modalState.type) ? 'danger' : 'info'}
         inputLabel={modalState.inputLabel}
         inputValue={modalState.inputValue}
         onInputChange={(val) => setModalState({ ...modalState, inputValue: val })}

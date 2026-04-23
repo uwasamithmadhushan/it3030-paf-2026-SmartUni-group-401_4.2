@@ -166,15 +166,15 @@ export default function TechnicianSchedulePage() {
                     <div 
                       key={i} 
                       onClick={() => d.currentMonth && setSelectedDate(dayDate)}
-                      className={`bg-luna-midnight/20 h-28 sm:h-36 p-4 transition-all cursor-pointer hover:bg-luna-aqua/5 border-luna-aqua/5 ${!d.currentMonth ? 'opacity-10 pointer-events-none' : ''} ${isSelected ? 'bg-luna-aqua/10 !border-luna-aqua/20 luna-glow-inset' : ''}`}
+                      className={`bg-luna-midnight/20 h-20 sm:h-24 p-2 sm:p-3 flex flex-col transition-all cursor-pointer hover:bg-luna-aqua/5 border-luna-aqua/5 ${!d.currentMonth ? 'opacity-10 pointer-events-none' : ''} ${isSelected ? 'bg-luna-aqua/10 !border-luna-aqua/20 luna-glow-inset' : ''}`}
                     >
-                       <span className={`text-[10px] font-black w-8 h-8 flex items-center justify-center rounded-xl transition-all ${isToday ? 'bg-luna-aqua text-luna-midnight shadow-lg luna-glow' : isSelected ? 'text-luna-aqua' : 'text-text-muted'}`}>
+                       <span className={`text-[10px] font-black w-6 h-6 flex shrink-0 items-center justify-center rounded-lg transition-all ${isToday ? 'bg-luna-aqua text-luna-midnight shadow-lg luna-glow' : isSelected ? 'text-luna-aqua' : 'text-text-muted'}`}>
                           {d.day}
                        </span>
                        {d.currentMonth && dayTickets.length > 0 && (
-                          <div className="mt-4 space-y-2 overflow-hidden">
-                             <div className="px-3 py-1 bg-luna-aqua/10 border-l-2 border-luna-aqua rounded text-[8px] font-black text-luna-aqua uppercase tracking-widest truncate">{dayTickets.length} Thread{dayTickets.length > 1 ? 's' : ''}</div>
-                             {hasUrgent && <div className="px-3 py-1 bg-red-500/10 border-l-2 border-red-500 rounded text-[8px] font-black text-red-400 uppercase tracking-widest truncate">Critical</div>}
+                          <div className="mt-auto space-y-1 overflow-hidden">
+                             <div className="px-2 py-0.5 bg-luna-aqua/10 border-l border-luna-aqua rounded text-[7px] font-black text-luna-aqua uppercase tracking-widest truncate">{dayTickets.length} Job{dayTickets.length > 1 ? 's' : ''}</div>
+                             {hasUrgent && <div className="px-2 py-0.5 bg-red-500/10 border-l border-red-500 rounded text-[7px] font-black text-red-400 uppercase tracking-widest truncate">Alert</div>}
                           </div>
                        )}
                     </div>

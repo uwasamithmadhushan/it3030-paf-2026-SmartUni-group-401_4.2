@@ -15,7 +15,10 @@ export default function AssignedTicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [filterParams, setFilterParams] = useState(null);
+  const [filterParams, setFilterParams] = useState(() => {
+    const saved = localStorage.getItem('technician_filters');
+    return saved ? JSON.parse(saved) : { search: '', status: 'ALL', priority: 'ALL', category: 'ALL', sort: 'NEWEST' };
+  });
   
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -40,7 +43,10 @@ export default function AssignedTicketsPage() {
   }, [filterParams, fetchTickets, initialLoad]);
 
   const handleFilterChange = useCallback((newFilters) => {
-    setFilterParams(newFilters);
+    setFilterParams(prev => {
+      if (JSON.stringify(prev) === JSON.stringify(newFilters)) return prev;
+      return newFilters;
+    });
   }, []);
 
   const handleStatusUpdate = async (id, status) => {
@@ -120,9 +126,11 @@ export default function AssignedTicketsPage() {
 const TicketCard = ({ ticket, onStatusUpdate, onView, index }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+      transition={{ delay: index * 0.04, duration: 0.3 }}
       className="luna-card group hover:border-luna-aqua/30 flex flex-col relative overflow-hidden !p-0 min-h-[400px]"
     >
       {/* Card Header Background */}

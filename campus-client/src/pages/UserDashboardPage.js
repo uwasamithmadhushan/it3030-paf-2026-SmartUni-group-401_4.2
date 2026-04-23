@@ -29,7 +29,7 @@ export default function UserDashboardPage() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
 

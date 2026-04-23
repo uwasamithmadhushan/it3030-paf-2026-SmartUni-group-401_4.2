@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { createTicket, getAllAssets, uploadAttachment } from '../services/api';
+import { createTicket, getAllResources, uploadAttachment } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,8 +48,8 @@ export default function CreateTicketPage() {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const { data } = await getAllAssets();
-        setAssets(data);
+        const { data } = await getAllResources({ size: 1000 });
+        setAssets(data.content || data);
       } catch (err) {
         addToast('Registry synchronization failed', 'error');
       }

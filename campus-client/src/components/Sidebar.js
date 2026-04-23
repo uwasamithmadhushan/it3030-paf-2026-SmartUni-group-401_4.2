@@ -34,6 +34,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     navItems.push({ to: '/resources', label: 'Resource Catalogue', icon: <Building2 size={20} /> });
     navItems.push({ to: '/tickets', label: 'Incident Queue', icon: <Ticket size={20} /> });
     navItems.push({ to: '/admin/users', label: 'User Control', icon: <Users size={20} /> });
+    navItems.push({ to: '/notifications', label: 'Notifications', icon: <Bell size={20} /> });
   } else if (user?.role === 'TECHNICIAN') {
     navItems.push(
       { to: '/assignments', label: 'My Jobs', icon: <ShieldAlert size={20} /> },
@@ -41,8 +42,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       { to: '/schedule', label: 'Schedule', icon: <Calendar size={20} /> },
       { to: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
       { to: '/performance', label: 'Performance', icon: <Activity size={20} /> },
-      { to: '/profile', label: 'My Profile', icon: <User size={20} /> },
-      { to: '/settings', label: 'Settings', icon: <Settings size={20} /> }
+      { to: '/profile', label: 'My Profile', icon: <User size={20} /> }
     );
   } else {
     // USER role
