@@ -13,7 +13,7 @@ const EmptyState = ({ title, message, actionText, onAction }) => {
       {onAction && actionText && (
         <button
           onClick={onAction}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#10B981] text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#5B5CE6] text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors"
         >
           <span className="text-lg leading-none">+</span>
           {actionText}

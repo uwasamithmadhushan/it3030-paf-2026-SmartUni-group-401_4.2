@@ -1,272 +1,272 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import { getAllTickets } from '../services/api';
+import { getMe, getMyBookings, getAllTickets } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Sparkles, 
+  Plus, 
+  ArrowRight, 
+  Calendar, 
+  Ticket, 
+  Clock, 
+  CheckCircle2,
+  ChevronRight,
+  Zap,
+  Activity,
+  Layers,
+  ShieldCheck,
+  Building2,
+  MapPin
+} from 'lucide-react';
 
 export default function UserDashboardPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  const [bookings, setBookings] = useState([]);
   const [tickets, setTickets] = useState([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData(true);
-    const interval = setInterval(() => fetchData(false), 30000);
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchData = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
+  const fetchData = async () => {
     try {
-      const { data } = await getAllTickets();
-      setTickets(data);
+      const [userRes, bookingsRes, ticketsRes] = await Promise.all([
+        getMe(),
+        getMyBookings(),
+        getAllTickets()
+      ]);
+      setUserData(userRes.data);
+      setBookings(bookingsRes.data);
+      // Filter for current user's tickets
+      setTickets(ticketsRes.data.filter(t => t.createdById === userRes.data.id));
     } catch (err) {
-      console.error('Failed to fetch dashboard data');
+      console.error('Failed to synchronize personal intelligence archive');
     } finally {
-      if (showLoading) setLoading(false);
+      setLoading(false);
     }
   };
 
-  const myTickets = useMemo(() => 
-    tickets.filter(t => t.createdById === user?.id), 
-    [tickets, user?.id]
-  );
+  if (loading && !userData) return <LoadingSpinner fullScreen message="Synthesizing Personal Hub..." />;
 
-  const stats = useMemo(() => ({
-    open: myTickets.filter(t => t.status === 'OPEN').length,
-    inProgress: myTickets.filter(t => t.status === 'IN_PROGRESS').length,
-    resolved: myTickets.filter(t => t.status === 'RESOLVED').length,
-    total: myTickets.length
-  }), [myTickets]);
-
-  const recentUpdates = useMemo(() => 
-    tickets
-      .flatMap(t => t.updates.map(u => ({ ...u, ticketTitle: t.title, ticketId: t.id })))
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 5),
-    [tickets]
-  );
+  const stats = [
+    { label: 'Active Reports', value: tickets.filter(t => t.status !== 'RESOLVED').length, icon: Ticket, trend: 'Field action pending', color: 'luna-aqua' },
+    { label: 'Reservations', value: bookings.length, icon: Calendar, trend: 'Scheduled access', color: 'luna-cyan' },
+    { label: 'System Sync', value: 'Optimal', icon: Activity, trend: 'Stable state', color: 'white' },
+    { label: 'Resolved', value: tickets.filter(t => t.status === 'RESOLVED').length, icon: CheckCircle2, trend: 'Archived cases', color: 'luna-steel' },
+  ];
 
   return (
-    <div className="max-w-[1600px] mx-auto p-4 lg:p-8 space-y-8 min-h-screen pb-20">
+    <div className="max-w-[1600px] mx-auto space-y-12">
       
-      {/* Welcome Hero Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden bg-gradient-to-br from-[#10B981] to-[#059669] rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl shadow-emerald-200/50"
-      >
-        <div className="relative z-10">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-widest mb-6">
-            Campus Live Overview
-          </span>
-          <h1 className="text-3xl lg:text-5xl font-black tracking-tight mb-4">
-            Hello, {user?.username?.split(' ')[0] || 'Student'}! 👋
-          </h1>
-          <p className="text-white/80 max-w-xl text-lg font-medium leading-relaxed">
-            Your personal campus command center. Track your requests, manage bookings, and stay updated with the latest campus activity.
-          </p>
-        </div>
+      {/* Student Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-luna-aqua/10">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+           <div className="flex items-center gap-3 mb-3">
+              <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
+                <Sparkles size={12} className="text-luna-aqua" />
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-widest">Active Workspace</span>
+              </div>
+           </div>
+           <h1 className="text-5xl font-black text-white tracking-tighter">
+             Bonjour, <span className="text-luna-aqua">{userData?.username}</span>
+           </h1>
+           <p className="text-text-muted font-medium mt-2 text-lg">Welcome back to your high-end personal campus command.</p>
+        </motion.div>
         
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
-      </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4"
+        >
+           <button onClick={() => navigate('/facilities')} className="luna-button-outline !px-8">
+             Browse Assets
+           </button>
+           <button onClick={() => navigate('/tickets/new')} className="luna-button !px-8 flex items-center gap-3 shadow-lg shadow-luna-aqua/20">
+             <Plus size={18} /> New Report
+           </button>
+        </motion.div>
+      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        
-        {/* Main Feed Content */}
-        <div className="xl:col-span-8 space-y-8">
-          
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <ModernStatCard 
-              label="Pending Items" 
-              value={stats.open} 
-              icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-              color="amber" 
-              delay={0.1}
-            />
-            <ModernStatCard 
-              label="Being Handled" 
-              value={stats.inProgress} 
-              icon="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
-              color="slate" 
-              delay={0.2}
-            />
-            <ModernStatCard 
-              label="Task Resolved" 
-              value={stats.resolved} 
-              icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-              color="emerald" 
-              delay={0.3}
-            />
-          </div>
-
-          {/* Activity Timeline */}
-          <motion.div 
+      {/* Metric Intelligence Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {stats.map((stat, idx) => (
+          <motion.div
+            key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
+            transition={{ delay: idx * 0.05 }}
+            className="luna-card group hover:border-luna-aqua/30 transition-all cursor-pointer"
           >
-            <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 tracking-tight">Activity Pulse</h2>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Real-time status updates</p>
-                </div>
+            <div className="flex items-center justify-between mb-6">
+              <div className={`w-12 h-12 luna-glass rounded-2xl flex items-center justify-center text-${stat.color} group-hover:luna-glow transition-all`}>
+                <stat.icon size={24} />
               </div>
-              <button 
-                onClick={() => navigate('/tickets')} 
-                className="px-4 py-2 text-xs font-black text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white rounded-xl transition-all uppercase tracking-widest"
-              >
-                View Feed
+              <ChevronRight size={14} className="text-text-muted group-hover:text-white transition-all group-hover:translate-x-1" />
+            </div>
+            <p className="text-4xl font-black text-white mb-1 leading-none">{stat.value}</p>
+            <div>
+              <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{stat.label}</h3>
+              <p className="text-[9px] font-black text-text-muted mt-1 uppercase tracking-widest">{stat.trend}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Main Activity Dashboard */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+        
+        {/* Incident Monitoring Area */}
+        <div className="xl:col-span-8 space-y-12">
+          <div className="luna-card !p-0 overflow-hidden">
+            <div className="px-10 py-8 border-b border-luna-aqua/10 flex justify-between items-center bg-luna-midnight/40">
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Personal Incident Feed</h3>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Real-time status of your service requests</p>
+              </div>
+              <button onClick={() => navigate('/tickets')} className="text-[10px] font-black text-luna-aqua hover:text-white transition-all uppercase tracking-[0.2em] flex items-center gap-2 luna-glass px-4 py-2 rounded-xl">
+                Archive Access <ArrowRight size={14} />
               </button>
             </div>
             
-            <div className="divide-y divide-slate-50">
-              {recentUpdates.length > 0 ? recentUpdates.map((update, i) => (
-                <div 
-                  key={i} 
-                  onClick={() => navigate(`/tickets/${update.ticketId}`)}
-                  className="p-8 hover:bg-slate-50/50 transition-all flex items-start gap-6 group cursor-pointer"
-                >
-                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <span className="text-xl">💡</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="text-sm font-black text-slate-900 truncate pr-4">{update.ticketTitle}</p>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                        {new Date(update.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+            <div className="divide-y divide-luna-aqua/5">
+              <AnimatePresence mode="wait">
+                {tickets.length > 0 ? (
+                  tickets.slice(0, 5).map((t, i) => (
+                    <motion.div 
+                      key={t.id} 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="px-10 py-8 flex items-center justify-between hover:bg-luna-aqua/5 transition-all group cursor-pointer" 
+                      onClick={() => navigate(`/tickets/${t.id}`)}
+                    >
+                      <div className="flex gap-8 items-center">
+                        <div className={`w-14 h-14 luna-glass rounded-[1.25rem] flex items-center justify-center transition-all ${
+                          t.status === 'OPEN' ? 'text-luna-cyan' : 
+                          t.status === 'RESOLVED' ? 'text-luna-aqua luna-glow' : 'text-white/20'
+                        }`}>
+                          <Ticket size={24} />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-black text-white group-hover:text-luna-aqua transition-colors tracking-tight">{t.title}</h4>
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className={`luna-badge !px-3 !py-0.5 ${
+                              t.status === 'RESOLVED' ? 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20' : 'bg-luna-cyan/10 text-luna-cyan border-luna-cyan/20'
+                            }`}>{t.status.replace('_', ' ')}</span>
+                            <span className="text-[10px] text-text-muted font-black uppercase tracking-widest flex items-center gap-2">
+                               <Clock size={12} className="text-luna-aqua" />
+                               Synced {new Date(t.updatedAt || t.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="text-text-muted group-hover:text-white transition-all group-hover:translate-x-2" size={24} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="py-24 text-center opacity-20 flex flex-col items-center gap-6">
+                    <div className="w-20 h-20 luna-glass rounded-[2rem] flex items-center justify-center text-text-muted">
+                      <ShieldCheck size={40} />
                     </div>
-                    <p className="text-sm font-medium text-slate-500 line-clamp-2">{update.note}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest italic leading-relaxed">No priority incidents recorded.<br/>Personal environment is stable.</p>
                   </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="luna-card bg-gradient-to-br from-luna-steel/10 to-transparent !p-12 relative overflow-hidden group">
+             <div className="absolute right-0 top-0 opacity-[0.03] pointer-events-none translate-x-20 -translate-y-20 group-hover:opacity-[0.06] transition-opacity duration-1000">
+                <Building2 size={400} />
+             </div>
+             <div className="relative z-10 max-w-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                   <Zap className="text-luna-aqua" size={20} />
+                   <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Resource Flow</span>
                 </div>
-              )) : (
-                <div className="py-20 text-center">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                    <svg className="w-8 h-8 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-                  </div>
-                  <p className="text-slate-400 font-bold italic tracking-tight">No recent activity on your campus pulse.</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Sidebar Actions */}
-        <div className="xl:col-span-4 space-y-6">
-          <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] px-2">Launch Pad</h2>
-          
-          <QuickActionButton
-            title="Log New Incident"
-            desc="Report a maintenance or technical issue"
-            icon="M12 4v16m8-8H4"
-            primary
-            onClick={() => navigate('/tickets/new')}
-          />
-
-          <QuickActionButton
-            title="Campus Assets"
-            desc="Browse equipment and resources"
-            icon="🏛️"
-            emoji
-            onClick={() => navigate('/facilities')}
-          />
-
-          <QuickActionButton
-            title="Book a Facility"
-            desc="Schedule labs, halls or rooms"
-            icon="📅"
-            emoji
-            onClick={() => navigate('/bookings/new')}
-          />
-
-          {/* Productivity Tip */}
-          <div className="p-8 bg-emerald-50/50 rounded-[2rem] border border-emerald-100 relative overflow-hidden group">
-            <div className="relative z-10">
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3 block">Pro Tip</span>
-              <p className="text-sm font-bold text-slate-700 leading-relaxed">
-                "Keep your campus running smoothly! Reporting issues early helps our technicians resolve them faster."
-              </p>
-            </div>
-            <div className="absolute -bottom-4 -right-4 text-6xl opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700 rotate-12 group-hover:rotate-0">
-              🚀
-            </div>
+                <h2 className="text-4xl font-black text-white tracking-tighter mb-6">Campus <span className="text-luna-aqua">Asset Sync</span></h2>
+                <p className="text-text-muted text-lg font-medium leading-relaxed mb-10 border-l-2 border-luna-aqua/20 pl-8">
+                   Explore and reserve state-of-the-art campus facilities. 
+                   From high-performance labs to collaborative studios, synchronize your access with the central registry.
+                </p>
+                <button onClick={() => navigate('/facilities')} className="luna-button !px-10 shadow-lg shadow-luna-aqua/20">Explore Infrastructure</button>
+             </div>
           </div>
         </div>
 
-      </div>
-    </div>
-  );
-}
+        {/* Temporal Sidebar */}
+        <div className="xl:col-span-4 space-y-12">
+          <div className="luna-card flex flex-col min-h-[500px]">
+            <div className="mb-10 pb-6 border-b border-luna-aqua/5">
+              <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
+                <Layers size={24} className="text-luna-aqua" /> Reservations
+              </h3>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Temporal access registry</p>
+            </div>
+            
+            <div className="flex-1 space-y-8">
+              <AnimatePresence mode="popLayout">
+                {bookings.length > 0 ? (
+                  bookings.slice(0, 3).map((b, i) => (
+                    <motion.div 
+                      key={b.id} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="p-6 rounded-[2rem] bg-luna-midnight/40 border border-luna-aqua/5 group hover:border-luna-aqua/20 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="px-3 py-1 rounded-lg bg-luna-aqua/5 border border-luna-aqua/10 text-[9px] font-black text-luna-aqua uppercase tracking-widest">
+                           {b.assetName || 'Site Alpha'}
+                        </div>
+                        <ArrowRight size={14} className="text-text-muted group-hover:text-luna-aqua transition-all" />
+                      </div>
+                      <p className="text-xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tight">
+                        {new Date(b.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
+                      <div className="flex items-center gap-3 mt-2 opacity-50">
+                         <Clock size={12} className="text-luna-aqua" />
+                         <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                           {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </span>
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center opacity-20 py-20">
+                    <Calendar size={48} className="mb-6" />
+                    <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">No temporal access<br/>reservations recorded</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            <button onClick={() => navigate('/my-bookings')} className="w-full luna-button-outline mt-10 group !py-4">
+              Temporal Management <Plus size={16} className="group-hover:rotate-90 transition-transform ml-2" />
+            </button>
+          </div>
 
-function ModernStatCard({ label, value, icon, color, delay }) {
-  const colorStyles = {
-    slate: 'bg-slate-50 text-slate-600 border-slate-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100'
-  };
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay }}
-      className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 group hover:border-emerald-200 transition-all cursor-default"
-    >
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 border transition-transform group-hover:rotate-6 ${colorStyles[color]}`}>
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={icon} />
-        </svg>
-      </div>
-      <div>
-        <p className="text-2xl font-black text-slate-900 tracking-tight mb-1">{value}</p>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-      </div>
-    </motion.div>
-  );
-}
-
-function QuickActionButton({ title, desc, icon, primary, emoji, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center p-6 rounded-[2rem] transition-all group relative overflow-hidden ${
-        primary 
-          ? 'bg-[#10B981] text-white shadow-2xl shadow-emerald-200/50 hover:bg-[#059669]' 
-          : 'bg-white border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-emerald-200 text-slate-900'
-      }`}
-    >
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mr-5 shrink-0 transition-all group-hover:scale-110 ${
-        primary ? 'bg-white/20' : 'bg-slate-50 border border-slate-100'
-      }`}>
-        {emoji ? (
-          <span className="text-2xl leading-none">{icon}</span>
-        ) : (
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={icon} />
-          </svg>
-        )}
-      </div>
-      <div className="text-left">
-        <p className="font-black text-sm tracking-tight">{title}</p>
-        <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${primary ? 'text-white/70' : 'text-slate-400'}`}>
-          {desc}
-        </p>
-      </div>
-      {primary && (
-        <div className="absolute right-6 opacity-20 group-hover:translate-x-2 transition-transform">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+          <div className="luna-card !bg-luna-midnight/60 border-luna-aqua/10 flex flex-col items-center justify-center text-center !p-12 group">
+            <div className="w-20 h-20 bg-luna-aqua/5 rounded-[2rem] flex items-center justify-center text-luna-aqua mb-8 border border-luna-aqua/20 luna-glow group-hover:scale-110 transition-transform">
+              <ShieldCheck size={32} />
+            </div>
+            <h3 className="text-xl font-black text-white tracking-tight mb-3">Concierge Access</h3>
+            <p className="text-xs font-medium text-text-muted mb-10 leading-relaxed px-6">
+              Immediate secure line to campus technical specialists for priority infrastructure support.
+            </p>
+            <button className="w-full luna-button !py-4 shadow-lg shadow-luna-aqua/10">Synchronize Specialist</button>
+          </div>
         </div>
-      )}
-    </button>
+      </div>
+
+    </div>
   );
 }

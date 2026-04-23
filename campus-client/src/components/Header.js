@@ -1,3 +1,4 @@
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header({ toggleSidebar }) {
@@ -22,6 +23,71 @@ export default function Header({ toggleSidebar }) {
           <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center font-black text-indigo-600 text-xs">
             {user?.username?.charAt(0).toUpperCase()}
           </div>
+          Smart Campus
+        </NavLink>
+
+        {/* Nav links */}
+        <nav className="flex items-center gap-1">
+          <NavLink
+            to="/facilities"
+            className={({ isActive }) =>
+              `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`
+            }
+          >
+            🏛️ Facility
+          </NavLink>
+
+          {user?.role !== 'ADMIN' && (
+            <NavLink
+              to="/bookings/my"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`
+              }
+            >
+              📅 Bookings
+            </NavLink>
+          )}
+
+          {user?.role === 'ADMIN' && (
+            <NavLink
+              to="/admin/bookings"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`
+              }
+            >
+              🗂️ Manage Bookings
+            </NavLink>
+          )}
+        </nav>
+
+        {/* User area */}
+        <div className="flex items-center gap-3">
+          {user && (
+            <span className="text-sm text-gray-500 hidden sm:block">
+              {user.username}
+              <span className="ml-2 text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                {user.role}
+              </span>
+            </span>
+          )}
+          <button
+            onClick={handleLogout}
+            className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     </header>

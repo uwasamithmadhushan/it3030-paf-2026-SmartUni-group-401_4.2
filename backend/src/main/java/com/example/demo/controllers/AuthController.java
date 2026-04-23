@@ -1,11 +1,11 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.AuthResponse;
-import com.example.demo.dto.GoogleAuthRequest;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.services.AuthService;
 import com.example.demo.services.GoogleAuthService;
+import com.example.demo.dto.GoogleAuthRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,7 +36,7 @@ public class AuthController {
     }
 
     @PostMapping("/google")
-    public ResponseEntity<AuthResponse> googleLogin(@RequestBody GoogleAuthRequest request) {
+    public ResponseEntity<AuthResponse> loginWithGoogle(@RequestBody GoogleAuthRequest request) {
         AuthResponse response = googleAuthService.loginWithGoogle(request.getCredential());
         return ResponseEntity.ok(response);
     }

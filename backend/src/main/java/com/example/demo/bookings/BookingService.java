@@ -62,7 +62,7 @@ public class BookingService {
 
     private BookingResponse toResponse(Booking b) {
         String resourceName = resourceRepository.findById(b.getResourceId())
-                .map(Resource::getName).orElse("Unknown Resource");
+            .map(Resource::getResourceName).orElse("Unknown Resource");
         String username = userRepository.findById(b.getUserId())
                 .map(User::getUsername).orElse("Unknown User");
         return new BookingResponse(
@@ -82,7 +82,7 @@ public class BookingService {
 
         if (resource.getStatus() != ResourceStatus.ACTIVE) {
             throw new IllegalArgumentException(
-                    "Resource '" + resource.getName() + "' is not available for booking");
+                "Resource '" + resource.getResourceName() + "' is not available for booking");
         }
 
         User user = userRepository.findByUsername(username)

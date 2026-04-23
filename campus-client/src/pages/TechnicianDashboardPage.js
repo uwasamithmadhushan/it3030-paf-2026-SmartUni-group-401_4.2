@@ -1,260 +1,251 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllTickets } from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getTechnicianDashboardStats, getAssignedTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
+import { 
+  Wrench, Clock, CheckCircle2, AlertTriangle, RefreshCcw,
+  ChevronRight, MapPin, Activity, Layers, Zap, ShieldCheck
+} from 'lucide-react';
 
-const TechnicianDashboardPage = () => {
-  const [tickets, setTickets] = useState([]);
+export default function TechnicianDashboardPage() {
+  const [stats, setStats] = useState(null);
+  const [recentTickets, setRecentTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { addToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
-      fetchTickets(true);
-      const interval = setInterval(() => fetchTickets(false), 30000);
+      fetchDashboardData(true);
+      const interval = setInterval(() => fetchDashboardData(false), 30000);
       return () => clearInterval(interval);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const fetchTickets = async (showLoading = true) => {
+  const fetchDashboardData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const { data } = await getAllTickets();
-      // Filter for current technician
-      setTickets(data.filter(t => t.assignedTechnicianId === user.id));
+      const [statsRes, ticketsRes] = await Promise.all([
+        getTechnicianDashboardStats(),
+        getAssignedTickets()
+      ]);
+      setStats(statsRes.data);
+      // Sort assigned tickets by created date descending and take top 5
+      const sortedTickets = ticketsRes.data
+        .filter(t => t.status !== 'RESOLVED' && t.status !== 'CLOSED')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5);
+      setRecentTickets(sortedTickets);
     } catch (error) {
-      console.error('Fetch error:', error);
-      if (showLoading) addToast('Error fetching summary', 'error');
+      console.error('Failed to fetch dashboard data', error);
     } finally {
       if (showLoading) setLoading(false);
     }
   };
 
-  const stats = useMemo(() => {
-    const total = tickets.length;
-    const completed = tickets.filter(t => t.status === 'RESOLVED' || t.status === 'COMPLETED' || t.status === 'CLOSED').length;
-    const inProgress = tickets.filter(t => t.status === 'IN_PROGRESS').length;
-    const pending = tickets.filter(t => t.status === 'OPEN' || t.status === 'ON_HOLD').length;
-    const urgent = tickets.filter(t => (t.priority === 'CRITICAL' || t.priority === 'HIGH') && (t.status !== 'RESOLVED' && t.status !== 'COMPLETED' && t.status !== 'CLOSED')).length;
-    
-    // Calculate weekly progress (last 7 days)
-    const weekData = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
-    const today = new Date();
-    tickets.forEach(t => {
-      const updateDate = new Date(t.updatedAt || t.createdAt);
-      const diffTime = Math.abs(today - updateDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays <= 7 && (t.status === 'RESOLVED' || t.status === 'COMPLETED' || t.status === 'CLOSED')) {
-        const dayIndex = (updateDate.getDay() + 6) % 7; // Convert Sun-Sat to Mon-Sun
-        weekData[dayIndex]++;
-      }
-    });
+  if (loading || !stats) return <LoadingSpinner fullScreen message="Calibrating Specialist Command..." />;
 
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
-    // Mock SLA based on high priority resolution (just to show something real-ish)
-    const sla = total > 0 ? 100 - (urgent * 5) : 100;
+  // Chart data formatting
+  const pieData = Object.entries(stats.ticketsByPriority).map(([key, value]) => ({
+    name: key, value
+  }));
+  const COLORS = ['#A7EBF2', '#64748b', '#ef4444', '#0ea5e9'];
 
-    return { 
-      total, completed, inProgress, pending, urgent, completionRate, 
-      weekData: weekData.map(v => Math.max(v * 20, 10)), // Scale for visualization
-      realCounts: weekData,
-      sla: Math.max(sla, 60)
-    };
-  }, [tickets]);
-
-  if (loading) return <LoadingSpinner fullScreen message="Syncing Maintenance Data..." />;
+  const barData = Object.entries(stats.weeklyCompletedTickets)
+    .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+    .map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+      resolved: count
+    }));
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8">
-      {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-[1600px] mx-auto space-y-12">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-luna-aqua/10">
         <div>
-           <h1 className="text-2xl font-black text-slate-900 tracking-tight">System Overview</h1>
-           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Maintenance Command Center • Logged in as {user?.username}</p>
+           <div className="flex items-center gap-3 mb-3">
+              <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
+                <ShieldCheck size={12} className="text-luna-aqua" />
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-widest">Specialist Terminal</span>
+              </div>
+           </div>
+           <h1 className="text-5xl font-black text-white tracking-tighter">Field <span className="text-luna-aqua">Command</span></h1>
+           <p className="text-text-muted font-medium mt-2 text-lg">Specialist: <span className="text-white">{user?.username}</span> • Operational Mission Intelligence</p>
         </div>
-        <div className="text-right">
-           <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Shift Status</p>
-           <p className="text-sm font-black text-emerald-600 uppercase tracking-widest">On Duty</p>
+        
+        <div className="flex items-center gap-4">
+           <button onClick={() => fetchDashboardData(true)} className="w-12 h-12 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all">
+              <RefreshCcw size={20} />
+           </button>
+           <button onClick={() => navigate('/assignments')} className="luna-button !px-8 flex items-center gap-3 shadow-lg shadow-luna-aqua/20">
+             Manage Assignments <ChevronRight size={18} />
+           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        <KPICard title="Assigned" value={stats.total} icon="📋" color="indigo" trend="Total queue" />
-        <KPICard title="Pending" value={stats.pending} icon="⏳" color="amber" trend="Awaiting action" />
-        <KPICard title="In Progress" value={stats.inProgress} icon="⚡" color="blue" trend="Active now" />
-        <KPICard title="Completed" value={stats.completed} icon="✅" color="emerald" trend="Lifetime resolved" />
-        <KPICard title="Urgent" value={stats.urgent} icon="🔥" color="rose" trend="Immediate action" />
+      {/* KPI Performance Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+        <KPICard title="Total Assigned" value={stats.totalAssigned} icon={<Layers size={24} />} color="navy" />
+        <KPICard title="Pending Action" value={stats.openTickets} icon={<Clock size={24} />} color="steel" />
+        <KPICard title="In Progress" value={stats.inProgressTickets} icon={<Zap size={24} />} color="cyan" />
+        <KPICard title="Resolved Today" value={stats.resolvedToday} icon={<CheckCircle2 size={24} />} color="aqua" />
+        <KPICard title="Urgent Priority" value={stats.urgentTickets} icon={<AlertTriangle size={24} />} color="critical" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-8">
+      {/* Main Mission Control Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        
+        {/* Workload Area */}
+        <div className="lg:col-span-2 space-y-12">
           
-          {/* Active Assignments Preview */}
-          <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Active Work Order Preview</h3>
-              <button onClick={() => navigate('/assignments')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">View Full Queue</button>
+          <div className="luna-card !p-0 overflow-hidden">
+            <div className="px-10 py-8 border-b border-luna-aqua/10 flex justify-between items-center bg-luna-midnight/40">
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Recent Assignments</h3>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Requires immediate field sync</p>
+              </div>
+              <div className="w-10 h-10 luna-glass rounded-xl flex items-center justify-center text-luna-aqua">
+                <Wrench size={20} />
+              </div>
             </div>
-            <div className="divide-y divide-slate-50">
-              {tickets.filter(t => t.status !== 'COMPLETED' && t.status !== 'RESOLVED' && t.status !== 'CLOSED').slice(0, 4).map(t => (
-                <div key={t.id} className="px-8 py-5 flex items-center justify-between hover:bg-slate-50 transition-all cursor-pointer group" onClick={() => navigate(`/tickets/${t.id}`)}>
-                  <div className="flex gap-4 items-center">
-                    <span className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xs shadow-inner">🛠️</span>
-                    <div>
-                      <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{t.title}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📍 {t.location || 'General'}</p>
-                    </div>
+            
+            <div className="divide-y divide-luna-aqua/5">
+              <AnimatePresence>
+                {recentTickets.length > 0 ? (
+                  recentTickets.map((t, i) => (
+                    <motion.div 
+                      key={t.id} 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="px-10 py-8 flex items-center justify-between hover:bg-luna-aqua/5 transition-all group cursor-pointer" 
+                      onClick={() => navigate(`/tickets/${t.id}`)}
+                    >
+                      <div className="flex gap-8 items-center">
+                        <div className="w-14 h-14 luna-glass rounded-[1.25rem] flex items-center justify-center text-luna-aqua group-hover:luna-glow transition-all">
+                          <Wrench size={24} />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-black text-white group-hover:text-luna-aqua transition-colors tracking-tight">{t.title}</h4>
+                          <div className="flex items-center gap-5 mt-2">
+                            <span className={`luna-badge !px-3 !py-0.5 ${
+                              t.priority === 'URGENT' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20'
+                            }`}>{t.priority} Delta</span>
+                            <span className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                              <MapPin size={12} className="text-luna-aqua" /> {t.location || 'Sector Alpha'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight size={24} className="text-text-muted group-hover:text-white transition-all group-hover:translate-x-2" />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="py-24 text-center opacity-20 flex flex-col items-center gap-4">
+                     <CheckCircle2 size={48} />
+                     <p className="text-[10px] font-black uppercase tracking-widest italic">Operational Queue Clear</p>
                   </div>
-                  <div className="text-right">
-                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${getPriorityStyles(t.priority)}`}>{t.priority}</span>
-                  </div>
-                </div>
-              ))}
-              {tickets.filter(t => t.status !== 'COMPLETED' && t.status !== 'RESOLVED' && t.status !== 'CLOSED').length === 0 && (
-                <div className="p-12 text-center text-slate-400 italic text-sm">No active tasks assigned.</div>
-              )}
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          {/* Performance Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white">
-                <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-slate-900">Weekly Progress</h3>
-                <div className="flex items-end justify-between h-32 gap-2 px-2">
-                   {stats.weekData.map((h, i) => (
-                      <div key={i} className="flex-1 bg-slate-100 rounded-t-lg relative group">
-                         <div className={`absolute bottom-0 w-full rounded-t-lg transition-all duration-700 ${i === new Date().getDay()-1 ? 'bg-indigo-600' : 'bg-slate-300 group-hover:bg-indigo-300'}`} style={{ height: `${h}%` }}>
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {stats.realCounts[i]}
-                            </div>
-                         </div>
-                      </div>
-                   ))}
-                </div>
-                <div className="flex justify-between mt-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
-                   <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                </div>
-             </div>
-
-             <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-xl shadow-slate-900/20 text-white relative overflow-hidden">
-                <div className="relative z-10">
-                   <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-6">Efficiency Pulse</h3>
-                   <div className="space-y-6">
-                      <div>
-                         <div className="flex justify-between text-[10px] font-black uppercase mb-1">
-                            <span>SLA Compliance</span>
-                            <span>{stats.sla}%</span>
-                         </div>
-                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500" style={{ width: `${stats.sla}%` }}></div>
-                         </div>
-                      </div>
-                      <div>
-                         <div className="flex justify-between text-[10px] font-black uppercase mb-1">
-                            <span>Completion Target</span>
-                            <span>{stats.completionRate}%</span>
-                         </div>
-                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500" style={{ width: `${stats.completionRate}%` }}></div>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
+          <div className="luna-card">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-10 text-white flex items-center gap-3">
+              <Activity size={16} className="text-luna-aqua" /> Weekly Resolution Pulse
+            </h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(167,235,242,0.05)" vertical={false} />
+                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    cursor={{fill: 'rgba(167,235,242,0.05)'}}
+                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }}
+                  />
+                  <Bar dataKey="resolved" fill="#A7EBF2" radius={[4, 4, 0, 0]} barSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar / Right Side */}
-        <div className="lg:col-span-4 space-y-8">
-           <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 border border-white">
-              <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-slate-900">Workload Pulse</h3>
-              <div className="flex flex-col items-center">
-                 <div className="relative w-36 h-36 mb-6">
-                    <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 36 36">
-                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" strokeWidth="3.5" />
-                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#10B981" strokeWidth="3.5" strokeDasharray={`${stats.completionRate} 100`} strokeLinecap="round" className="transition-all duration-1000" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                       <span className="text-2xl font-black text-slate-900">{stats.completionRate}%</span>
-                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Rate</span>
-                    </div>
-                 </div>
-                 <div className="grid grid-cols-2 w-full gap-4">
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-                       <p className="text-xl font-black text-slate-900">{stats.total}</p>
-                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</p>
-                    </div>
-                    <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-center">
-                       <p className="text-xl font-black text-rose-600">{stats.urgent}</p>
-                       <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Urgent</p>
-                    </div>
-                 </div>
+        {/* Diagnostic Sidebar */}
+        <div className="space-y-12">
+           <div className="luna-card text-center flex flex-col items-center !p-12">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-6 text-luna-aqua">Priority Breakdown</h3>
+              <div className="h-48 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(167,235,242,0.2)', borderRadius: '1rem' }} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
            </div>
 
-           <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
-              <div className="px-8 py-5 border-b border-slate-50 flex items-center gap-2">
-                 <span className="text-rose-600">🔥</span>
-                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Immediate Attention</h3>
-              </div>
-              <div className="divide-y divide-slate-50">
-                 {tickets.filter(t => (t.priority === 'CRITICAL' || t.priority === 'HIGH') && t.status !== 'COMPLETED' && t.status !== 'RESOLVED').slice(0, 3).map(t => (
-                    <div key={t.id} className="p-6 hover:bg-rose-50/10 transition-colors cursor-pointer group" onClick={() => navigate(`/tickets/${t.id}`)}>
-                       <div className="flex justify-between items-start mb-2">
-                          <span className="text-[8px] font-black px-2 py-0.5 bg-rose-100 text-rose-600 rounded uppercase tracking-widest">{t.priority}</span>
-                          <span className="text-[9px] font-bold text-slate-400">#{t.id.substring(0, 6)}</span>
-                       </div>
-                       <h4 className="text-xs font-black text-slate-800 line-clamp-1">{t.title}</h4>
+           <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/10 flex flex-col justify-center !p-10">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-text-muted mb-8">
+                Strategic Efficiency
+              </h3>
+              <div className="space-y-8">
+                 <div className="space-y-3">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                       <span className="text-white">Avg Resolution Time</span>
+                       <span className="text-luna-aqua">{stats.avgResolutionTimeHours.toFixed(1)} hrs</span>
                     </div>
-                 ))}
-                 {tickets.filter(t => (t.priority === 'CRITICAL' || t.priority === 'HIGH') && t.status !== 'COMPLETED' && t.status !== 'RESOLVED').length === 0 && <div className="p-6 text-center text-[10px] font-bold text-slate-400 italic">No urgent jobs currently.</div>}
+                 </div>
+                 <div className="space-y-3">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                       <span className="text-white">Resolved This Week</span>
+                       <span className="text-luna-cyan">{stats.resolvedThisWeek} Tickets</span>
+                    </div>
+                 </div>
               </div>
            </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
-const KPICard = ({ title, value, icon, color, trend }) => {
+const KPICard = ({ title, value, icon, color }) => {
   const colorMap = {
-    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100 shadow-indigo-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100',
-    blue: 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100',
-    rose: 'bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100'
+    navy: 'bg-luna-navy/20 text-luna-aqua border-luna-navy/20',
+    steel: 'bg-luna-steel/20 text-luna-cyan border-luna-steel/20',
+    cyan: 'bg-luna-cyan/10 text-luna-cyan border-luna-cyan/20',
+    aqua: 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20 luna-glow',
+    critical: 'bg-red-500/10 text-red-400 border-red-500/20 shadow-lg shadow-red-500/10'
   };
 
   return (
-    <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 hover:scale-[1.03] transition-all group">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl border ${colorMap[color]} group-hover:rotate-12 transition-transform mb-4`}>
+    <motion.div 
+      whileHover={{ y: -10 }}
+      className="luna-card !p-10 group"
+    >
+      <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${colorMap[color]}`}>
         {icon}
       </div>
-      <div>
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-        <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
-        <p className="text-[9px] font-bold text-slate-400 mt-2">{trend}</p>
+      <div className="mt-10">
+        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-3">{title}</p>
+        <p className="text-5xl font-black text-white tracking-tighter leading-none">{value}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
-
-const getPriorityStyles = (priority) => {
-  switch (priority) {
-    case 'CRITICAL': return 'bg-rose-50 text-rose-600 border-rose-100';
-    case 'HIGH': return 'bg-orange-50 text-orange-600 border-orange-100';
-    case 'MEDIUM': return 'bg-amber-50 text-amber-600 border-amber-100';
-    case 'LOW': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-    default: return 'bg-slate-50 text-slate-400 border-slate-100';
-  }
-};
-
-export default TechnicianDashboardPage;

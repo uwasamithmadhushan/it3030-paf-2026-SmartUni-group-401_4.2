@@ -1,8 +1,18 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  LayoutDashboard, 
+  Building2, 
+  Ticket, 
+  Users, 
+  Calendar, 
+  LogOut, 
+  ChevronRight,
+  ShieldAlert
+} from 'lucide-react';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+export default function Sidebar({ isOpen, toggleSidebar }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -12,99 +22,91 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
+    { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { to: '/resources', label: 'Resource Catalogue', icon: <Building2 size={20} /> },
+    { to: '/tickets', label: 'Incident Tickets', icon: <Ticket size={20} /> },
   ];
 
   if (user?.role === 'ADMIN') {
-    navItems.push({ to: '/facilities', label: 'Facility & Assets', icon: '🏛️' });
-    navItems.push({ to: '/tickets', label: 'Incident Tickets', icon: '🎫' });
-    navItems.push({ to: '/admin/users', label: 'User Management', icon: '👥' });
-    navItems.push({ to: '/admin/bookings', label: 'Manage Bookings', icon: '📅' });
+    navItems.push({ to: '/admin/users', label: 'User Control', icon: <Users size={20} /> });
   } else if (user?.role === 'TECHNICIAN') {
-    navItems.push({ to: '/assignments', label: 'Assignments', icon: '📋' });
-    navItems.push({ to: '/schedule', label: 'Schedule', icon: '📅' });
-    navItems.push({ to: '/reports', label: 'Reports', icon: '📊' });
-    navItems.push({ to: '/profile', label: 'Profile', icon: '👤' });
-  } else {
-    navItems.push({ to: '/facilities', label: 'Facility & Assets', icon: '🏛️' });
-    navItems.push({ to: '/tickets', label: 'Incident Tickets', icon: '🎫' });
-    navItems.push({ to: '/bookings/my', label: 'My Bookings', icon: '📅' });
+    navItems.push({ to: '/assignments', label: 'My Jobs', icon: <ShieldAlert size={20} /> });
   }
+
+  navItems.push({ to: '/bookings', label: 'Reservations', icon: <Calendar size={20} /> });
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={toggleSidebar}
-        ></div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={toggleSidebar}
+            className="fixed inset-0 bg-luna-midnight/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar Container */}
-      <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-gradient-to-b from-[#10B981] to-[#059669] z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl`}>
-        <div className="flex flex-col h-full">
-          {/* Logo Section */}
-          <div className="p-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <span className="text-xl font-black text-white tracking-tight">SmartUni</span>
+      <motion.aside 
+        initial={false}
+        className={`fixed top-0 left-0 h-full w-72 luna-sidebar z-50 flex flex-col lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-transform duration-500 ease-in-out`}
+      >
+        <div className="p-8">
+          <div className="flex items-center gap-4">
+            <motion.div 
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 1 }}
+              className="w-12 h-12 bg-gradient-to-br from-luna-steel to-luna-navy rounded-2xl flex items-center justify-center shadow-lg border border-luna-aqua/20 luna-glow"
+            >
+               <ShieldAlert className="w-6 h-6 text-luna-aqua" />
+            </motion.div>
+            <div>
+              <h1 className="text-white font-black text-xl tracking-tighter leading-none">Smart<span className="text-luna-aqua">Uni</span></h1>
+              <p className="text-[10px] font-black text-luna-cyan uppercase tracking-[0.3em] mt-1">Enterprise</p>
             </div>
           </div>
+        </div>
 
-          {/* Navigation Links */}
-          <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-            <p className="px-4 text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-4">Main Menu</p>
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => window.innerWidth < 1024 && toggleSidebar()}
-                className={({ isActive }) => `
-                  flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all
-                  ${isActive 
-                    ? 'bg-white text-[#059669] shadow-xl shadow-emerald-900/20' 
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'}
-                `}
-              >
-                <span className="text-xl opacity-80">{item.icon}</span>
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          {/* Bottom Actions */}
-          <div className="p-4 mt-auto border-t border-white/10 space-y-1.5">
-            <button 
-              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all"
+        <nav className="flex-1 p-6 space-y-3 overflow-y-auto custom-scrollbar">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={() => { if (window.innerWidth < 1024) toggleSidebar(); }}
+              className={({ isActive }) => 
+                `luna-nav-link group ${isActive ? 'active' : ''}`
+              }
             >
-              <span className="text-xl opacity-80">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-              Help & Support
-            </button>
+              <span className="transition-transform duration-300 group-hover:scale-110">{item.icon}</span>
+              <span className="flex-1">{item.label}</span>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="p-6 border-t border-luna-aqua/5 bg-luna-midnight/40">
+          <div className="flex items-center justify-between luna-glass p-4 rounded-3xl border-luna-aqua/5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-luna-navy to-luna-midnight flex items-center justify-center text-luna-aqua font-black border border-luna-aqua/10 shadow-inner">
+                {user?.username?.substring(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-black text-white truncate">{user?.username}</p>
+                <p className="text-[9px] font-bold text-luna-cyan uppercase tracking-widest">{user?.role}</p>
+              </div>
+            </div>
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold text-rose-100 hover:bg-rose-500/20 transition-all"
+              className="p-2.5 rounded-xl bg-luna-aqua/5 text-luna-aqua hover:bg-red-500/20 hover:text-red-400 transition-all border border-luna-aqua/10 hover:border-red-500/30"
+              title="Sign Out"
             >
-              <span className="text-xl opacity-80">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </span>
-              Sign Out
+              <LogOut size={18} />
             </button>
           </div>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
-};
-
-export default Sidebar;
+}

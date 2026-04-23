@@ -45,18 +45,24 @@ module.exports = {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
+        },
+        luna: {
+          aqua: '#A7EBF2',
+          cyan: '#54ACBF',
+          steel: '#26658C',
+          navy: '#023859',
+          midnight: '#011C40',
+        },
+        text: {
+          muted: '#8FBACC',
         }
       },
       animation: {
-        'pulse-slow': 'pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'scale-up': 'scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
-        'pulse-slow': {
-          '0%, 100%': { opacity: '0.4' },
-          '50%': { opacity: '0.2' },
-        },
         'fade-in': {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -65,9 +71,19 @@ module.exports = {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         }
+      },
+      backgroundImage: {
+        'luna-gradient': 'linear-gradient(135deg, #011C40 0%, #023859 100%)',
+        'luna-glass': 'linear-gradient(135deg, rgba(167, 235, 242, 0.05) 0%, rgba(167, 235, 242, 0.01) 100%)',
+      },
+      borderRadius: {
+        'luxury': '2rem',
+      },
+      boxShadow: {
+        'luna-glow': '0 0 20px rgba(167, 235, 242, 0.15)',
+        'luna-glow-strong': '0 0 40px rgba(167, 235, 242, 0.3)',
       }
     },
   },
   plugins: [],
 }
-

@@ -1,11 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { createTicket, getAllAssets, uploadAttachment } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Send, 
+  Paperclip, 
+  X, 
+  AlertTriangle,
+  MapPin,
+  Tag,
+  Layers,
+  Phone,
+  FileText,
+  Building2,
+  ShieldCheck,
+  Zap,
+  Activity,
+  Globe,
+  Plus,
+  User,
+  Mail
+} from 'lucide-react';
 
-const CreateTicketPage = () => {
+export default function CreateTicketPage() {
   const navigate = useNavigate();
   const { refreshTickets } = useOutletContext() || {};
   const { addToast } = useToast();
@@ -13,11 +33,13 @@ const CreateTicketPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'IT_SUPPORT',
+    category: 'ELECTRICAL',
     priority: 'MEDIUM',
     resourceId: '',
     location: '',
-    contactDetails: '',
+    preferredContactName: '',
+    preferredContactEmail: '',
+    preferredContactPhone: '',
     attachments: []
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -29,7 +51,7 @@ const CreateTicketPage = () => {
         const { data } = await getAllAssets();
         setAssets(data);
       } catch (err) {
-        addToast('Could not load assets list', 'error');
+        addToast('Registry synchronization failed', 'error');
       }
     };
     fetchAssets();
@@ -38,36 +60,28 @@ const CreateTicketPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.title.length < 5) {
-      addToast('Title is too short (min 5 chars)', 'error');
+      addToast('Subject exceeds minimum character delta', 'error');
       return;
     }
-    if (formData.description.length < 10) {
-      addToast('Please provide a more detailed description', 'error');
-      return;
-    }
-
     setLoading(true);
     try {
       const { data: newTicket } = await createTicket({ ...formData, attachments: [] });
       
-      // Upload files if any
       if (selectedFiles.length > 0) {
-        addToast(`Uploading ${selectedFiles.length} attachments...`, 'info');
         for (const file of selectedFiles) {
           try {
             await uploadAttachment(newTicket.id, file);
           } catch (uploadErr) {
-            console.error('File upload failed', uploadErr);
+            console.error('Temporal transmission failure', uploadErr);
           }
         }
       }
 
-      addToast('Ticket submitted successfully!', 'success');
+      addToast('Incident successfully registered in central hub', 'success');
       if (refreshTickets) refreshTickets();
       navigate('/tickets');
     } catch (error) {
-      const msg = error.response?.data?.message || 'Failed to submit ticket.';
-      addToast(msg, 'error');
+      addToast('Mission critical transmission failure', 'error');
     } finally {
       setLoading(false);
     }
@@ -76,7 +90,7 @@ const CreateTicketPage = () => {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (formData.attachments.length + files.length > 3) {
-      addToast('Maximum 3 attachments allowed', 'error');
+      addToast('Protocol limit: 3 digital captures', 'error');
       return;
     }
     
@@ -94,182 +108,307 @@ const CreateTicketPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  if (loading) return <LoadingSpinner fullScreen message="Submitting your request..." />;
+  if (loading) return <LoadingSpinner fullScreen message="Transmitting Incident Intelligence..." />;
 
   return (
-    <>
-      {/* Static Backdrop */}
-      <div className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-150"></div>
+    <div className="max-w-[1200px] mx-auto space-y-12 pb-20">
       
-      {/* Fixed Centered Modal - No Animations, No Resize Jumps */}
-      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-[720px] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 custom-scrollbar">
-        
-        {/* Header Banner */}
-        <div className="bg-[#10B981] px-8 py-6 text-white flex justify-between items-start sticky top-0 z-10">
-          <div>
-            <h1 className="text-xl font-bold mb-1">New Incident Report</h1>
-            <p className="text-indigo-100 text-sm">Please provide details about the issue.</p>
+      {/* Dynamic Navigation */}
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => navigate('/tickets')}
+          className="group flex items-center gap-3 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] hover:text-luna-aqua transition-all"
+        >
+          <div className="w-10 h-10 luna-glass rounded-xl flex items-center justify-center group-hover:luna-glow">
+            <ArrowLeft size={16} />
           </div>
-          <button 
-            type="button"
-            onClick={() => navigate('/tickets')}
-            className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
-            title="Cancel"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+          Abort Submission
+        </button>
+        <div className="flex items-center gap-3">
+          <ShieldCheck size={16} className="text-luna-aqua" />
+          <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Secure Terminal #401-Sync</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+        {/* Main Reporting Interface */}
+        <div className="xl:col-span-8">
+           <motion.div 
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             className="luna-card !p-0 overflow-hidden"
+           >
+              {/* Report Header */}
+              <div className="p-12 border-b border-luna-aqua/10 relative overflow-hidden bg-gradient-to-br from-luna-midnight/60 to-transparent">
+                 <div className="absolute right-0 top-0 opacity-[0.03] pointer-events-none translate-x-20 -translate-y-20">
+                   <AlertTriangle size={320} />
+                 </div>
+                 <div className="relative z-10">
+                   <div className="flex items-center gap-3 mb-6">
+                      <Zap className="text-luna-aqua" size={20} />
+                      <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Operational Anomaly</span>
+                   </div>
+                   <h1 className="text-5xl font-black text-white tracking-tighter">New Incident <span className="text-luna-aqua">Dossier</span></h1>
+                   <p className="text-text-muted font-medium mt-4 text-lg max-w-xl">Initiate specialized technician dispatch through high-fidelity discrepancy reporting.</p>
+                 </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-12 space-y-12">
+                 {/* Section: Core Intelligence */}
+                 <div className="space-y-10">
+                    <div className="flex items-center gap-4 text-white border-l-4 border-luna-aqua pl-6">
+                       <FileText size={20} className="text-luna-aqua" />
+                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Core Intel Registry</h3>
+                    </div>
+
+                    <div className="space-y-8">
+                       <div className="group">
+                         <label className="luna-label">Incident Subject</label>
+                         <div className="relative">
+                            <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                            <input
+                              required
+                              name="title"
+                              value={formData.title}
+                              onChange={handleChange}
+                              placeholder="Briefly summarize the discrepancy..."
+                              className="luna-input !pl-16"
+                            />
+                         </div>
+                       </div>
+
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="group">
+                            <label className="luna-label">Operational Classification</label>
+                            <div className="relative">
+                              <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                              <select
+                                name="category"
+                                value={formData.category}
+                                onChange={handleChange}
+                                className="luna-input !pl-16 appearance-none cursor-pointer"
+                              >
+                                <option value="ELECTRICAL">Electrical</option>
+                                <option value="NETWORK">Network</option>
+                                <option value="FURNITURE">Furniture</option>
+                                <option value="EQUIPMENT">Equipment</option>
+                                <option value="CLEANING">Cleaning</option>
+                                <option value="SAFETY">Safety</option>
+                                <option value="OTHER">Other</option>
+                              </select>
+                            </div>
+                          </div>
+                          
+                          <div className="group">
+                            <label className="luna-label">Priority Delta</label>
+                            <div className="relative">
+                              <Activity className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                              <select
+                                name="priority"
+                                value={formData.priority}
+                                onChange={handleChange}
+                                className="luna-input !pl-16 appearance-none cursor-pointer"
+                              >
+                                <option value="LOW">Tier 4: Low</option>
+                                <option value="MEDIUM">Tier 3: Medium</option>
+                                <option value="HIGH">Tier 2: High</option>
+                                <option value="URGENT">Tier 1: Urgent</option>
+                              </select>
+                            </div>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Section: Logistical Context */}
+                 <div className="space-y-10">
+                    <div className="flex items-center gap-4 text-white border-l-4 border-luna-cyan pl-6">
+                       <MapPin size={20} className="text-luna-cyan" />
+                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Logistical Context</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="group">
+                          <label className="luna-label">Sector Resource Mapping</label>
+                          <div className="relative">
+                            <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <select
+                              name="resourceId"
+                              value={formData.resourceId}
+                              onChange={handleChange}
+                              className="luna-input !pl-16 appearance-none cursor-pointer"
+                            >
+                              <option value="">Sector Agnostic</option>
+                              {assets.map(asset => (
+                                <option key={asset.id} value={asset.id}>{asset.name} - {asset.location}</option>
+                              ))}
+                            </select>
+                          </div>
+                       </div>
+                       
+                       <div className="group">
+                          <label className="luna-label">Precise Sector Mapping</label>
+                          <div className="relative">
+                            <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <input
+                              required
+                              name="location"
+                              value={formData.location}
+                              onChange={handleChange}
+                              placeholder="Precise coordinates (e.g. Lab 404)..."
+                              className="luna-input !pl-16"
+                            />
+                          </div>
+                       </div>
+
+                       <div className="group">
+                          <label className="luna-label">Preferred Contact Name</label>
+                          <div className="relative">
+                            <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <input
+                              required
+                              name="preferredContactName"
+                              value={formData.preferredContactName}
+                              onChange={handleChange}
+                              placeholder="Name..."
+                              className="luna-input !pl-16"
+                            />
+                          </div>
+                       </div>
+
+                       <div className="group">
+                          <label className="luna-label">Preferred Contact Email</label>
+                          <div className="relative">
+                            <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <input
+                              required
+                              type="email"
+                              name="preferredContactEmail"
+                              value={formData.preferredContactEmail}
+                              onChange={handleChange}
+                              placeholder="Email address..."
+                              className="luna-input !pl-16"
+                            />
+                          </div>
+                       </div>
+
+                       <div className="group">
+                          <label className="luna-label">Preferred Contact Phone</label>
+                          <div className="relative">
+                            <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <input
+                              required
+                              name="preferredContactPhone"
+                              value={formData.preferredContactPhone}
+                              onChange={handleChange}
+                              placeholder="Phone number..."
+                              className="luna-input !pl-16"
+                            />
+                          </div>
+                       </div>
+
+                       <div className="group">
+                          <label className="luna-label">Visual Artifacts (Max 3)</label>
+                          <label className="luna-input flex items-center justify-between cursor-pointer hover:border-luna-cyan/30 transition-all !px-6 group-hover:luna-glow-inset">
+                             <div className="flex items-center gap-4 overflow-hidden">
+                                <Paperclip size={20} className="text-text-muted shrink-0" />
+                                <span className="text-sm font-medium text-text-muted truncate">
+                                   {selectedFiles.length > 0 ? `${selectedFiles.length} resources selected` : 'Attach anomaly captures...'}
+                                </span>
+                             </div>
+                             <div className="w-8 h-8 luna-glass rounded-lg flex items-center justify-center text-luna-cyan">
+                                <Plus size={16} />
+                             </div>
+                             <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
+                          </label>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Section: Intelligence Narrative */}
+                 <div className="space-y-10">
+                    <div className="flex items-center gap-4 text-white border-l-4 border-white pl-6">
+                       <Zap size={20} className="text-white" />
+                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Detailed Intelligence</h3>
+                    </div>
+
+                    <div className="group">
+                       <label className="luna-label">Anomaly Narrative</label>
+                       <textarea
+                         required
+                         name="description"
+                         value={formData.description}
+                         onChange={handleChange}
+                         rows="8"
+                         placeholder="Provide a comprehensive technical narrative of the encountered anomaly..."
+                         className="luna-input !p-8 resize-none text-base leading-relaxed"
+                       ></textarea>
+                    </div>
+                 </div>
+
+                 {/* Action Command Bar */}
+                 <div className="flex items-center justify-end gap-10 pt-12 border-t border-luna-aqua/10">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/tickets')}
+                      className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] hover:text-white transition-all"
+                    >
+                      Abort Mission
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="luna-button !px-16 !py-5 shadow-2xl shadow-luna-aqua/20 text-xs tracking-[0.3em]"
+                    >
+                      {loading ? 'Transmitting...' : 'Transmit Intelligence'} <Send size={20} />
+                    </button>
+                 </div>
+              </form>
+           </motion.div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {/* Issue Title */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Issue Title</label>
-            <input
-              required
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="e.g., Wi-Fi disconnected in Library Block B"
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium appearance-none cursor-pointer"
-              >
-                <option value="IT_SUPPORT">💻 IT Support</option>
-                <option value="MAINTENANCE">🔧 Facility Maintenance</option>
-                <option value="SECURITY">🛡️ Security Incident</option>
-                <option value="LAB_EQUIPMENT">🔬 Lab Equipment</option>
-                <option value="OTHER">📁 Other</option>
-              </select>
-            </div>
-            
-            {/* Priority */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Priority</label>
-              <select
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium appearance-none cursor-pointer"
-              >
-                <option value="LOW">🌴 Low</option>
-                <option value="MEDIUM">⚖️ Medium</option>
-                <option value="HIGH">🔥 High</option>
-                <option value="CRITICAL">🚨 Critical</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Resource Mapping */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Related Asset (Optional)</label>
-              <select
-                name="resourceId"
-                value={formData.resourceId}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium appearance-none cursor-pointer"
-              >
-                <option value="">-- No specific asset --</option>
-                {assets.map(asset => (
-                  <option key={asset.id} value={asset.id}>{asset.name} ({asset.location.substring(0, 15)})</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-              <input
-                required
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="Room number, floor, or area"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Contact Details */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Contact Details</label>
-              <input
-                required
-                name="contactDetails"
-                value={formData.contactDetails}
-                onChange={handleChange}
-                placeholder="Phone or extension number"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium"
-              />
-            </div>
-
-            {/* File Upload */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Attachments (Max 3)</label>
-              <div className="relative group cursor-pointer h-[44px]">
-                <div className={`absolute inset-0 rounded-xl border-2 border-dashed ${formData.attachments.length > 0 ? 'border-[#10B981] bg-indigo-50/50' : 'border-gray-200 bg-gray-50 group-hover:border-[#10B981]'} transition-all pointer-events-none`}></div>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  title="Click to upload images"
-                  className="w-full h-full opacity-0 cursor-pointer object-cover z-20 relative"
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 px-4">
-                  <span className={`text-sm font-bold ${formData.attachments.length > 0 ? 'text-[#10B981]' : 'text-gray-400'}`}>
-                    {formData.attachments.length > 0 ? `${formData.attachments.length} files attached` : 'Click to attach photos'}
-                  </span>
-                </div>
+        {/* Support Sidebar */}
+        <div className="xl:col-span-4 space-y-12">
+           <div className="luna-card !bg-luna-midnight/60 border-luna-aqua/10 !p-12">
+              <div className="w-20 h-20 bg-luna-aqua/5 rounded-[2.5rem] flex items-center justify-center text-luna-aqua mb-10 border border-luna-aqua/20 luna-glow">
+                 <ShieldCheck size={36} />
               </div>
-            </div>
-          </div>
+              <h3 className="text-xl font-black text-white tracking-tight mb-4">Submission Protocol</h3>
+              <p className="text-sm font-medium text-text-muted mb-10 leading-relaxed border-l-2 border-luna-aqua/20 pl-8">
+                 Every report is encrypted and synchronized with our high-end technician dispatch matrix for optimal resolution velocity.
+              </p>
+              
+              <div className="space-y-6">
+                 <ProtocolStep label="Data Encryption" status="Optimal" />
+                 <ProtocolStep label="Identity Sync" status="Verified" />
+                 <ProtocolStep label="Asset Validation" status="Live" />
+              </div>
+           </div>
 
-          {/* Detailed Description */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Detailed Description</label>
-            <textarea
-              required
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="4"
-              placeholder="Provide as much detail as possible..."
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#10B981] text-gray-900 text-sm font-medium resize-none"
-            ></textarea>
-          </div>
-
-          {/* Submit Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => navigate('/tickets')}
-              className="px-6 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-8 py-2.5 bg-[#10B981] text-white rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors"
-            >
-              Submit Ticket
-            </button>
-          </div>
-        </form>
+           <div className="luna-card !bg-gradient-to-br from-luna-steel/10 to-transparent border-transparent text-center !p-12">
+              <Globe size={48} className="text-luna-aqua mx-auto mb-8 animate-pulse opacity-50" />
+              <h4 className="text-lg font-black text-white uppercase tracking-widest mb-4">Global Network</h4>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-10">Real-time infrastructure monitoring active across all sectors.</p>
+              <div className="w-full h-1 bg-luna-aqua/10 rounded-full overflow-hidden">
+                 <motion.div 
+                   animate={{ x: ['-100%', '100%'] }} 
+                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                   className="w-1/2 h-full bg-luna-aqua luna-glow"
+                 />
+              </div>
+           </div>
+        </div>
       </div>
-    </>
+    </div>
   );
-};
+}
 
-export default CreateTicketPage;
+const ProtocolStep = ({ label, status }) => (
+  <div className="flex items-center justify-between p-5 luna-glass rounded-2xl border border-luna-aqua/5 group hover:border-luna-aqua/20 transition-all">
+     <span className="text-[10px] font-black text-white uppercase tracking-widest">{label}</span>
+     <div className="flex items-center gap-3">
+        <div className="w-1.5 h-1.5 rounded-full bg-luna-aqua animate-pulse" />
+        <span className="text-[9px] font-black text-luna-aqua uppercase tracking-widest">{status}</span>
+     </div>
+  </div>
+);
