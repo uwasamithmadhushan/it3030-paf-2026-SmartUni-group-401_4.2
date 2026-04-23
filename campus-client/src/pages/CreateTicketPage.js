@@ -59,29 +59,76 @@ export default function CreateTicketPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.title.length < 5) {
-      addToast('Subject exceeds minimum character delta', 'error');
+
+    // Client-side validation before sending to backend
+    if (!formData.title || formData.title.trim().length < 5) {
+      addToast('Please enter an issue title (at least 5 characters).', 'error');
       return;
     }
+    if (!formData.category) {
+      addToast('Please select a category.', 'error');
+      return;
+    }
+    if (!formData.priority) {
+      addToast('Please select a priority.', 'error');
+      return;
+    }
+    if (!formData.description || formData.description.trim().length < 10) {
+      addToast('Please provide a description (at least 10 characters).', 'error');
+      return;
+    }
+    if (!formData.preferredContactName || !formData.preferredContactName.trim()) {
+      addToast('Please enter a contact name.', 'error');
+      return;
+    }
+    if (!formData.preferredContactEmail || !formData.preferredContactEmail.trim()) {
+      addToast('Please enter a valid email address.', 'error');
+      return;
+    }
+    if (!formData.preferredContactPhone || !formData.preferredContactPhone.trim()) {
+      addToast('Please enter a contact phone number.', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
-      const { data: newTicket } = await createTicket({ ...formData, attachments: [] });
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        priority: formData.priority,
+        location: formData.location.trim(),
+        resourceId: formData.resourceId || null,
+        preferredContactName: formData.preferredContactName.trim(),
+        preferredContactEmail: formData.preferredContactEmail.trim(),
+        preferredContactPhone: formData.preferredContactPhone.trim(),
+        attachments: []
+      };
+
+      const { data: newTicket } = await createTicket(payload);
       
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           try {
             await uploadAttachment(newTicket.id, file);
           } catch (uploadErr) {
-            console.error('Temporal transmission failure', uploadErr);
+            console.error('File upload error:', uploadErr);
           }
         }
       }
 
-      addToast('Incident successfully registered in central hub', 'success');
+      addToast('Your incident report has been submitted successfully!', 'success');
       if (refreshTickets) refreshTickets();
       navigate('/tickets');
     } catch (error) {
-      addToast('Mission critical transmission failure', 'error');
+      // Extract the real validation message from the backend response
+      const responseData = error.response?.data;
+      let msg = 'Failed to submit report. Please check all fields and try again.';
+      if (typeof responseData === 'string') msg = responseData;
+      else if (responseData?.message) msg = responseData.message;
+      else if (responseData?.errors) msg = Object.values(responseData.errors).join(' ');
+      addToast(msg, 'error');
+      console.error('Ticket submission error:', error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -90,7 +137,7 @@ export default function CreateTicketPage() {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (formData.attachments.length + files.length > 3) {
-      addToast('Protocol limit: 3 digital captures', 'error');
+      addToast('Maximum 3 images allowed.', 'error');
       return;
     }
     
@@ -108,7 +155,7 @@ export default function CreateTicketPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  if (loading) return <LoadingSpinner fullScreen message="Transmitting Incident Intelligence..." />;
+  if (loading) return <LoadingSpinner fullScreen message="Submitting your report..." />;
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-12 pb-20">
@@ -122,7 +169,7 @@ export default function CreateTicketPage() {
           <div className="w-10 h-10 luna-glass rounded-xl flex items-center justify-center group-hover:luna-glow">
             <ArrowLeft size={16} />
           </div>
-          Abort Submission
+          Back to My Requests
         </button>
         <div className="flex items-center gap-3">
           <ShieldCheck size={16} className="text-luna-aqua" />
@@ -148,8 +195,8 @@ export default function CreateTicketPage() {
                       <Zap className="text-luna-aqua" size={20} />
                       <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Operational Anomaly</span>
                    </div>
-                   <h1 className="text-5xl font-black text-white tracking-tighter">New Incident <span className="text-luna-aqua">Dossier</span></h1>
-                   <p className="text-text-muted font-medium mt-4 text-lg max-w-xl">Initiate specialized technician dispatch through high-fidelity discrepancy reporting.</p>
+                   <h1 className="text-5xl font-black text-white tracking-tighter">Report New <span className="text-luna-aqua">Incident</span></h1>
+                   <p className="text-text-muted font-medium mt-4 text-lg max-w-xl">Submit a maintenance or facility issue for technician review and support.</p>
                  </div>
               </div>
 
@@ -158,12 +205,12 @@ export default function CreateTicketPage() {
                  <div className="space-y-10">
                     <div className="flex items-center gap-4 text-white border-l-4 border-luna-aqua pl-6">
                        <FileText size={20} className="text-luna-aqua" />
-                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Core Intel Registry</h3>
+                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Incident Information</h3>
                     </div>
 
                     <div className="space-y-8">
                        <div className="group">
-                         <label className="luna-label">Incident Subject</label>
+                         <label className="luna-label">Issue Title</label>
                          <div className="relative">
                             <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
                             <input
@@ -171,7 +218,7 @@ export default function CreateTicketPage() {
                               name="title"
                               value={formData.title}
                               onChange={handleChange}
-                              placeholder="Briefly summarize the discrepancy..."
+                              placeholder="Briefly describe the issue"
                               className="luna-input !pl-16"
                             />
                          </div>
@@ -179,7 +226,7 @@ export default function CreateTicketPage() {
 
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="group">
-                            <label className="luna-label">Operational Classification</label>
+                            <label className="luna-label">Category</label>
                             <div className="relative">
                               <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
                               <select
@@ -200,7 +247,7 @@ export default function CreateTicketPage() {
                           </div>
                           
                           <div className="group">
-                            <label className="luna-label">Priority Delta</label>
+                            <label className="luna-label">Priority</label>
                             <div className="relative">
                               <Activity className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
                               <select
@@ -209,10 +256,10 @@ export default function CreateTicketPage() {
                                 onChange={handleChange}
                                 className="luna-input !pl-16 appearance-none cursor-pointer"
                               >
-                                <option value="LOW">Tier 4: Low</option>
-                                <option value="MEDIUM">Tier 3: Medium</option>
-                                <option value="HIGH">Tier 2: High</option>
-                                <option value="URGENT">Tier 1: Urgent</option>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent</option>
                               </select>
                             </div>
                           </div>
@@ -224,12 +271,12 @@ export default function CreateTicketPage() {
                  <div className="space-y-10">
                     <div className="flex items-center gap-4 text-white border-l-4 border-luna-cyan pl-6">
                        <MapPin size={20} className="text-luna-cyan" />
-                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Logistical Context</h3>
+                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Location Details</h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="group">
-                          <label className="luna-label">Sector Resource Mapping</label>
+                          <label className="luna-label">Related Resource</label>
                           <div className="relative">
                             <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <select
@@ -238,7 +285,7 @@ export default function CreateTicketPage() {
                               onChange={handleChange}
                               className="luna-input !pl-16 appearance-none cursor-pointer"
                             >
-                              <option value="">Sector Agnostic</option>
+                              <option value="">No Specific Resource</option>
                               {assets.map(asset => (
                                 <option key={asset.id} value={asset.id}>{asset.name} - {asset.location}</option>
                               ))}
@@ -247,7 +294,7 @@ export default function CreateTicketPage() {
                        </div>
                        
                        <div className="group">
-                          <label className="luna-label">Precise Sector Mapping</label>
+                          <label className="luna-label">Exact Location</label>
                           <div className="relative">
                             <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <input
@@ -255,14 +302,14 @@ export default function CreateTicketPage() {
                               name="location"
                               value={formData.location}
                               onChange={handleChange}
-                              placeholder="Precise coordinates (e.g. Lab 404)..."
+                              placeholder="Example: Lab 404, Block B, Floor 4"
                               className="luna-input !pl-16"
                             />
                           </div>
                        </div>
 
                        <div className="group">
-                          <label className="luna-label">Preferred Contact Name</label>
+                          <label className="luna-label">Contact Name</label>
                           <div className="relative">
                             <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <input
@@ -270,14 +317,14 @@ export default function CreateTicketPage() {
                               name="preferredContactName"
                               value={formData.preferredContactName}
                               onChange={handleChange}
-                              placeholder="Name..."
+                              placeholder="Enter your name"
                               className="luna-input !pl-16"
                             />
                           </div>
                        </div>
 
                        <div className="group">
-                          <label className="luna-label">Preferred Contact Email</label>
+                          <label className="luna-label">Contact Email</label>
                           <div className="relative">
                             <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <input
@@ -286,14 +333,14 @@ export default function CreateTicketPage() {
                               name="preferredContactEmail"
                               value={formData.preferredContactEmail}
                               onChange={handleChange}
-                              placeholder="Email address..."
+                              placeholder="Enter email address"
                               className="luna-input !pl-16"
                             />
                           </div>
                        </div>
 
                        <div className="group">
-                          <label className="luna-label">Preferred Contact Phone</label>
+                          <label className="luna-label">Contact Phone</label>
                           <div className="relative">
                             <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <input
@@ -301,19 +348,19 @@ export default function CreateTicketPage() {
                               name="preferredContactPhone"
                               value={formData.preferredContactPhone}
                               onChange={handleChange}
-                              placeholder="Phone number..."
+                              placeholder="Enter phone number"
                               className="luna-input !pl-16"
                             />
                           </div>
                        </div>
 
                        <div className="group">
-                          <label className="luna-label">Visual Artifacts (Max 3)</label>
+                          <label className="luna-label">Attach Images (Max 3)</label>
                           <label className="luna-input flex items-center justify-between cursor-pointer hover:border-luna-cyan/30 transition-all !px-6 group-hover:luna-glow-inset">
                              <div className="flex items-center gap-4 overflow-hidden">
                                 <Paperclip size={20} className="text-text-muted shrink-0" />
                                 <span className="text-sm font-medium text-text-muted truncate">
-                                   {selectedFiles.length > 0 ? `${selectedFiles.length} resources selected` : 'Attach anomaly captures...'}
+                                   {selectedFiles.length > 0 ? `${selectedFiles.length} image(s) selected` : 'Upload images related to the issue'}
                                 </span>
                              </div>
                              <div className="w-8 h-8 luna-glass rounded-lg flex items-center justify-center text-luna-cyan">
@@ -329,18 +376,18 @@ export default function CreateTicketPage() {
                  <div className="space-y-10">
                     <div className="flex items-center gap-4 text-white border-l-4 border-white pl-6">
                        <Zap size={20} className="text-white" />
-                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Detailed Intelligence</h3>
+                       <h3 className="text-xs font-black uppercase tracking-[0.3em]">Additional Details</h3>
                     </div>
 
                     <div className="group">
-                       <label className="luna-label">Anomaly Narrative</label>
+                       <label className="luna-label">Description</label>
                        <textarea
                          required
                          name="description"
                          value={formData.description}
                          onChange={handleChange}
                          rows="8"
-                         placeholder="Provide a comprehensive technical narrative of the encountered anomaly..."
+                         placeholder="Describe the issue in detail, including what happened and any visible damage."
                          className="luna-input !p-8 resize-none text-base leading-relaxed"
                        ></textarea>
                     </div>
@@ -353,14 +400,14 @@ export default function CreateTicketPage() {
                       onClick={() => navigate('/tickets')}
                       className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] hover:text-white transition-all"
                     >
-                      Abort Mission
+                      Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
                       className="luna-button !px-16 !py-5 shadow-2xl shadow-luna-aqua/20 text-xs tracking-[0.3em]"
                     >
-                      {loading ? 'Transmitting...' : 'Transmit Intelligence'} <Send size={20} />
+                      {loading ? 'Submitting...' : 'Submit Report'} <Send size={20} />
                     </button>
                  </div>
               </form>

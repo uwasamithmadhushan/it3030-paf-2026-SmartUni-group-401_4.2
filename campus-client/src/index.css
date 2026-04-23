@@ -31,6 +31,14 @@
   padding: 0;
   box-sizing: border-box;
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* GPU-accelerated elements - eliminates paint jitter */
+motion.div, [data-framer-component-type] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 body {
@@ -43,8 +51,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  /* Prevent scrollbar layout shift */
   overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 .luna-stable-container {
@@ -67,10 +75,11 @@ body {
   }
 
   .luna-button {
-    @apply px-8 py-3 rounded-xl font-bold transition-all duration-500 active:scale-95 flex items-center justify-center gap-2;
+    @apply px-8 py-3 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2;
     background: linear-gradient(135deg, var(--luna-steel), var(--luna-navy));
     color: white;
     border: 1px solid rgba(167, 235, 242, 0.2);
+    transform: translateZ(0);
   }
 
   .luna-button:hover {
@@ -97,7 +106,9 @@ body {
   }
 
   .luna-card {
-    @apply luna-glass-dark p-8 rounded-[2.5rem] transition-all duration-500 hover:border-luna-aqua/20;
+    @apply luna-glass-dark p-8 rounded-[2.5rem] transition-all duration-300 hover:border-luna-aqua/20;
+    contain: layout style;
+    transform: translateZ(0);
   }
 
   .luna-sidebar {
