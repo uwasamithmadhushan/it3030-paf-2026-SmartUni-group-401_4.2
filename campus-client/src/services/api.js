@@ -12,6 +12,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 409 &&
+      error.config?.url?.includes('/bookings')
+    ) {
+      const message =
+        error.response.data?.error ||
+        error.response.data?.message ||
+        'This time slot is already booked. Please choose a different time.';
+      return Promise.reject(new Error(message));
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const registerUser = (data) => api.post('/auth/register', data);
 export const loginUser = (data) => api.post('/auth/login', data);
@@ -42,10 +59,10 @@ export const updateAsset = (id, data) => api.put(`/assets/${id}`, data);
 export const deleteAsset = (id) => api.delete(`/assets/${id}`);
 
 // Incident Tickets
-export const getAllTickets = () => api.get('/tickets');
-export const getMyTickets = () => api.get('/tickets/my');
-export const getAssignedTickets = () => api.get('/tickets/assigned/me');
-export const getTechnicianDashboard = () => api.get('/tickets/technician/dashboard');
+export const getAllTickets = (params) => api.get('/tickets', { params });
+export const getMyTickets = (params) => api.get('/tickets/my', { params });
+export const getAssignedTickets = (params) => api.get('/tickets/assigned/me', { params });
+export const getTechnicianDashboardStats = () => api.get('/tickets/technician/dashboard');
 export const getTicketById = (id) => api.get(`/tickets/${id}`);
 export const createTicket = (data) => api.post('/tickets', data);
 export const updateTicket = (id, data) => api.put(`/tickets/${id}`, data);
@@ -73,6 +90,7 @@ export const uploadAttachment = (id, file) => {
 export const getMyBookings = () => api.get('/bookings/my');
 export const getAllBookings = (status) => api.get('/bookings', { params: { status } });
 export const createBooking = (data) => api.post('/bookings', data);
+export const getBookingById = (id) => api.get(`/bookings/${id}`);
 export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
 export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
 

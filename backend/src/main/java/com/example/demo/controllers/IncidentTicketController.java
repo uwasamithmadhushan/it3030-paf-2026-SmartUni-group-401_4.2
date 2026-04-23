@@ -23,22 +23,40 @@ public class IncidentTicketController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> getTickets(Principal principal) {
+    public ResponseEntity<List<TicketResponse>> getTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
-        return ResponseEntity.ok(ticketService.getTickets(user));
+        return ResponseEntity.ok(ticketService.getTickets(user, status, priority, category, search, sort));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<TicketResponse>> getMyTickets(Principal principal) {
+    public ResponseEntity<List<TicketResponse>> getMyTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
-        return ResponseEntity.ok(ticketService.getMyTickets(user));
+        return ResponseEntity.ok(ticketService.getMyTickets(user, status, priority, category, search, sort));
     }
 
     @GetMapping("/assigned/me")
     @PreAuthorize("hasRole('TECHNICIAN') or hasRole('ADMIN')")
-    public ResponseEntity<List<TicketResponse>> getAssignedTickets(Principal principal) {
+    public ResponseEntity<List<TicketResponse>> getAssignedTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
-        return ResponseEntity.ok(ticketService.getAssignedTickets(user));
+        return ResponseEntity.ok(ticketService.getAssignedTickets(user, status, priority, category, search, sort));
     }
 
     @GetMapping("/technician/dashboard")

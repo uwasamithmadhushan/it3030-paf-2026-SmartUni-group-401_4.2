@@ -1,74 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllTickets, getMyTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
+import TechnicianFilters from '../components/technician/TechnicianFilters';
 import { 
   Plus, 
-  Search, 
-  Filter, 
   Ticket, 
-  ChevronRight, 
   Calendar,
   Layers,
   ArrowRight,
-  Activity,
-  ShieldCheck,
-  Zap,
   Globe,
   Clock,
-  MapPin
+  MapPin,
+  Zap
 } from 'lucide-react';
 
 export default function TicketListPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('ALL');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filterParams, setFilterParams] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchTickets();
-    const interval = setInterval(fetchTickets, 60000); // Sync every minute
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async (params = filterParams, showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
-      let data;
+      let res;
       if (user.role === 'USER') {
-        const res = await getMyTickets();
-        data = res.data;
+        res = await getMyTickets(params);
       } else {
-        const res = await getAllTickets();
-        data = res.data;
+        res = await getAllTickets(params);
       }
-      
-      let filtered = data;
-      if (user.role === 'TECHNICIAN') {
-        filtered = data.filter(t => t.assignedTechnicianId === user.id);
-      }
-      setTickets(filtered);
+      setTickets(res.data);
     } catch (err) {
       console.error('Failed to synchronize incident archive');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
+  }, [user.role, filterParams]);
+
+  useEffect(() => {
+    fetchTickets(filterParams, true);
+    const interval = setInterval(() => fetchTickets(filterParams, false), 60000);
+    return () => clearInterval(interval);
+  }, [filterParams, fetchTickets]);
+
+  const handleFilterChange = (newFilters) => {
+    setFilterParams(newFilters);
   };
 
-  const filteredTickets = tickets.filter(t => {
-    const matchesFilter = filter === 'ALL' || t.status === filter;
-    const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          t.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
-
   if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Registry..." />;
-
-  const statusFilters = ['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'];
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12 pb-20">
@@ -101,40 +84,16 @@ export default function TicketListPage() {
         )}
       </div>
 
-      {/* Intelligence Control Bar */}
-      <div className="flex flex-col xl:flex-row gap-8 items-center justify-between bg-luna-midnight/40 p-8 rounded-[2.5rem] border border-luna-aqua/5">
-        <div className="flex flex-wrap justify-center gap-4">
-          {statusFilters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border ${
-                filter === f 
-                  ? 'bg-luna-aqua text-luna-midnight border-luna-aqua shadow-xl shadow-luna-aqua/20' 
-                  : 'bg-luna-midnight/60 text-text-muted hover:text-white hover:border-luna-aqua/30 border-luna-aqua/5'
-              }`}
-            >
-              {f.replace('_', ' ')}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full xl:w-[500px] group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-          <input
-            type="text"
-            placeholder="Search incident archive..."
-            className="luna-input !pl-16 !py-4 !rounded-[2rem] text-base"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Professional Filters */}
+      <TechnicianFilters 
+        onFilterChange={handleFilterChange}
+        resultsCount={tickets.length}
+      />
 
       {/* Incident Visualization Grid */}
       <div className="grid grid-cols-1 gap-8">
         <AnimatePresence mode="popLayout">
-          {filteredTickets.map((ticket, idx) => (
+          {tickets.map((ticket, idx) => (
             <motion.div 
               key={ticket.id} 
               initial={{ opacity: 0, y: 20 }}
@@ -178,7 +137,6 @@ export default function TicketListPage() {
                 </div>
               </div>
               
-              {/* Operational Progress Matrix */}
               <div className="absolute bottom-0 left-0 h-1 bg-luna-aqua/5 w-full">
                 <motion.div 
                   initial={{ width: 0 }}
@@ -191,21 +149,15 @@ export default function TicketListPage() {
           ))}
         </AnimatePresence>
 
-        {filteredTickets.length === 0 && (
+        {tickets.length === 0 && !loading && (
           <div className="py-40 text-center luna-card border-dashed border-luna-aqua/10 flex flex-col items-center gap-8">
             <div className="w-32 h-32 luna-glass rounded-[3rem] flex items-center justify-center text-text-muted opacity-10">
-              <ShieldCheck size={64} />
+              <Plus size={64} />
             </div>
             <div>
               <h3 className="text-3xl font-black text-white/20 tracking-tighter italic uppercase">Registry Sync Failed</h3>
               <p className="text-base font-medium text-text-muted mt-4">No incident entries detected for current synchronization parameters.</p>
             </div>
-            <button 
-              onClick={() => {setFilter('ALL'); setSearchTerm('');}} 
-              className="luna-button-outline !px-12 !py-4"
-            >
-              Reset Archive Parameters
-            </button>
           </div>
         )}
       </div>
