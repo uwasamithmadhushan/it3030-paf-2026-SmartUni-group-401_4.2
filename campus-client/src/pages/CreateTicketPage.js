@@ -25,68 +25,74 @@ import {
   Mail
 } from 'lucide-react';
 
+/**
+ * PAGE: CreateTicketPage
+ * This component provides a form for users to report new incidents/issues.
+ */
 export default function CreateTicketPage() {
   const navigate = useNavigate();
   const { refreshTickets } = useOutletContext() || {};
-  const { addToast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const { addToast } = useToast(); // Helper for showing notification popups
+  const [loading, setLoading] = useState(false); // Tracks if the form is currently submitting
+  const [errors, setErrors] = useState({}); // Stores validation error messages
+  
+  // FORM DATA STATE: Holds all the input values
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'ELECTRICAL',
-    priority: 'MEDIUM',
-    resourceId: '',
-    location: '',
-    preferredContactName: '',
-    preferredContactEmail: '',
-    preferredContactPhone: '',
-    attachments: []
+    title: '',                 // Summary of the problem
+    description: '',           // Detailed explanation
+    category: 'ELECTRICAL',    // Default category
+    priority: 'MEDIUM',        // Default priority
+    resourceId: '',            // (Optional) ID of a specific asset
+    location: '',              // Where on campus the issue is
+    preferredContactName: '',  // User's name
+    preferredContactEmail: '', // User's email
+    preferredContactPhone: '', // User's phone
+    attachments: []            // List of uploaded files
   });
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [assets, setAssets] = useState([]);
 
-  useEffect(() => {
-    const fetchAssets = async () => {
-      try {
-        const { data } = await getAllResources({ size: 1000 });
-        setAssets(data.content || data);
-      } catch (err) {
-        addToast('Directory synchronization failed', 'error');
-      }
-    };
-    fetchAssets();
-  }, [addToast]);
+  // ... (setSelectedFiles, assets states)
+  const [selectedFiles, setSelectedFiles] = useState([]); 
+  const [assets, setAssets] = useState([]);               
 
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10}$/; // Basic 10-digit check
+
+    if (!formData.title || formData.title.trim().length < 5) {
+      newErrors.title = 'Title must be at least 5 characters.';
+    }
+    if (!formData.description || formData.description.trim().length < 10) {
+      newErrors.description = 'Description must be at least 10 characters.';
+    }
+    if (!formData.location || !formData.location.trim()) {
+      newErrors.location = 'Location is required.';
+    }
+    if (!formData.preferredContactName || !formData.preferredContactName.trim()) {
+      newErrors.preferredContactName = 'Contact name is required.';
+    }
+    if (!formData.preferredContactEmail || !emailRegex.test(formData.preferredContactEmail)) {
+      newErrors.preferredContactEmail = 'Please enter a valid email address.';
+    }
+    if (!formData.preferredContactPhone || !formData.preferredContactPhone.trim()) {
+       newErrors.preferredContactPhone = 'Phone number is required.';
+    } else if (!/^\d+$/.test(formData.preferredContactPhone)) {
+       newErrors.preferredContactPhone = 'Phone number must contain only digits.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * FORM SUBMISSION HANDLER
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validation before sending to backend
-    if (!formData.title || formData.title.trim().length < 5) {
-      addToast('Please enter an issue title (at least 5 characters).', 'error');
-      return;
-    }
-    if (!formData.category) {
-      addToast('Please select a category.', 'error');
-      return;
-    }
-    if (!formData.priority) {
-      addToast('Please select a priority.', 'error');
-      return;
-    }
-    if (!formData.description || formData.description.trim().length < 10) {
-      addToast('Please provide a description (at least 10 characters).', 'error');
-      return;
-    }
-    if (!formData.preferredContactName || !formData.preferredContactName.trim()) {
-      addToast('Please enter a contact name.', 'error');
-      return;
-    }
-    if (!formData.preferredContactEmail || !formData.preferredContactEmail.trim()) {
-      addToast('Please enter a valid email address.', 'error');
-      return;
-    }
-    if (!formData.preferredContactPhone || !formData.preferredContactPhone.trim()) {
-      addToast('Please enter a contact phone number.', 'error');
+    if (!validateForm()) {
+      addToast('Please correct the errors in the form.', 'error');
       return;
     }
 
@@ -121,14 +127,12 @@ export default function CreateTicketPage() {
       if (refreshTickets) refreshTickets();
       navigate('/tickets');
     } catch (error) {
-      // Extract the real validation message from the backend response
       const responseData = error.response?.data;
       let msg = 'Failed to submit report. Please check all fields and try again.';
       if (typeof responseData === 'string') msg = responseData;
       else if (responseData?.message) msg = responseData.message;
       else if (responseData?.errors) msg = Object.values(responseData.errors).join(' ');
       addToast(msg, 'error');
-      console.error('Ticket submission error:', error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -152,7 +156,12 @@ export default function CreateTicketPage() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error for this field as user types
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
   };
 
   if (loading) return <LoadingSpinner fullScreen message="Submitting your report..." />;
@@ -219,8 +228,9 @@ export default function CreateTicketPage() {
                               value={formData.title}
                               onChange={handleChange}
                               placeholder="Briefly describe the issue"
-                              className="luna-input !pl-16"
+                              className={`luna-input !pl-16 ${errors.title ? '!border-red-500/50' : ''}`}
                             />
+                            {errors.title && <p className="text-[10px] font-bold text-red-400 mt-2 ml-4 uppercase tracking-wider">{errors.title}</p>}
                          </div>
                        </div>
 
@@ -303,8 +313,9 @@ export default function CreateTicketPage() {
                               value={formData.location}
                               onChange={handleChange}
                               placeholder="Example: Lab 404, Block B, Floor 4"
-                              className="luna-input !pl-16"
+                              className={`luna-input !pl-16 ${errors.location ? '!border-red-500/50' : ''}`}
                             />
+                            {errors.location && <p className="text-[10px] font-bold text-red-400 mt-2 ml-4 uppercase tracking-wider">{errors.location}</p>}
                           </div>
                        </div>
 
@@ -318,8 +329,9 @@ export default function CreateTicketPage() {
                               value={formData.preferredContactName}
                               onChange={handleChange}
                               placeholder="Enter your name"
-                              className="luna-input !pl-16"
+                              className={`luna-input !pl-16 ${errors.preferredContactName ? '!border-red-500/50' : ''}`}
                             />
+                            {errors.preferredContactName && <p className="text-[10px] font-bold text-red-400 mt-2 ml-4 uppercase tracking-wider">{errors.preferredContactName}</p>}
                           </div>
                        </div>
 
@@ -334,8 +346,9 @@ export default function CreateTicketPage() {
                               value={formData.preferredContactEmail}
                               onChange={handleChange}
                               placeholder="Enter email address"
-                              className="luna-input !pl-16"
+                              className={`luna-input !pl-16 ${errors.preferredContactEmail ? '!border-red-500/50' : ''}`}
                             />
+                            {errors.preferredContactEmail && <p className="text-[10px] font-bold text-red-400 mt-2 ml-4 uppercase tracking-wider">{errors.preferredContactEmail}</p>}
                           </div>
                        </div>
 
@@ -349,8 +362,9 @@ export default function CreateTicketPage() {
                               value={formData.preferredContactPhone}
                               onChange={handleChange}
                               placeholder="Enter phone number"
-                              className="luna-input !pl-16"
+                              className={`luna-input !pl-16 ${errors.preferredContactPhone ? '!border-red-500/50' : ''}`}
                             />
+                            {errors.preferredContactPhone && <p className="text-[10px] font-bold text-red-400 mt-2 ml-4 uppercase tracking-wider">{errors.preferredContactPhone}</p>}
                           </div>
                        </div>
 
@@ -388,8 +402,9 @@ export default function CreateTicketPage() {
                          onChange={handleChange}
                          rows="8"
                          placeholder="Describe the issue in detail, including what happened and any visible damage."
-                         className="luna-input !p-8 resize-none text-base leading-relaxed"
+                         className={`luna-input !p-8 resize-none text-base leading-relaxed ${errors.description ? '!border-red-500/50' : ''}`}
                        ></textarea>
+                       {errors.description && <p className="text-[10px] font-bold text-red-400 mt-2 ml-4 uppercase tracking-wider">{errors.description}</p>}
                     </div>
                  </div>
 
