@@ -7,8 +7,6 @@ import RegisterPage from './pages/RegisterPage';
 import AnimatedPage from './components/AnimatedPage';
 
 import { ToastProvider } from './context/ToastContext';
-import { lazy, Suspense } from 'react';
-import LoadingSpinner from './components/LoadingSpinner';
 import { AnimatePresence } from 'framer-motion';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -43,7 +41,6 @@ const DashboardRedirect = () => {
 };
 
 const AppRoutes = () => {
-  const { user } = useAuth();
   const location = useLocation();
 
   const getRouteKey = () => {

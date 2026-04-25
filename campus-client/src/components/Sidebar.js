@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -8,18 +8,14 @@ import {
   Users, 
   Calendar, 
   LogOut, 
-  ChevronRight,
   ShieldAlert,
-  CheckCircle,
   Bell,
   Activity,
-  User,
-  Settings
+  User
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
