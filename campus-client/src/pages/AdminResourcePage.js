@@ -74,7 +74,7 @@ export default function AdminResourcePage() {
         showToast('Resource configuration updated successfully.', 'success');
       } else {
         await createResource(formData);
-        showToast('New resource registered in global matrix.', 'success');
+        showToast('New resource registered in global system.', 'success');
       }
       navigate('/resources');
     } catch (err) {
@@ -166,7 +166,7 @@ export default function AdminResourcePage() {
                            min="0"
                            className="luna-input !py-4 !pr-20"
                         />
-                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-text-muted uppercase">Pax</span>
+                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-text-muted uppercase">People</span>
                      </div>
                   </div>
                </div>
@@ -178,7 +178,7 @@ export default function AdminResourcePage() {
                      value={formData.description}
                      onChange={handleChange}
                      rows="4"
-                     placeholder="Detailed resource dossier..."
+                     placeholder="Detailed resource record..."
                      className="luna-input !py-4 resize-none"
                   />
                </div>
@@ -187,7 +187,7 @@ export default function AdminResourcePage() {
             <div className="luna-card !p-10 space-y-10">
                <div className="flex items-center gap-4 text-luna-aqua border-b border-luna-aqua/5 pb-6">
                   <Clock size={20} />
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Availability Protocol</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Availability Procedure</h3>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -222,7 +222,7 @@ export default function AdminResourcePage() {
             <div className="luna-card !p-10 space-y-10">
                <div className="flex items-center gap-4 text-luna-aqua border-b border-luna-aqua/5 pb-6">
                   <Building2 size={20} />
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Physical Sector</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Physical Location</h3>
                </div>
 
                <div className="space-y-8">
@@ -287,7 +287,7 @@ export default function AdminResourcePage() {
                   <div className="p-6 rounded-3xl bg-luna-aqua/5 border border-luna-aqua/10 flex items-start gap-4">
                      <AlertCircle size={20} className="text-luna-aqua shrink-0 mt-1" />
                      <p className="text-[10px] font-medium text-text-muted leading-relaxed uppercase tracking-wider">
-                        Registered resources are immediately available for global synchronization. Ensure building sectors are correctly mapped.
+                        Registered resources are immediately available for global synchronization. Ensure building locations are correctly mapped.
                      </p>
                   </div>
                </div>
@@ -307,7 +307,7 @@ export default function AdminResourcePage() {
       
       {/* Footer Info */}
       <div className="flex items-center justify-between text-[9px] font-black text-text-muted uppercase tracking-[0.5em] pt-10 border-t border-luna-aqua/10">
-         <span>SmartUni Interface Protocol v4.2</span>
+         <span>SmartUni Interface Procedure v4.2</span>
          <span>Security Level: Authorized Administrator</span>
       </div>
 

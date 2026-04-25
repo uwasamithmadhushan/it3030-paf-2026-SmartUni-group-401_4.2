@@ -48,7 +48,7 @@ export default function MyBookings() {
       const res = await getMyBookings();
       setBookings(res.data);
     } catch {
-      setError('Failed to synchronize reservation archive.');
+      setError('Failed to update reservation archive.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ export default function MyBookings() {
     }
   };
 
-  if (loading && bookings.length === 0) return <LoadingSpinner fullScreen message="Accessing Reservation Registry..." />;
+  if (loading && bookings.length === 0) return <LoadingSpinner fullScreen message="Accessing Reservation Directory..." />;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12">
@@ -86,7 +86,7 @@ export default function MyBookings() {
            <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Temporal Access Matrix</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Temporal Access System</span>
               </div>
            </div>
            <h1 className="text-6xl font-black text-white tracking-tighter leading-none">My <span className="text-luna-aqua">Bookings</span></h1>
@@ -101,7 +101,7 @@ export default function MyBookings() {
           <button
             onClick={load}
             className="w-14 h-14 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all shadow-xl shadow-luna-aqua/5"
-            title="Sync Registry"
+            title="Sync Directory"
           >
             <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -159,7 +159,7 @@ export default function MyBookings() {
                   <div className="w-px h-10 bg-luna-aqua/10 hidden md:block" />
                   <IntelligenceMetric icon={<Users size={20} />} label="Personnel Scale" value={`${b.expectedAttendees} Members`} />
                   <div className="w-px h-10 bg-luna-aqua/10 hidden md:block" />
-                  <IntelligenceMetric icon={<MapPin size={20} />} label="Physical Sector" value={b.location || 'Central Nexus'} />
+                  <IntelligenceMetric icon={<MapPin size={20} />} label="Physical Location" value={b.location || 'Central Nexus'} />
                 </div>
               </div>
 
@@ -170,7 +170,7 @@ export default function MyBookings() {
                     disabled={cancelling === b.id}
                     className="w-full px-8 py-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 shadow-lg hover:shadow-red-500/20"
                   >
-                    {cancelling === b.id ? 'Abort Protocol...' : 'Revoke Request'}
+                    {cancelling === b.id ? 'Abort Procedure...' : 'Revoke Request'}
                   </button>
                 )}
                 <button 
@@ -208,7 +208,7 @@ export default function MyBookings() {
             </div>
             <div>
                <h3 className="text-3xl font-black text-white tracking-tighter italic uppercase">No active reservations recorded</h3>
-               <p className="text-base font-medium text-text-muted mt-4">Registry archive search yielded zero synchronized entries.</p>
+               <p className="text-base font-medium text-text-muted mt-4">Directory archive search yielded zero synchronized entries.</p>
             </div>
             <button onClick={() => navigate('/facilities')} className="luna-button-outline !px-12 !py-4">Initialize Resource Hunt</button>
           </div>

@@ -49,7 +49,7 @@ export default function ProfilePage() {
                 <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Personnel Identity Archive</span>
               </div>
            </div>
-           <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Personnel <span className="text-luna-aqua">Dossier</span></h1>
+           <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Personnel <span className="text-luna-aqua">Record</span></h1>
            <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity identity management and executive access tier control.</p>
         </motion.div>
         
@@ -103,7 +103,7 @@ export default function ProfilePage() {
                   <h2 className="text-4xl font-black text-white tracking-tighter mt-8">{user?.username}</h2>
                   <div className="flex items-center gap-3 text-[10px] font-black text-luna-cyan uppercase tracking-[0.3em] mt-3">
                      <Shield size={14} className="text-luna-aqua" />
-                     {user?.role} Access Protocol
+                     {user?.role} Access Procedure
                   </div>
                   <p className="text-base font-medium text-text-muted mt-6 opacity-60 leading-relaxed max-w-xs">{user?.email}</p>
                </div>
@@ -130,7 +130,7 @@ export default function ProfilePage() {
              </h3>
              <div className="space-y-8">
                 <SecurityRow label="Multi-Factor Auth" value="Optimal" active />
-                <SecurityRow label="Global Sync" value="Synchronized" active />
+                <SecurityRow label="Global Sync" value="Updated" active />
                 <SecurityRow label="Access Latency" value="0.04ms" />
              </div>
           </div>
@@ -142,7 +142,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
              <IntelligencePanel icon={<CreditCard size={24} />} label="Personnel UID" value={user?.id || 'SYN-000-000'} isMono />
              <IntelligencePanel icon={<ShieldCheck size={24} />} label="Authorization Class" value={user?.role === 'ADMIN' ? 'Executive Alpha' : 'Member Standard'} />
-             <IntelligencePanel icon={<Zap size={24} />} label="Registry State" value="Verified & Active" color="text-luna-aqua" />
+             <IntelligencePanel icon={<Zap size={24} />} label="Directory State" value="Verified & Active" color="text-luna-aqua" />
              <IntelligencePanel icon={<Layers size={24} />} label="Infrastructure Access" value="Full Suite Enabled" />
           </div>
 
@@ -173,14 +173,14 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <ModuleShortcut 
                      onClick={() => navigate('/facilities')}
-                     title="Asset Matrix"
+                     title="Asset System"
                      desc="Browse campus infrastructure portfolio."
                      icon={<Building2 size={24} />}
                    />
                    <ModuleShortcut 
                      onClick={() => navigate('/tickets')}
                      title="Incident Archive"
-                     desc="Review synchronized support dossiers."
+                     desc="Review synchronized support records."
                      icon={<Layers size={24} />}
                    />
                 </div>
@@ -307,7 +307,7 @@ function UpdateProfileModal({ user, onClose, onSuccess }) {
         <div className="p-12 border-b border-luna-aqua/10 bg-luna-midnight/60 flex items-center justify-between">
           <div>
             <h3 className="text-3xl font-black text-white tracking-tighter">Identity Sync</h3>
-            <p className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.4em] mt-2">Dossier Modification Protocol</p>
+            <p className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.4em] mt-2">Record Modification Procedure</p>
           </div>
           <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-luna-aqua/10 text-luna-aqua flex items-center justify-center hover:bg-luna-aqua hover:text-luna-midnight transition-all">
             <X size={24} />
@@ -324,7 +324,7 @@ function UpdateProfileModal({ user, onClose, onSuccess }) {
                 >
                    <CheckCircle2 size={48} />
                 </motion.div>
-                <p className="text-2xl font-black text-white tracking-tight uppercase tracking-[0.2em]">Dossier Synchronized</p>
+                <p className="text-2xl font-black text-white tracking-tight uppercase tracking-[0.2em]">Record Updated</p>
              </div>
            ) : (
              <form onSubmit={handleSubmit} className="space-y-10">

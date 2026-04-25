@@ -27,7 +27,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const from = location.state?.from || '/dashboard';
+  const from = '/dashboard';
 
   const validate = () => {
     const e = {};

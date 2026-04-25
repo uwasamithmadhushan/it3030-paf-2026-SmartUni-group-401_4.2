@@ -41,7 +41,7 @@ export default function TechnicianSchedulePage() {
       const myTickets = data.filter(t => t.assignedTechnicianId === user?.id);
       setTickets(myTickets);
     } catch (error) {
-      console.error('Failed to synchronize schedule intelligence');
+      console.error('Failed to update schedule intelligence');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function TechnicianSchedulePage() {
         <div className="xl:col-span-8 luna-card">
            <div className="flex items-center justify-between mb-10">
               <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
-                <CalendarIcon size={16} className="text-luna-aqua" /> Maintenance Registry
+                <CalendarIcon size={16} className="text-luna-aqua" /> Maintenance Directory
               </h3>
               <div className="flex items-center gap-6 luna-glass px-4 py-2 rounded-2xl">
                  <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center text-luna-aqua hover:luna-glow transition-all">
@@ -166,15 +166,15 @@ export default function TechnicianSchedulePage() {
                     <div 
                       key={i} 
                       onClick={() => d.currentMonth && setSelectedDate(dayDate)}
-                      className={`bg-luna-midnight/20 h-28 sm:h-36 p-4 transition-all cursor-pointer hover:bg-luna-aqua/5 border-luna-aqua/5 ${!d.currentMonth ? 'opacity-10 pointer-events-none' : ''} ${isSelected ? 'bg-luna-aqua/10 !border-luna-aqua/20 luna-glow-inset' : ''}`}
+                      className={`bg-luna-midnight/20 h-20 sm:h-24 p-2 sm:p-3 flex flex-col transition-all cursor-pointer hover:bg-luna-aqua/5 border-luna-aqua/5 ${!d.currentMonth ? 'opacity-10 pointer-events-none' : ''} ${isSelected ? 'bg-luna-aqua/10 !border-luna-aqua/20 luna-glow-inset' : ''}`}
                     >
-                       <span className={`text-[10px] font-black w-8 h-8 flex items-center justify-center rounded-xl transition-all ${isToday ? 'bg-luna-aqua text-luna-midnight shadow-lg luna-glow' : isSelected ? 'text-luna-aqua' : 'text-text-muted'}`}>
+                       <span className={`text-[10px] font-black w-6 h-6 flex shrink-0 items-center justify-center rounded-lg transition-all ${isToday ? 'bg-luna-aqua text-luna-midnight shadow-lg luna-glow' : isSelected ? 'text-luna-aqua' : 'text-text-muted'}`}>
                           {d.day}
                        </span>
                        {d.currentMonth && dayTickets.length > 0 && (
-                          <div className="mt-4 space-y-2 overflow-hidden">
-                             <div className="px-3 py-1 bg-luna-aqua/10 border-l-2 border-luna-aqua rounded text-[8px] font-black text-luna-aqua uppercase tracking-widest truncate">{dayTickets.length} Thread{dayTickets.length > 1 ? 's' : ''}</div>
-                             {hasUrgent && <div className="px-3 py-1 bg-red-500/10 border-l-2 border-red-500 rounded text-[8px] font-black text-red-400 uppercase tracking-widest truncate">Critical</div>}
+                          <div className="mt-auto space-y-1 overflow-hidden">
+                             <div className="px-2 py-0.5 bg-luna-aqua/10 border-l border-luna-aqua rounded text-[7px] font-black text-luna-aqua uppercase tracking-widest truncate">{dayTickets.length} Job{dayTickets.length > 1 ? 's' : ''}</div>
+                             {hasUrgent && <div className="px-2 py-0.5 bg-red-500/10 border-l border-red-500 rounded text-[7px] font-black text-red-400 uppercase tracking-widest truncate">Alert</div>}
                           </div>
                        )}
                     </div>
@@ -191,7 +191,7 @@ export default function TechnicianSchedulePage() {
                 <span className="ml-auto text-[10px] font-black text-luna-cyan">{selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
               </h3>
               <div className="space-y-8">
-                 <AnimatePresence mode="wait">
+                 <AnimatePresence mode="popLayout">
                    {ticketsForSelectedDate.length > 0 ? (
                      ticketsForSelectedDate.map((t, i) => (
                       <motion.div 
@@ -237,9 +237,9 @@ export default function TechnicianSchedulePage() {
            <div className="luna-card !bg-gradient-to-br from-luna-navy to-luna-midnight border-luna-aqua/20 relative overflow-hidden group">
               <div className="relative z-10">
                  <h3 className="text-xs font-black text-luna-aqua uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                   <Navigation size={16} /> Sector Planning
+                   <Navigation size={16} /> Location Planning
                  </h3>
-                 <p className="text-sm font-medium text-text-muted leading-relaxed mb-8">Optimize your maintenance route between campus sectors to maximize operational efficiency.</p>
+                 <p className="text-sm font-medium text-text-muted leading-relaxed mb-8">Optimize your maintenance route between campus locations to maximize operational efficiency.</p>
                  <button className="w-full luna-button group-hover:luna-glow">Execute Route Analysis</button>
               </div>
               <div className="absolute -right-12 -bottom-12 text-luna-aqua/10 group-hover:text-luna-aqua/20 transition-colors">
