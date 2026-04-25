@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import { 
-  Building2, 
   MapPin, 
   Users, 
   Clock, 
@@ -13,7 +12,6 @@ import {
   Edit3, 
   Trash2, 
   ShieldCheck, 
-  Layers, 
   Globe,
   Info,
   CalendarCheck,

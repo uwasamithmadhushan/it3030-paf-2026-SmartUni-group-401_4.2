@@ -9,20 +9,13 @@ import {
   Calendar, 
   Clock, 
   MapPin, 
-  Trash2, 
-  CheckCircle2, 
-  XCircle, 
   AlertCircle,
   Plus,
   RefreshCw,
   ChevronRight,
-  ShieldCheck,
   Zap,
   Users,
-  Activity,
-  Globe,
-  Layers,
-  ArrowRight
+  Globe
 } from 'lucide-react';
 
 const STATUS_STYLES = {

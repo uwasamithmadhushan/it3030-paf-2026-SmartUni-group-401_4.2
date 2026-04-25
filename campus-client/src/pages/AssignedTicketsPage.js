@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAssignedTickets, updateTicketStatus } from '../services/api';
@@ -8,7 +8,7 @@ import { useToast } from '../context/ToastContext';
 import TechnicianFilters from '../components/technician/TechnicianFilters';
 import { 
   Wrench, Clock, MapPin, CheckCircle2, 
-  ArrowRight, ShieldCheck, ClipboardList, AlertTriangle
+  ArrowRight, ClipboardList, AlertTriangle
 } from 'lucide-react';
 
 export default function AssignedTicketsPage() {

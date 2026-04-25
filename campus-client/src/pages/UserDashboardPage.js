@@ -16,8 +16,7 @@ import {
   Activity,
   Layers,
   ShieldCheck,
-  Building2,
-  MapPin
+  Building2
 } from 'lucide-react';
 
 export default function UserDashboardPage() {
@@ -75,7 +74,7 @@ export default function UserDashboardPage() {
               </div>
            </div>
            <h1 className="text-5xl font-black text-white tracking-tighter">
-             Bonjour, <span className="text-luna-aqua">{userData?.username}</span>
+             Hi!, <span className="text-luna-aqua">{userData?.username}</span>
            </h1>
            <p className="text-text-muted font-medium mt-2 text-lg">Welcome back to your high-end personal campus command.</p>
         </motion.div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Zap, AlertTriangle, ShieldCheck, Clock, CheckCircle2, Info } from 'lucide-react';
+import { Bell, Zap, AlertTriangle, Clock, CheckCircle2, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getAssignedTickets, getAllTickets } from '../services/api';
 
@@ -57,7 +57,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchLiveAlerts();

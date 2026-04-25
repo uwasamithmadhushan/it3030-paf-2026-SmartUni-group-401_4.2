@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAllAssets, createAsset, updateAsset } from '../services/api';
+import { getAssetById, createAsset, updateAsset } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Building2, 
   ArrowLeft, 
-  Plus, 
-  Trash2, 
   Clock, 
   MapPin, 
   Users, 
   Tag, 
   Zap,
-  Save,
   Layers,
   ChevronRight,
   ShieldCheck,
@@ -23,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const RESOURCE_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
-const RESOURCE_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE'];
+const RESOURCE_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'INACTIVE'];
 
 const TYPE_LABELS = {
   LECTURE_HALL: 'Lecture Hall',
@@ -33,21 +30,26 @@ const TYPE_LABELS = {
 };
 
 const EMPTY_FORM = {
-  name: '',
-  type: '',
+  resourceCode: '',
+  resourceName: '',
+  resourceType: '',
   capacity: '',
-  location: '',
-  status: '',
-  availabilityWindows: [{ from: '08:00:00', to: '17:00:00' }],
+  building: '',
+  floor: '',
+  roomNumber: '',
+  description: '',
+  availableFrom: '08:00',
+  availableTo: '18:00',
+  status: 'ACTIVE',
 };
 
 export default function AssetForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { showToast } = useToast();
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
   const [loadingAsset, setLoadingAsset] = useState(isEdit);
@@ -56,20 +58,23 @@ export default function AssetForm() {
     if (!isEdit) return;
     const fetchAsset = async () => {
       try {
-        const res = await getAllAssets();
-        const asset = res.data.find((a) => a.id === id);
-        if (asset) {
-          setForm({
-            name: asset.name || '',
-            type: asset.type || '',
-            capacity: asset.capacity || '',
-            location: asset.location || '',
-            status: asset.status || '',
-            availabilityWindows: asset.availabilityWindows?.length > 0 ? asset.availabilityWindows : [{ from: '08:00:00', to: '17:00:00' }],
-          });
-        }
+        const res = await getAssetById(id);
+        const asset = res.data;
+        setForm({
+          resourceCode: asset.resourceCode || '',
+          resourceName: asset.resourceName || '',
+          resourceType: asset.resourceType || '',
+          capacity: asset.capacity || '',
+          building: asset.building || '',
+          floor: asset.floor || '',
+          roomNumber: asset.roomNumber || '',
+          description: asset.description || '',
+          availableFrom: asset.availableFrom || '08:00',
+          availableTo: asset.availableTo || '18:00',
+          status: asset.status || 'ACTIVE',
+        });
       } catch (err) {
-        setApiError('Identity retrieval failed.');
+        setApiError('Failed to load resource.');
       } finally {
         setLoadingAsset(false);
       }
@@ -79,27 +84,24 @@ export default function AssetForm() {
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setErrors((prev) => ({ ...prev, [e.target.name]: '' }));
     setApiError('');
-  };
-
-  const handleWindowChange = (index, field, value) => {
-    setForm((prev) => {
-      const updated = [...prev.availabilityWindows];
-      updated[index] = { ...updated[index], [field]: value };
-      return { ...prev, availabilityWindows: updated };
-    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (isEdit) await updateAsset(id, form);
-      else await createAsset(form);
+      const payload = { ...form, capacity: Number(form.capacity) };
+      if (isEdit) {
+        await updateAsset(id, payload);
+        showToast('Facility updated successfully.', 'success');
+      } else {
+        await createAsset(payload);
+        showToast('Facility created successfully.', 'success');
+      }
       navigate('/facilities');
     } catch (err) {
-      setApiError('Configuration transmission failure.');
+      setApiError(err.response?.data?.message || 'Failed to save facility.');
     } finally {
       setSubmitting(false);
     }
@@ -126,7 +128,7 @@ export default function AssetForm() {
             <div className="flex items-center gap-3 mb-3">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Infrastructure Directory</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Infrastructure Registry</span>
               </div>
             </div>
             <h1 className="text-5xl font-black text-white tracking-tighter leading-none">
@@ -161,13 +163,28 @@ export default function AssetForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                <div className="group">
-                  <label className="luna-label !ml-2">Asset Intelligence Label</label>
+                  <label className="luna-label !ml-2">Resource Code</label>
                   <div className="relative">
                     <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
                     <input
                       type="text"
-                      name="name"
-                      value={form.name}
+                      name="resourceCode"
+                      value={form.resourceCode}
+                      onChange={handleChange}
+                      placeholder="Ex: LH-A101"
+                      className="luna-input !pl-16 !py-5"
+                      required
+                    />
+                  </div>
+               </div>
+               <div className="group">
+                  <label className="luna-label !ml-2">Resource Name</label>
+                  <div className="relative">
+                    <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <input
+                      type="text"
+                      name="resourceName"
+                      value={form.resourceName}
                       onChange={handleChange}
                       placeholder="Ex: Main Auditorium A1"
                       className="luna-input !pl-16 !py-5"
@@ -175,88 +192,80 @@ export default function AssetForm() {
                     />
                   </div>
                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                <div className="group">
-                  <label className="luna-label !ml-2">Classification Tier</label>
+                  <label className="luna-label !ml-2">Resource Type</label>
                   <div className="relative">
                     <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-                    <select name="type" value={form.type} onChange={handleChange} className="luna-input !pl-16 !py-5 appearance-none cursor-pointer" required>
-                      <option value="" className="bg-luna-midnight">Select Category Classification...</option>
+                    <select name="resourceType" value={form.resourceType} onChange={handleChange} className="luna-input !pl-16 !py-5 appearance-none cursor-pointer" required>
+                      <option value="" className="bg-luna-midnight">Select Type...</option>
                       {RESOURCE_TYPES.map(t => <option key={t} value={t} className="bg-luna-midnight text-white">{TYPE_LABELS[t]}</option>)}
                     </select>
+                  </div>
+               </div>
+               <div className="group">
+                  <label className="luna-label !ml-2">Capacity</label>
+                  <div className="relative">
+                    <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <input type="number" name="capacity" value={form.capacity} onChange={handleChange} placeholder="Person count" className="luna-input !pl-16 !py-5" required min="0" />
                   </div>
                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                <div className="group">
-                  <label className="luna-label !ml-2">Occupancy Scale</label>
-                  <div className="relative">
-                    <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-                    <input type="number" name="capacity" value={form.capacity} onChange={handleChange} placeholder="Pers. Count" className="luna-input !pl-16 !py-5" required />
-                  </div>
-               </div>
-               <div className="group">
-                  <label className="luna-label !ml-2">Physical Hub Location</label>
+                  <label className="luna-label !ml-2">Building</label>
                   <div className="relative">
                     <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-                    <input type="text" name="location" value={form.location} onChange={handleChange} placeholder="Location / Wing..." className="luna-input !pl-16 !py-5" required />
+                    <input type="text" name="building" value={form.building} onChange={handleChange} placeholder="Building name" className="luna-input !pl-16 !py-5" required />
                   </div>
                </div>
                <div className="group">
-                  <label className="luna-label !ml-2">Operational State</label>
+                  <label className="luna-label !ml-2">Floor</label>
                   <div className="relative">
-                    <Zap className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-                    <select name="status" value={form.status} onChange={handleChange} className="luna-input !pl-16 !py-5 appearance-none cursor-pointer" required>
-                      <option value="" className="bg-luna-midnight">Select Availability Status...</option>
-                      {RESOURCE_STATUSES.map(s => <option key={s} value={s} className="bg-luna-midnight text-white">{s}</option>)}
-                    </select>
+                    <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <input type="text" name="floor" value={form.floor} onChange={handleChange} placeholder="Ex: Ground, 1st" className="luna-input !pl-16 !py-5" required />
+                  </div>
+               </div>
+               <div className="group">
+                  <label className="luna-label !ml-2">Room Number</label>
+                  <div className="relative">
+                    <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <input type="text" name="roomNumber" value={form.roomNumber} onChange={handleChange} placeholder="Ex: 101" className="luna-input !pl-16 !py-5" required />
                   </div>
                </div>
             </div>
 
-            <div className="pt-12 border-t border-luna-aqua/5">
-               <div className="flex items-center justify-between mb-10">
-                  <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-4">
-                    <Clock size={24} className="text-luna-aqua" /> Temporal Availability System
-                  </h3>
-                  <button 
-                    type="button" 
-                    onClick={() => setForm(f => ({ ...f, availabilityWindows: [...f.availabilityWindows, { from: '08:00:00', to: '17:00:00' }] }))} 
-                    className="luna-button-outline !px-6 !py-2 text-[9px] font-black uppercase tracking-[0.3em]"
-                  >
-                    + Append Window
-                  </button>
+            <div className="group">
+               <label className="luna-label !ml-2">Description</label>
+               <textarea name="description" value={form.description} onChange={handleChange} placeholder="Optional description..." className="luna-input !py-4 resize-none" rows={3} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+               <div className="group">
+                  <label className="luna-label !ml-2">Available From</label>
+                  <div className="relative">
+                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <input type="time" name="availableFrom" value={form.availableFrom} onChange={handleChange} className="luna-input !pl-16 !py-5" required />
+                  </div>
                </div>
-               
-               <div className="grid grid-cols-1 gap-6">
-                  <AnimatePresence>
-                    {form.availabilityWindows.map((w, i) => (
-                      <motion.div 
-                        key={i} 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-wrap items-center gap-10 p-10 rounded-[2.5rem] bg-luna-midnight/60 border border-luna-aqua/5 group/window hover:border-luna-aqua/20 transition-all"
-                      >
-                         <div className="flex-1 min-w-[200px] group/field">
-                            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within/field:text-luna-aqua transition-colors">Shift Commencement</span>
-                            <input type="time" value={w.from?.substring(0, 5)} onChange={(e) => handleWindowChange(i, 'from', e.target.value + ':00')} className="luna-input !py-3 !px-8" />
-                         </div>
-                         <div className="flex-1 min-w-[200px] group/field">
-                            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within/field:text-luna-aqua transition-colors">Shift Termination</span>
-                            <input type="time" value={w.to?.substring(0, 5)} onChange={(e) => handleWindowChange(i, 'to', e.target.value + ':00')} className="luna-input !py-3 !px-8" />
-                         </div>
-                         {form.availabilityWindows.length > 1 && (
-                           <button 
-                            type="button" 
-                            onClick={() => setForm(f => ({ ...f, availabilityWindows: f.availabilityWindows.filter((_, idx) => idx !== i) }))} 
-                            className="mt-8 w-14 h-14 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20"
-                           >
-                              <Trash2 size={22} />
-                           </button>
-                         )}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+               <div className="group">
+                  <label className="luna-label !ml-2">Available To</label>
+                  <div className="relative">
+                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <input type="time" name="availableTo" value={form.availableTo} onChange={handleChange} className="luna-input !pl-16 !py-5" required />
+                  </div>
+               </div>
+               <div className="group">
+                  <label className="luna-label !ml-2">Status</label>
+                  <div className="relative">
+                    <Zap className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
+                    <select name="status" value={form.status} onChange={handleChange} className="luna-input !pl-16 !py-5 appearance-none cursor-pointer" required>
+                      {RESOURCE_STATUSES.map(s => <option key={s} value={s} className="bg-luna-midnight text-white">{s}</option>)}
+                    </select>
+                  </div>
                </div>
             </div>
 
@@ -266,16 +275,16 @@ export default function AssetForm() {
                 onClick={() => navigate('/facilities')} 
                 className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] hover:text-white transition-all"
               >
-                Abort Procedure
+                Cancel
               </button>
               <button 
                 type="submit" 
                 disabled={submitting} 
                 className="luna-button !px-16 !py-5 shadow-2xl shadow-luna-aqua/20"
               >
-                {submitting ? 'Transmitting Specification...' : (
+                {submitting ? 'Saving...' : (
                   <span className="flex items-center gap-4 text-xs font-black uppercase tracking-[0.3em]">
-                    {isEdit ? 'Sync Refinements' : 'Confirm Deployment'} <ChevronRight size={20} />
+                    {isEdit ? 'Save Changes' : 'Add Facility'} <ChevronRight size={20} />
                   </span>
                 )}
               </button>
@@ -293,11 +302,11 @@ export default function AssetForm() {
                Operational Integrity <ShieldCheck size={14} />
              </h3>
              <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 opacity-80">
-               Infrastructure nodes are synchronized across the global system. Classification accuracy is paramount for strategic resource allocation.
+               Infrastructure nodes are synchronized across the global matrix. Classification accuracy is paramount for strategic resource allocation.
              </p>
              <div className="space-y-6">
-                <NodeStatus icon={<Globe size={16} />} label="Global Directory Sync" />
-                <NodeStatus icon={<Activity size={16} />} label="Instant System Push" />
+                <NodeStatus icon={<Globe size={16} />} label="Global Registry Sync" />
+                <NodeStatus icon={<Activity size={16} />} label="Instant Matrix Push" />
                 <NodeStatus icon={<ShieldCheck size={16} />} label="RBAC Policy Enforced" />
              </div>
           </div>

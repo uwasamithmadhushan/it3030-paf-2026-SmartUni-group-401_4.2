@@ -1,24 +1,19 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllTickets, updateTicketStatus, getAllUsers, assignTechnician } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { getAllTickets, getAllUsers, assignTechnician } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { 
   ShieldCheck, 
   RefreshCw, 
   Search, 
-  Filter, 
   Clock, 
   MapPin, 
   Zap, 
-  CheckCircle2, 
-  AlertCircle, 
   ChevronRight,
   ClipboardList,
   Layers,
-  MoreVertical,
   Activity,
   Users,
   Globe,
@@ -35,7 +30,6 @@ export default function TechnicianAssignmentsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [assigning, setAssigning] = useState(null);
   
-  const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 

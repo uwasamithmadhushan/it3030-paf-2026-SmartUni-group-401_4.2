@@ -9,16 +9,11 @@ import {
   RefreshCw, 
   Clock, 
   User, 
-  Search, 
   Filter, 
   CheckCircle2, 
   XCircle,
   Zap,
-  Users,
-  ChevronRight,
-  MoreVertical,
-  Layers,
-  Calendar
+  Layers
 } from 'lucide-react';
 
 const STATUS_OPTIONS = ['', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];

@@ -6,18 +6,20 @@ import {
   updateTicketStatus, 
   resolveTicket,
   rejectTicket,
-  getAllUsers, 
+  closeTicket,
+  reopenTicket,
   addComment, 
   updateComment,
   deleteComment as apiDeleteComment,
-  deleteTicket, 
+  deleteTicket,
+  updateTicket,
   uploadAttachment 
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   MessageSquare, 
@@ -35,30 +37,20 @@ import {
   XCircle,
   Zap,
   Layers,
-  ShieldCheck,
-  ChevronRight,
   Globe,
   Plus,
   Mail,
   Phone
 } from 'lucide-react';
 
-/**
- * PAGE: TicketDetailsPage
- * This is the most complex page. It shows all details for a single ticket,
- * including comments, attachments, and controls for technicians/admins.
- */
 export default function TicketDetailsPage() {
-  const { id } = useParams(); // Get the Ticket ID from the URL (e.g., /tickets/123)
+  const { id } = useParams();
   const navigate = useNavigate();   
-  const { user } = useAuth(); // Current logged-in user info
+  const { user } = useAuth();
   const { addToast } = useToast();
   
-  const [ticket, setTicket] = useState(null);    // Stores the ticket data from the API
+  const [ticket, setTicket] = useState(null);    
   const [loading, setLoading] = useState(true);
-  const [technicians, setTechnicians] = useState([]); // List of technicians (for Admin assignment)
-  
-  // MODAL STATE: Controls the confirmation popups (Assign, Resolve, Delete)
   const [modalState, setModalState] = useState({ 
     isOpen: false, 
     type: '', 
@@ -69,54 +61,29 @@ export default function TicketDetailsPage() {
     inputValue: ''
   });
   
-  const [selectedTech, setSelectedTech] = useState(''); // Selected technician ID in the dropdown
-  const [newComment, setNewComment] = useState('');      // Text for the new comment form
+
+  const [newComment, setNewComment] = useState('');
   const [commenting, setCommenting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  /**
-   * DATA FETCHING
-   * Gets the ticket details and (if admin) the list of technicians.
-   */
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ticketRes, usersRes] = await Promise.all([
-        getTicketById(id),
-        user.role === 'ADMIN' ? getAllUsers() : Promise.resolve({ data: [] })
-      ]);
+      const ticketRes = await getTicketById(id);
       setTicket(ticketRes.data);
-      if (ticketRes.data.assignedTechnicianId) {
-        setSelectedTech(ticketRes.data.assignedTechnicianId);
-      }
-      if (user.role === 'ADMIN') {
-        // Filter users to only show technicians in the assignment dropdown
-        setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
-      }
     } catch (error) {
       addToast('Failed to load incident intelligence', 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAssignAction = () => {
-    if (!selectedTech) return;
-    const techName = technicians.find(t => t.id === selectedTech)?.username;
-    setModalState({
-      isOpen: true,
-      type: 'assign',
-      title: 'Confirm Tactical Dispatch',
-      message: `Initialize dispatch procedure and assign this incident record to Specialist ${techName}?`,
-      data: selectedTech,
-      inputLabel: '',
-      inputValue: ''
-    });
   };
 
   const handleStatusAction = (newStatus) => {
@@ -153,13 +120,6 @@ export default function TicketDetailsPage() {
     }
   };
 
-  /**
-   * ACTION HANDLER: performAction
-   * This central function handles different button actions after user confirms in the modal.
-   * - Assigning a technician
-   * - Resolving the ticket
-   * - Deleting the ticket
-   */
   const performAction = async () => {
     try {
       if (modalState.type === 'assign') {
@@ -187,29 +147,22 @@ export default function TicketDetailsPage() {
         addToast('Incident record purged', 'success');
         navigate('/tickets');
         return;
-      } else if (modalState.type === 'delete_comment') {
-        await apiDeleteComment(id, modalState.data);
-        addToast('Transmission purged', 'success');
       }
-      fetchData(); // Refresh page data after action
-      setModalState({ ...modalState, isOpen: false }); // Close the modal
+      fetchData();
+      setModalState({ ...modalState, isOpen: false });
     } catch (error) {
       addToast('Action sequence failed', 'error');
     }
   };
 
-  /**
-   * COMMENT HANDLER
-   * Sends the user's comment to the backend.
-   */
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     setCommenting(true);
     try {
       await addComment(id, newComment);
-      setNewComment(''); // Clear the input box
-      fetchData(); // Refresh list to show new comment
+      setNewComment('');
+      fetchData();
       addToast('Personnel transmission logged', 'success');
     } catch (error) {
       addToast('Transmission failure', 'error');
@@ -228,6 +181,65 @@ export default function TicketDetailsPage() {
       addToast('Transmission updated', 'success');
     } catch (error) {
       addToast('Update failed', 'error');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Delete this transmission?')) return;
+    try {
+      await apiDeleteComment(id, commentId);
+      fetchData();
+      addToast('Transmission purged', 'success');
+    } catch (error) {
+      addToast('Purge failed', 'error');
+    }
+  };
+
+  const handleStartEdit = () => {
+    setEditFormData({
+      title: ticket.title,
+      description: ticket.description,
+      category: ticket.category,
+      priority: ticket.priority,
+      location: ticket.location || '',
+      preferredContactName: ticket.preferredContactName || '',
+      preferredContactEmail: ticket.preferredContactEmail || '',
+      preferredContactPhone: ticket.preferredContactPhone || '',
+      resourceId: ticket.resourceId || '',
+    });
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateTicket(id, editFormData);
+      setIsEditing(false);
+      fetchData();
+      addToast('Ticket updated successfully', 'success');
+    } catch (error) {
+      addToast('Failed to update ticket', 'error');
+    }
+  };
+
+  const handleOwnerClose = async () => {
+    if (!window.confirm('Confirm the issue is fixed and close this ticket?')) return;
+    try {
+      await closeTicket(id);
+      fetchData();
+      addToast('Ticket closed — issue confirmed as resolved', 'success');
+    } catch (error) {
+      addToast('Failed to close ticket', 'error');
+    }
+  };
+
+  const handleOwnerReopen = async () => {
+    if (!window.confirm('Mark this ticket as not fixed and reopen it?')) return;
+    try {
+      await reopenTicket(id);
+      fetchData();
+      addToast('Ticket reopened — technician will be notified', 'success');
+    } catch (error) {
+      addToast('Failed to reopen ticket', 'error');
     }
   };
 
@@ -251,7 +263,7 @@ export default function TicketDetailsPage() {
     <div className="p-40 text-center flex flex-col items-center gap-8">
       <XCircle size={80} className="text-luna-aqua opacity-20" />
       <h2 className="text-4xl font-black text-white tracking-tighter">Incident Not Found</h2>
-      <button onClick={() => navigate('/tickets')} className="luna-button-outline">Return to Directory</button>
+      <button onClick={() => navigate('/tickets')} className="luna-button-outline">Return to Registry</button>
     </div>
   );
 
@@ -281,12 +293,20 @@ export default function TicketDetailsPage() {
               {React.cloneElement(getPriorityStyles(ticket.priority).icon, { size: 16 })}
               <span className={`text-[10px] font-black uppercase tracking-widest ${getPriorityStyles(ticket.priority).text}`}>{ticket.priority} Priority Delta</span>
            </div>
-           {user.role === 'ADMIN' && (
+           {(user.role === 'ADMIN' || user.role === 'TECHNICIAN' || (user.role === 'USER' && ticket.createdById === user.id)) && (
              <button 
-               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Purge Record', message: 'Permanently remove this incident record from the central directory?' })}
-               className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20 flex-shrink-0"
+               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Delete Ticket', message: 'Permanently delete this ticket? This action cannot be undone.' })}
+               className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20 flex-shrink-0 flex items-center justify-center"
              >
                <Trash2 size={20} />
+             </button>
+           )}
+           {user.role === 'USER' && ticket.createdById === user.id && ticket.status === 'OPEN' && (
+             <button
+               onClick={handleStartEdit}
+               className="w-12 h-12 rounded-2xl bg-luna-aqua/10 text-luna-aqua border border-luna-aqua/20 hover:bg-luna-aqua hover:text-luna-midnight transition-all shadow-lg hover:shadow-luna-aqua/20 flex-shrink-0 flex items-center justify-center"
+             >
+               <Edit2 size={20} />
              </button>
            )}
         </div>
@@ -294,7 +314,7 @@ export default function TicketDetailsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
         
-        {/* Core Information Panel */}
+        {/* Core Intelligence Panel */}
         <div className="xl:col-span-8 space-y-12">
           
           <motion.div 
@@ -331,7 +351,7 @@ export default function TicketDetailsPage() {
 
                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-10 luna-glass rounded-[2.5rem] border-luna-aqua/5 mt-12">
                  <IntelItem icon={<Layers size={16} />} label="Category" value={ticket.category} />
-                 <IntelItem icon={<MapPin size={16} />} label="Location" value={ticket.location || 'Central Alpha'} />
+                 <IntelItem icon={<MapPin size={16} />} label="Sector" value={ticket.location || 'Central Alpha'} />
                  <IntelItem icon={<Globe size={16} />} label="Asset Sync" value={ticket.resourceId?.substring(0, 12) || 'Agnostic'} />
                  <IntelItem icon={<Clock size={16} />} label="Temporal Log" value={new Date(ticket.createdAt).toLocaleDateString()} />
                </div>
@@ -357,7 +377,12 @@ export default function TicketDetailsPage() {
               <div className="space-y-10 mb-10 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
                 {ticket.comments && ticket.comments.length > 0 ? (
                   ticket.comments.map((comment, i) => {
-                    const isRightSide = comment.userId === user.id;
+                    let isRightSide = comment.userId === user.id;
+                    if (comment.userRole) {
+                      const isSupportStaff = user.role === 'ADMIN' || user.role === 'TECHNICIAN';
+                      const isCommentFromSupport = comment.userRole === 'ADMIN' || comment.userRole === 'TECHNICIAN';
+                      isRightSide = isSupportStaff ? isCommentFromSupport : comment.userId === user.id;
+                    }
                     
                     return (
                       <motion.div 
@@ -379,7 +404,7 @@ export default function TicketDetailsPage() {
                                   <button onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.text); }} className="text-luna-aqua hover:text-white transition-colors">
                                     <Edit2 size={12} />
                                   </button>
-                                  <button onClick={() => setModalState({ isOpen: true, type: 'delete_comment', title: 'Purge Transmission', message: 'Permanently remove this transmission from the personnel log?', data: comment.id })} className="text-red-400 hover:text-red-300 transition-colors">
+                                  <button onClick={() => handleDeleteComment(comment.id)} className="text-red-400 hover:text-red-300 transition-colors">
                                     <Trash2 size={12} />
                                   </button>
                                 </div>
@@ -458,36 +483,10 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
 
-              {/* Admin Dispatch Override */}
-              {user.role === 'ADMIN' && (
-                <div className="space-y-6 pt-10 border-t border-luna-aqua/5">
-                  <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block">Dispatch Specialist Override</label>
-                  <div className="relative group">
-                     <select 
-                       value={selectedTech}
-                       onChange={(e) => setSelectedTech(e.target.value)}
-                       className="luna-input !py-4 !pl-12 appearance-none cursor-pointer"
-                     >
-                       <option value="">Awaiting Specialist Selection...</option>
-                       {technicians.map(t => (
-                         <option key={t.id} value={t.id} className="bg-luna-midnight text-white">{t.username}</option>
-                       ))}
-                     </select>
-                     <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" />
-                  </div>
-                  <button 
-                    onClick={handleAssignAction}
-                    disabled={!selectedTech || selectedTech === ticket.assignedTechnicianId}
-                    className={`w-full luna-button !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/10 ${selectedTech === ticket.assignedTechnicianId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {selectedTech === ticket.assignedTechnicianId ? 'Assigned' : 'Confirm Dispatch'} 
-                    {selectedTech !== ticket.assignedTechnicianId && <ChevronRight size={16} />}
-                  </button>
-                </div>
-              )}
 
-              {/* Specialist Workflow Transition */}
-              {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id)) && (
+
+              {/* Specialist Workflow Transition — technician only */}
+              {user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id && (
                 <div className="pt-10 border-t border-luna-aqua/5">
                   <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-6">Workflow Synchronization</label>
                   <div className="grid grid-cols-1 gap-4">
@@ -511,6 +510,68 @@ export default function TicketDetailsPage() {
                         Archive Record
                       </button>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Ticket Owner Edit — shown when ticket is OPEN */}
+              {user.role === 'USER' && ticket.createdById === user.id && ticket.status === 'OPEN' && isEditing && (
+                <div className="pt-10 border-t border-luna-aqua/5">
+                  <label className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.3em] block mb-6">Edit Ticket Details</label>
+                  <div className="space-y-4">
+                    <input
+                      value={editFormData.title || ''}
+                      onChange={e => setEditFormData(p => ({ ...p, title: e.target.value }))}
+                      placeholder="Title"
+                      className="luna-input !py-3 !px-4 text-sm w-full"
+                    />
+                    <textarea
+                      value={editFormData.description || ''}
+                      onChange={e => setEditFormData(p => ({ ...p, description: e.target.value }))}
+                      placeholder="Description"
+                      rows={4}
+                      className="luna-input !py-3 !px-4 text-sm w-full resize-none"
+                    />
+                    <select
+                      value={editFormData.priority || 'MEDIUM'}
+                      onChange={e => setEditFormData(p => ({ ...p, priority: e.target.value }))}
+                      className="luna-input !py-3 !px-4 text-sm w-full appearance-none"
+                    >
+                      <option value="LOW">Low Priority</option>
+                      <option value="MEDIUM">Medium Priority</option>
+                      <option value="HIGH">High Priority</option>
+                      <option value="URGENT">Urgent Priority</option>
+                    </select>
+                    <div className="flex gap-3 pt-2">
+                      <button onClick={handleSaveEdit} className="flex-1 luna-button !py-3 text-xs flex items-center justify-center gap-2">
+                        <CheckCircle2 size={16} /> Save Changes
+                      </button>
+                      <button onClick={() => setIsEditing(false)} className="flex-1 luna-button-outline !py-3 text-xs flex items-center justify-center gap-2 !text-text-muted !border-luna-aqua/10">
+                        <XCircle size={16} /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Ticket Owner Confirmation — shown when ticket is RESOLVED */}
+              {user.role === 'USER' && ticket.createdById === user.id && ticket.status === 'RESOLVED' && (
+                <div className="pt-10 border-t border-luna-aqua/5">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-2">Was your issue resolved?</label>
+                  <p className="text-[9px] text-text-muted mb-6">The technician has marked this ticket as resolved. Please confirm.</p>
+                  <div className="grid grid-cols-1 gap-4">
+                    <button
+                      onClick={handleOwnerClose}
+                      className="w-full luna-button !bg-luna-aqua !text-luna-midnight !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/20"
+                    >
+                      <CheckCircle2 size={18} /> Yes, Issue Fixed
+                    </button>
+                    <button
+                      onClick={handleOwnerReopen}
+                      className="w-full luna-button-outline !py-4 flex items-center justify-center gap-3 !text-red-400 !border-red-500/20 hover:!bg-red-500/10 hover:!border-red-500/40"
+                    >
+                      <XCircle size={18} /> No, Still Not Fixed
+                    </button>
                   </div>
                 </div>
               )}
@@ -563,7 +624,7 @@ export default function TicketDetailsPage() {
         onConfirm={performAction}
         title={modalState.title}
         message={modalState.message}
-        type={['delete_ticket', 'reject', 'delete_comment'].includes(modalState.type) ? 'danger' : 'info'}
+        type={modalState.type === 'delete_ticket' || modalState.type === 'reject' ? 'danger' : 'info'}
         inputLabel={modalState.inputLabel}
         inputValue={modalState.inputValue}
         onInputChange={(val) => setModalState({ ...modalState, inputValue: val })}
