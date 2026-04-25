@@ -51,12 +51,12 @@ export const updateResource = (id, data) => api.put(`/resources/${id}`, data);
 export const updateResourceStatus = (id, status) => api.patch(`/resources/${id}/status`, { status });
 export const deleteResource = (id) => api.delete(`/resources/${id}`);
 
-// Assets (Legacy or Generic)
-export const getAllAssets = (params) => api.get('/assets', { params });
-export const getAssetById = (id) => api.get(`/assets/${id}`);
-export const createAsset = (data) => api.post('/assets', data);
-export const updateAsset = (id, data) => api.put(`/assets/${id}`, data);
-export const deleteAsset = (id) => api.delete(`/assets/${id}`);
+// Assets (mapped to /resources)
+export const getAllAssets = (params) => api.get('/resources', { params });
+export const getAssetById = (id) => api.get(`/resources/${id}`);
+export const createAsset = (data) => api.post('/resources', data);
+export const updateAsset = (id, data) => api.put(`/resources/${id}`, data);
+export const deleteAsset = (id) => api.delete(`/resources/${id}`);
 
 // Incident Tickets
 export const getAllTickets = (params) => api.get('/tickets', { params });

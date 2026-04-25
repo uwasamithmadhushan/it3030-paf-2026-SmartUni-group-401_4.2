@@ -78,7 +78,18 @@ export default function RegisterPage() {
         navigate('/login', { state: { registered: true } });
       }
     } catch (err) {
-      setServerError('Identity conflict detected. Registry aborted.');
+      if (err.response?.status === 409) {
+        const msg = err.response?.data?.message || '';
+        if (msg.toLowerCase().includes('email')) {
+          setErrors((e) => ({ ...e, email: 'This email is already registered.' }));
+        } else if (msg.toLowerCase().includes('username')) {
+          setErrors((e) => ({ ...e, username: 'This username is already taken.' }));
+        } else {
+          setServerError('Username or email already in use.');
+        }
+      } else {
+        setServerError('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -115,7 +126,7 @@ export default function RegisterPage() {
                  <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Protocol Initialize</span>
               </div>
               <h1 className="text-6xl font-black text-white tracking-tighter leading-none mb-8">
-                Nexus <span className="text-luna-aqua">Registry</span>
+                SmartUni <span className="text-luna-aqua">Registry</span>
               </h1>
               <p className="text-text-muted text-xl font-medium leading-relaxed max-w-md border-l-2 border-luna-aqua/20 pl-8">
                 Synchronize your identity with the SmartUni high-end infrastructure matrix. Access state-of-the-art campus intelligence.
@@ -150,7 +161,7 @@ export default function RegisterPage() {
                    <UserPlus size={24} />
                 </div>
                 <div>
-                   <h2 className="text-2xl font-black text-white tracking-tight">Identity Request</h2>
+                   <h2 className="text-2xl font-black text-white tracking-tight">Register</h2>
                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mt-1">Operator Profile Calibration</p>
                 </div>
              </div>
@@ -173,7 +184,7 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div className="group">
-                  <label className="luna-label !ml-2">Operator ID</label>
+                  <label className="luna-label !ml-2">Username</label>
                   <div className="relative">
                      <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
                      <input
@@ -189,7 +200,7 @@ export default function RegisterPage() {
                </div>
 
                <div className="group">
-                  <label className="luna-label !ml-2">Operational Protocol</label>
+                  <label className="luna-label !ml-2">User Type</label>
                   <div className="relative">
                      <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
                      <select
@@ -207,7 +218,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="luna-label !ml-2">Communication Channel</label>
+              <label className="luna-label !ml-2">Email</label>
               <div className="relative">
                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
                  <input
@@ -223,7 +234,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="luna-label !ml-2">Security Token</label>
+              <label className="luna-label !ml-2">Password</label>
               <div className="relative">
                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
                  <input
@@ -245,7 +256,7 @@ export default function RegisterPage() {
                  className="w-full luna-button !py-5 shadow-2xl shadow-luna-aqua/20 group relative overflow-hidden"
                >
                  <span className="relative z-10 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em]">
-                   {loading ? 'Processing Registry...' : 'Initialize Identity'}
+                   {loading ? 'Registering...' : 'Register'}
                    {!loading && <ArrowRight size={20} className="group-hover:translate-x-3 transition-transform" />}
                  </span>
                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />

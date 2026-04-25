@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getAssetById, createBooking } from '../services/api';
+import { getAssetById, createBooking, getAllResources } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -43,12 +44,21 @@ function nowPlus(offsetMinutes) {
 
 export default function BookingForm() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const resourceId = searchParams.get('resourceId');
+
+  // Only USER role can make bookings
+  useEffect(() => {
+    if (user && user.role !== 'USER') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const [resource, setResource] = useState(null);
   const [loadingResource, setLoadingResource] = useState(true);
   const [resourceError, setResourceError] = useState('');
+  const [allResources, setAllResources] = useState([]);
 
   const defaultStart = nowPlus(60);
   const defaultEnd = nowPlus(120);
@@ -65,7 +75,11 @@ export default function BookingForm() {
 
   useEffect(() => {
     if (!resourceId) {
-      setLoadingResource(false);
+      // Load all ACTIVE resources for the dropdown selector
+      getAllResources({ status: 'ACTIVE' })
+        .then(res => setAllResources(res.data?.content ?? res.data))
+        .catch(() => {})
+        .finally(() => setLoadingResource(false));
       return;
     }
     const fetchResource = async () => {
@@ -80,6 +94,20 @@ export default function BookingForm() {
     };
     fetchResource();
   }, [resourceId]);
+
+  // When user selects a resource from the dropdown, load its details
+  const handleResourceSelect = async (e) => {
+    const id = e.target.value;
+    setForm(prev => ({ ...prev, resourceId: id }));
+    setError('');
+    if (!id) { setResource(null); return; }
+    try {
+      const res = await getAssetById(id);
+      setResource(res.data);
+    } catch {
+      setResource(null);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,10 +133,12 @@ export default function BookingForm() {
 
     setSubmitting(true);
     try {
+      // Send as local datetime (no timezone) — Spring LocalDateTime requires "YYYY-MM-DDTHH:mm:ss"
+      const toLocalDT = (v) => v.length === 16 ? v + ':00' : v;
       await createBooking({
         resourceId: form.resourceId,
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
+        startTime: toLocalDT(form.startTime),
+        endTime: toLocalDT(form.endTime),
         purpose: form.purpose,
         expectedAttendees: form.expectedAttendees,
       });
@@ -169,14 +199,17 @@ export default function BookingForm() {
               🏛️
             </div>
             <div className="relative z-10 flex-1 text-center md:text-left">
-              <h3 className="text-3xl font-black text-white tracking-tighter">{resource.name}</h3>
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                <span className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 text-[10px] font-black text-luna-aqua uppercase tracking-widest">{resource.resourceCode}</span>
+              </div>
+              <h3 className="text-3xl font-black text-white tracking-tighter">{resource.resourceName}</h3>
               <div className="flex flex-wrap justify-center md:justify-start items-center gap-8 mt-4">
                  <div className="flex items-center gap-2 text-[10px] font-black text-luna-cyan uppercase tracking-widest">
-                    <Layers size={14} className="text-luna-aqua" /> {TYPE_LABELS[resource.type] || resource.type}
+                    <Layers size={14} className="text-luna-aqua" /> {TYPE_LABELS[resource.resourceType] || resource.resourceType}
                  </div>
                  <div className="w-1 h-1 rounded-full bg-white/20" />
                  <div className="flex items-center gap-2 text-[10px] font-black text-luna-cyan uppercase tracking-widest">
-                    <MapPin size={14} className="text-luna-aqua" /> {resource.location}
+                    <MapPin size={14} className="text-luna-aqua" /> {resource.building}
                  </div>
                  <div className="w-1 h-1 rounded-full bg-white/20" />
                  <div className="flex items-center gap-2 text-[10px] font-black text-luna-cyan uppercase tracking-widest">
@@ -212,17 +245,23 @@ export default function BookingForm() {
 
             {!resourceId && (
               <div className="group">
-                <label className="luna-label !ml-2">Target Resource Identifier</label>
+                <label className="luna-label !ml-2">Select Facility</label>
                 <div className="relative">
-                  <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-                  <input
+                  <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors pointer-events-none" size={20} />
+                  <select
                     name="resourceId"
                     value={form.resourceId}
-                    onChange={handleChange}
+                    onChange={handleResourceSelect}
                     required
-                    placeholder="Enter strategic resource identifier..."
-                    className="luna-input !pl-16 !py-5"
-                  />
+                    className="luna-input !pl-16 !py-5 appearance-none"
+                  >
+                    <option value="">-- Choose a facility --</option>
+                    {allResources.map(r => (
+                      <option key={r.id} value={r.id} className="bg-luna-midnight text-white">
+                        [{r.resourceCode}] {r.resourceName} — {r.building} (cap: {r.capacity})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}

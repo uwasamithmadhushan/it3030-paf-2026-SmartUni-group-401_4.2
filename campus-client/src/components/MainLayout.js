@@ -3,10 +3,106 @@ import { useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
+import { updateMe } from '../services/api';
+import { X, User, Mail, CheckCircle2, Zap } from 'lucide-react';
+
+function ProfileModal({ user, onClose, onSuccess }) {
+  const [form, setForm] = useState({ username: user?.username || '', email: user?.email || '' });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const { data } = await updateMe(form);
+      setSuccess(true);
+      setTimeout(() => {
+        onSuccess(data.token, { username: data.username, email: data.email, role: data.role });
+        onClose();
+      }, 900);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Update failed. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-luna-midnight/90 backdrop-blur-2xl flex items-center justify-center z-50 px-6"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="luna-card w-full max-w-md border-luna-aqua/20 !p-0 overflow-hidden shadow-2xl shadow-luna-aqua/20"
+      >
+        <div className="p-8 border-b border-luna-aqua/10 bg-luna-midnight/60 flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-black text-white tracking-tighter">Update Profile</h3>
+            <p className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.4em] mt-1">Edit your account details</p>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-xl bg-luna-aqua/10 text-luna-aqua flex items-center justify-center hover:bg-luna-aqua hover:text-luna-midnight transition-all">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-8">
+          {success ? (
+            <div className="text-center py-12">
+              <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} className="w-16 h-16 bg-luna-aqua/10 text-luna-aqua rounded-3xl flex items-center justify-center mx-auto mb-6 border border-luna-aqua/20 luna-glow">
+                <CheckCircle2 size={32} />
+              </motion.div>
+              <p className="text-xl font-black text-white tracking-tight">Profile Updated!</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-[10px] font-black text-red-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                  <Zap size={16} /> {error}
+                </div>
+              )}
+              <div className="group">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-1 mb-3 block group-focus-within:text-luna-aqua transition-all">Username</label>
+                <div className="relative">
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
+                  <input type="text" name="username" value={form.username} onChange={handleChange} className="luna-input !pl-14 !py-4" required />
+                </div>
+              </div>
+              <div className="group">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-1 mb-3 block group-focus-within:text-luna-aqua transition-all">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={18} />
+                  <input type="email" name="email" value={form.email} onChange={handleChange} className="luna-input !pl-14 !py-4" required />
+                </div>
+              </div>
+              <div className="flex gap-4 pt-2">
+                <button type="button" onClick={onClose} className="flex-1 luna-button-outline !py-4 text-[10px] font-black uppercase tracking-widest">Cancel</button>
+                <button type="submit" disabled={submitting} className="flex-1 luna-button !py-4 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-luna-aqua/20">
+                  {submitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const { user, login } = useAuth();
   const location = useLocation();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -57,17 +153,19 @@ export default function MainLayout() {
               </button>
             </div>
 
-            <div className="relative">
-              <div className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-luna-steel to-luna-navy flex items-center justify-center font-bold text-white text-sm shadow-soft group-hover:shadow-lg transition-all luna-glow">
-                  {user?.username?.substring(0, 2).toUpperCase() || 'U'}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-black text-white leading-tight">{user?.username || 'Guest'}</span>
-                  <span className="text-[9px] font-black text-luna-aqua uppercase tracking-wider">{user?.role || 'User'}</span>
-                </div>
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-3 cursor-pointer group"
+              title="Edit Profile"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-luna-steel to-luna-navy flex items-center justify-center font-bold text-white text-sm shadow-soft group-hover:shadow-lg transition-all luna-glow group-hover:ring-2 group-hover:ring-luna-aqua/40">
+                {user?.username?.substring(0, 2).toUpperCase() || 'U'}
               </div>
-            </div>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-black text-white leading-tight">{user?.username || 'Guest'}</span>
+                <span className="text-[9px] font-black text-luna-aqua uppercase tracking-wider">{user?.role || 'User'}</span>
+              </div>
+            </button>
           </div>
         </header>
 
@@ -86,6 +184,16 @@ export default function MainLayout() {
           </AnimatePresence>
         </main>
       </div>
+
+      <AnimatePresence>
+        {showProfileModal && (
+          <ProfileModal
+            user={user}
+            onClose={() => setShowProfileModal(false)}
+            onSuccess={(token, updated) => login(token, updated)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

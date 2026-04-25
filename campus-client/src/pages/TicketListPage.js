@@ -68,7 +68,7 @@ export default function TicketListPage() {
                 <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Intelligence Feed</span>
               </div>
            </div>
-           <h1 className="text-6xl font-black text-white tracking-tighter">Support <span className="text-luna-aqua">Matrix</span></h1>
+           <h1 className="text-6xl font-black text-white tracking-tighter">Raise a <span className="text-luna-aqua">Ticket</span></h1>
            <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity incident monitoring and operational resource tracking.</p>
         </motion.div>
         

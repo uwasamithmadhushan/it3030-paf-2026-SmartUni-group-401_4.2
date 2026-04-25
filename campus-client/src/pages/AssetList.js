@@ -42,14 +42,14 @@ export default function AssetList() {
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(null);
 
-  const [filters, setFilters] = useState({ type: '', capacity: '', location: '' });
+  const [filters, setFilters] = useState({ type: '', minCapacity: '', building: '' });
 
   const fetchAssets = useCallback(async (params) => {
     setLoading(true);
     setError('');
     try {
       const res = await getAllAssets(params);
-      setAssets(res.data);
+      setAssets(res.data?.content ?? res.data);
     } catch {
       setError('Failed to synchronize facility portfolio.');
     } finally {
@@ -66,11 +66,15 @@ export default function AssetList() {
   };
 
   const handleApplyFilter = () => {
-    fetchAssets(filters);
+    const params = {};
+    if (filters.type) params.type = filters.type;
+    if (filters.minCapacity) params.minCapacity = filters.minCapacity;
+    if (filters.building) params.building = filters.building;
+    fetchAssets(params);
   };
 
   const handleClearFilter = () => {
-    const empty = { type: '', capacity: '', location: '' };
+    const empty = { type: '', minCapacity: '', building: '' };
     setFilters(empty);
     fetchAssets({});
   };
@@ -148,8 +152,8 @@ export default function AssetList() {
                <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
                <input
                  type="number"
-                 name="capacity"
-                 value={filters.capacity}
+                 name="minCapacity"
+                 value={filters.minCapacity}
                  onChange={handleFilterChange}
                  placeholder="Pers. Count"
                  className="luna-input !pl-16 !py-4"
@@ -163,10 +167,10 @@ export default function AssetList() {
               <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
               <input
                 type="text"
-                name="location"
-                value={filters.location}
+                name="building"
+                value={filters.building}
                 onChange={handleFilterChange}
-                placeholder="Sector / Wing..."
+                placeholder="Building / Wing..."
                 className="luna-input !pl-16 !py-4"
               />
             </div>
@@ -213,10 +217,10 @@ export default function AssetList() {
                  <div className="absolute inset-0 bg-gradient-to-t from-luna-midnight to-transparent" />
                  <div className="absolute top-8 left-10 flex items-center gap-4">
                     <div className="w-16 h-16 rounded-[1.5rem] bg-luna-midnight/80 border border-luna-aqua/10 flex items-center justify-center text-4xl group-hover:luna-glow group-hover:rotate-6 transition-all duration-500 shadow-2xl shadow-luna-aqua/10">
-                       {asset.type === 'LECTURE_HALL' ? '🏛️' : asset.type === 'LAB' ? '🧪' : asset.type === 'MEETING_ROOM' ? '💼' : '🛠️'}
+                       {asset.resourceType === 'LECTURE_HALL' ? '🏛️' : asset.resourceType === 'LAB' ? '🧪' : asset.resourceType === 'MEETING_ROOM' ? '💼' : '🛠️'}
                     </div>
                     <div>
-                       <span className={`luna-badge !px-3 !py-1 ${asset.status === 'AVAILABLE' ? 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                       <span className={`luna-badge !px-3 !py-1 ${asset.status === 'ACTIVE' ? 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
                           {asset.status}
                        </span>
                     </div>
@@ -225,8 +229,8 @@ export default function AssetList() {
               </div>
 
               <div className="p-10 flex-1 flex flex-col">
-                <h3 className="text-3xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-2">{asset.name}</h3>
-                <p className="text-[10px] font-black text-luna-cyan uppercase tracking-[0.4em] mb-10">{TYPE_LABELS[asset.type] || asset.type}</p>
+                <h3 className="text-3xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-2">{asset.resourceName}</h3>
+                <p className="text-[10px] font-black text-luna-cyan uppercase tracking-[0.4em] mb-10">{TYPE_LABELS[asset.resourceType] || asset.resourceType}</p>
 
                 <div className="grid grid-cols-2 gap-6 mb-12">
                    <div className="p-5 rounded-3xl bg-luna-midnight/40 border border-luna-aqua/5 group/metric hover:border-luna-aqua/20 transition-all">
@@ -234,8 +238,8 @@ export default function AssetList() {
                       <p className="text-lg font-black text-white flex items-center gap-3"><Users size={16} className="text-luna-aqua" /> {asset.capacity}</p>
                    </div>
                    <div className="p-5 rounded-3xl bg-luna-midnight/40 border border-luna-aqua/5 group/metric hover:border-luna-aqua/20 transition-all">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2 group-hover/metric:text-white transition-colors">Sector Hub</p>
-                      <p className="text-lg font-black text-white truncate flex items-center gap-3"><MapPin size={16} className="text-luna-aqua" /> {asset.location}</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2 group-hover/metric:text-white transition-colors">Building</p>
+                      <p className="text-lg font-black text-white truncate flex items-center gap-3"><MapPin size={16} className="text-luna-aqua" /> {asset.building}</p>
                    </div>
                 </div>
 
@@ -256,14 +260,14 @@ export default function AssetList() {
                         <Trash2 size={20} />
                       </button>
                     </>
-                  ) : (
+                  ) : user?.role === 'USER' ? (
                     <button
-                      onClick={() => navigate('/bookings/new', { state: { assetId: asset.id, assetName: asset.name } })}
+                      onClick={() => navigate(`/bookings/new?resourceId=${asset.id}`)}
                       className="w-full luna-button !py-4 flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] group/res"
                     >
-                      Initialize Reservation <ArrowRight size={20} className="group-hover/res:translate-x-2 transition-transform" />
+                      Reserve <ArrowRight size={20} className="group-hover/res:translate-x-2 transition-transform" />
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
               

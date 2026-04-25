@@ -12,7 +12,6 @@ import {
   ShieldCheck, 
   Mail, 
   Trash2, 
-  Edit3, 
   User,
   ShieldAlert,
   AlertCircle,
@@ -252,17 +251,12 @@ export default function UserListPage() {
 
                 <div className="flex gap-4 pt-10 border-t border-luna-aqua/5">
                   <button
-                    className="flex-1 luna-button-outline !py-4 flex items-center justify-center gap-3 group/edit"
-                  >
-                    <Edit3 size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Update Dossier</span>
-                  </button>
-                  <button
                     onClick={() => setDeleteTarget(u)}
                     disabled={u.id === currentUser?.id}
-                    className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all disabled:opacity-10 disabled:grayscale shadow-xl hover:shadow-red-500/20 group/purge"
+                    className="flex-1 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all disabled:opacity-10 disabled:grayscale shadow-xl hover:shadow-red-500/20 group/purge gap-3"
                   >
                     <Trash2 size={20} className="group-hover/purge:scale-125 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Delete User</span>
                   </button>
                 </div>
               </div>
