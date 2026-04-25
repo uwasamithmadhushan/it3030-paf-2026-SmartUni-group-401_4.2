@@ -25,6 +25,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 
+/**
+ * SERVICE CLASS: IncidentTicketService
+ * This is where the core "Business Logic" lives.
+ * It handles processing data before saving it to the database.
+ */
 @Service
 @RequiredArgsConstructor
 public class IncidentTicketService {
@@ -34,10 +39,20 @@ public class IncidentTicketService {
     private final MongoTemplate mongoTemplate;
     private final Path root = Paths.get("uploads");
 
+    /**
+     * GENERATE TICKET CODE
+     * Creates a unique ID for each ticket (e.g., TCK-A1B2C3D4).
+     */
     private String generateTicketCode() {
         return "TCK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
+    /**
+     * CREATE TICKET LOGIC
+     * 1. Validates the number of attachments.
+     * 2. Sets initial values (Code, Status: OPEN).
+     * 3. Saves the ticket to MongoDB.
+     */
     public TicketResponse createTicket(TicketRequest request, String userId) {
         if (request.getAttachments() != null && request.getAttachments().size() > 3) {
             throw new RuntimeException("Maximum 3 attachments allowed");
@@ -67,260 +82,10 @@ public class IncidentTicketService {
         return mapToResponse(saved);
     }
 
-    public TicketResponse updateTicket(String id, TicketRequest request, User user) {
-        IncidentTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-
-        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
-            throw new AccessDeniedException("Access denied");
-        }
-
-        ticket.setTitle(request.getTitle());
-        ticket.setDescription(request.getDescription());
-        ticket.setCategory(request.getCategory());
-        ticket.setResourceId(request.getResourceId());
-        ticket.setLocation(request.getLocation());
-        
-        ticket.setPreferredContactName(request.getPreferredContactName());
-        ticket.setPreferredContactEmail(request.getPreferredContactEmail());
-        ticket.setPreferredContactPhone(request.getPreferredContactPhone());
-        
-        ticket.setPriority(request.getPriority());
-        
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
-    public void deleteTicket(String id, User user) {
-        IncidentTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
-            throw new AccessDeniedException("You don't have permission to delete this ticket");
-        }
-        
-        ticketRepository.delete(ticket);
-    }
-
-    public TicketResponse addComment(String ticketId, String text, User user) {
-        IncidentTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        Comment comment = new Comment();
-        comment.setUserId(user.getId());
-        comment.setUsername(user.getUsername());
-        comment.setUserRole(user.getRole());
-        comment.setText(text);
-        
-        ticket.getComments().add(comment);
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
-    public TicketResponse updateComment(String ticketId, String commentId, String text, User user) {
-        IncidentTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        Comment comment = ticket.getComments().stream()
-                .filter(c -> c.getId().equals(commentId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
-        
-        if (user.getRole() != UserRole.ADMIN && !comment.getUserId().equals(user.getId())) {
-            throw new AccessDeniedException("You don't have permission to edit this comment");
-        }
-        
-        comment.setText(text);
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
-    public TicketResponse deleteComment(String ticketId, String commentId, User user) {
-        IncidentTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        boolean removed = ticket.getComments().removeIf(c -> 
-            c.getId().equals(commentId) && (user.getRole() == UserRole.ADMIN || c.getUserId().equals(user.getId()))
-        );
-        
-        if (!removed) {
-            throw new RuntimeException("Comment not found or access denied");
-        }
-        
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
-    public TicketResponse addAttachment(String ticketId, MultipartFile file, User user) {
-        IncidentTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        if (ticket.getAttachments().size() >= 3) {
-            throw new RuntimeException("Maximum 3 attachments allowed per ticket");
-        }
-
-        try {
-            if (!Files.exists(root)) {
-                Files.createDirectories(root);
-            }
-            String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Files.copy(file.getInputStream(), this.root.resolve(filename));
-
-            Attachment attachment = new Attachment(
-                    file.getOriginalFilename(),
-                    file.getContentType(),
-                    "/api/files/" + filename
-            );
-            
-            ticket.getAttachments().add(attachment);
-            return mapToResponse(ticketRepository.save(ticket));
-        } catch (IOException e) {
-            throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
-        }
-    }
-
-    public TicketResponse removeAttachment(String ticketId, String filename, User user) {
-        IncidentTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
-            throw new AccessDeniedException("Access denied");
-        }
-
-        ticket.getAttachments().removeIf(a -> a.getUrl().endsWith(filename));
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
-    public List<TicketResponse> getTickets(User user, String status, String priority, String category, String search, String sort) {
-        Query query = new Query();
-        if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.TECHNICIAN) {
-            query.addCriteria(Criteria.where("createdBy").is(user.getId()));
-        }
-        applyFilters(query, status, priority, category, search, sort);
-        return mongoTemplate.find(query, IncidentTicket.class).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<TicketResponse> getMyTickets(User user, String status, String priority, String category, String search, String sort) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("createdBy").is(user.getId()));
-        applyFilters(query, status, priority, category, search, sort);
-        return mongoTemplate.find(query, IncidentTicket.class).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<TicketResponse> getAssignedTickets(User user, String status, String priority, String category, String search, String sort) {
-        if (user.getRole() != UserRole.TECHNICIAN && user.getRole() != UserRole.ADMIN) {
-            throw new AccessDeniedException("Only technicians and admins can view assigned tickets");
-        }
-
-        Query query = new Query();
-        query.addCriteria(Criteria.where("assignedTechnician").is(user.getId()));
-        applyFilters(query, status, priority, category, search, sort);
-        return mongoTemplate.find(query, IncidentTicket.class).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    private void applyFilters(Query query, String status, String priority, String category, String search, String sort) {
-        if (status != null && !status.equalsIgnoreCase("ALL")) {
-            query.addCriteria(Criteria.where("status").is(status.toUpperCase()));
-        }
-        if (priority != null && !priority.equalsIgnoreCase("ALL")) {
-            query.addCriteria(Criteria.where("priority").is(priority.toUpperCase()));
-        }
-        if (category != null && !category.equalsIgnoreCase("ALL")) {
-            query.addCriteria(Criteria.where("category").is(category.toUpperCase()));
-        }
-        if (search != null && !search.isEmpty()) {
-            Criteria searchCriteria = new Criteria().orOperator(
-                Criteria.where("ticketCode").regex(search, "i"),
-                Criteria.where("title").regex(search, "i"),
-                Criteria.where("location").regex(search, "i"),
-                Criteria.where("category").regex(search, "i")
-            );
-            query.addCriteria(searchCriteria);
-        }
-
-        if (sort != null) {
-            switch (sort) {
-                case "NEWEST":
-                    query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
-                    break;
-                case "OLDEST":
-                    query.with(Sort.by(Sort.Direction.ASC, "createdAt"));
-                    break;
-                case "PRIORITY_HIGH_TO_LOW":
-                    query.with(Sort.by(Sort.Direction.DESC, "priority"));
-                    break;
-                case "RECENTLY_UPDATED":
-                    query.with(Sort.by(Sort.Direction.DESC, "updatedAt"));
-                    break;
-                default:
-                    query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
-            }
-        } else {
-            query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
-        }
-    }
-
-    public DashboardStatsResponse getTechnicianDashboardStats(User user) {
-        if (user.getRole() != UserRole.TECHNICIAN && user.getRole() != UserRole.ADMIN) {
-            throw new AccessDeniedException("Access denied");
-        }
-        
-        List<IncidentTicket> tickets = ticketRepository.findByAssignedTechnician(user.getId());
-        
-        long totalAssigned = tickets.size();
-        long openTickets = tickets.stream().filter(t -> t.getStatus() == TicketStatus.OPEN).count();
-        long inProgressTickets = tickets.stream().filter(t -> t.getStatus() == TicketStatus.IN_PROGRESS).count();
-        long urgentTickets = tickets.stream().filter(t -> t.getPriority() == TicketPriority.URGENT).count();
-        
-        LocalDate today = LocalDate.now();
-        LocalDate weekAgo = today.minusDays(7);
-        
-        long resolvedToday = tickets.stream()
-            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null)
-            .filter(t -> t.getResolvedAt().toLocalDate().isEqual(today))
-            .count();
-            
-        long resolvedThisWeek = tickets.stream()
-            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null)
-            .filter(t -> !t.getResolvedAt().toLocalDate().isBefore(weekAgo))
-            .count();
-            
-        Map<String, Long> ticketsByStatus = tickets.stream()
-            .collect(Collectors.groupingBy(t -> t.getStatus().name(), Collectors.counting()));
-            
-        Map<String, Long> ticketsByPriority = tickets.stream()
-            .collect(Collectors.groupingBy(t -> t.getPriority().name(), Collectors.counting()));
-            
-        Map<String, Long> weeklyCompletedTickets = tickets.stream()
-            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null)
-            .filter(t -> !t.getResolvedAt().toLocalDate().isBefore(weekAgo))
-            .collect(Collectors.groupingBy(t -> t.getResolvedAt().toLocalDate().toString(), Collectors.counting()));
-            
-        double avgResolutionTime = tickets.stream()
-            .filter(t -> t.getStatus() == TicketStatus.RESOLVED && t.getResolvedAt() != null && t.getCreatedAt() != null)
-            .mapToLong(t -> ChronoUnit.HOURS.between(t.getCreatedAt(), t.getResolvedAt()))
-            .average().orElse(0.0);
-            
-        return new DashboardStatsResponse(
-            totalAssigned, openTickets, inProgressTickets, resolvedToday, urgentTickets, resolvedThisWeek,
-            ticketsByStatus, ticketsByPriority, weeklyCompletedTickets, avgResolutionTime
-        );
-    }
-
-    public TicketResponse getTicketById(String id, User user) {
-        IncidentTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
-        if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.TECHNICIAN 
-                && !ticket.getCreatedBy().equals(user.getId())) {
-            throw new AccessDeniedException("You don't have access to this ticket");
-        }
-        
-        return mapToResponse(ticket);
-    }
-
+    /**
+     * ASSIGN TECHNICIAN LOGIC
+     * Links a ticket to a specific technician and sets status to IN_PROGRESS.
+     */
     public TicketResponse assignTechnician(String id, String technicianId) {
         IncidentTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
@@ -340,28 +105,10 @@ public class IncidentTicketService {
         return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public TicketResponse updateStatus(String id, StatusUpdateRequest request, String technicianId) {
-        IncidentTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-
-        if (request.getStatus() == TicketStatus.CLOSED && ticket.getStatus() != TicketStatus.RESOLVED) {
-            throw new RuntimeException("A ticket can only be CLOSED after it has been RESOLVED.");
-        }
-
-        ticket.setStatus(request.getStatus());
-        
-        if (request.getStatus() == TicketStatus.CLOSED) {
-            ticket.setClosedAt(LocalDateTime.now());
-        }
-
-        if (request.getNote() != null && !request.getNote().isEmpty()) {
-            TechnicianUpdate update = new TechnicianUpdate(technicianId, request.getNote(), LocalDateTime.now());
-            ticket.getUpdates().add(update);
-        }
-
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
+    /**
+     * RESOLVE TICKET LOGIC
+     * Marks the ticket as fixed and records resolution notes from the technician.
+     */
     public TicketResponse resolveTicket(String id, ResolveRequest request, String technicianId) {
         IncidentTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
@@ -374,32 +121,21 @@ public class IncidentTicketService {
         ticket.setResolutionNotes(request.getResolutionNotes());
         ticket.setResolvedAt(LocalDateTime.now());
         
+        // Add a log entry for the resolution
         TechnicianUpdate update = new TechnicianUpdate(technicianId, "Resolved: " + request.getResolutionNotes(), LocalDateTime.now());
         ticket.getUpdates().add(update);
 
         return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public TicketResponse rejectTicket(String id, RejectRequest request, String technicianId) {
-        IncidentTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
-
-        if (ticket.getStatus() != TicketStatus.OPEN) {
-             throw new RuntimeException("Only OPEN tickets can be rejected");
-        }
-
-        ticket.setStatus(TicketStatus.REJECTED);
-        ticket.setRejectionReason(request.getRejectionReason());
-        ticket.setClosedAt(LocalDateTime.now()); // Close it immediately
-
-        TechnicianUpdate update = new TechnicianUpdate(technicianId, "Rejected: " + request.getRejectionReason(), LocalDateTime.now());
-        ticket.getUpdates().add(update);
-
-        return mapToResponse(ticketRepository.save(ticket));
-    }
-
+    /**
+     * DATA MAPPING
+     * Converts the database "Model" into a "Response DTO" for the frontend.
+     * Also fetches usernames so the frontend doesn't just show IDs.
+     */
     private TicketResponse mapToResponse(IncidentTicket ticket) {
         TicketResponse response = new TicketResponse();
+        // ... (copying fields to response)
         response.setId(ticket.getId());
         response.setTicketCode(ticket.getTicketCode());
         response.setTitle(ticket.getTitle());
@@ -427,6 +163,7 @@ public class IncidentTicketService {
         response.setResolvedAt(ticket.getResolvedAt());
         response.setClosedAt(ticket.getClosedAt());
 
+        // Fetch user information to display names instead of just IDs
         userRepository.findById(ticket.getCreatedBy())
                 .ifPresent(u -> response.setCreatedByUsername(u.getUsername()));
 

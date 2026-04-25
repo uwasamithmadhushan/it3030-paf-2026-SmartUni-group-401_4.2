@@ -17,26 +17,39 @@ import {
   Zap
 } from 'lucide-react';
 
+/**
+ * PAGE: TicketListPage
+ * This component displays the list of incident tickets.
+ * It works for both users (seeing their own tickets) and admins/technicians (seeing all tickets).
+ */
 export default function TicketListPage() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState([]); // State to store the list of tickets
+  const [loading, setLoading] = useState(true); // State to show/hide the loading spinner
+  
+  // State to manage filtering (Search, Status, Priority, etc.)
   const [filterParams, setFilterParams] = useState(() => {
     const saved = localStorage.getItem('technician_filters');
     return saved ? JSON.parse(saved) : { search: '', status: 'ALL', priority: 'ALL', category: 'ALL', sort: 'NEWEST' };
   });
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  
+  const { user } = useAuth(); // Get information about the logged-in user
+  const navigate = useNavigate(); // Helper for page navigation
 
+  /**
+   * DATA FETCHING FUNCTION
+   * Connects to the backend API to get the latest tickets.
+   */
   const fetchTickets = useCallback(async (params = filterParams, showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
       let res;
+      // If user is a regular user, only get their tickets. Otherwise, get all.
       if (user.role === 'USER') {
         res = await getMyTickets(params);
       } else {
         res = await getAllTickets(params);
       }
-      setTickets(res.data);
+      setTickets(res.data); // Update the list in our state
     } catch (err) {
       console.error('Failed to update incident archive');
     } finally {
@@ -44,8 +57,10 @@ export default function TicketListPage() {
     }
   }, [user.role, filterParams]);
 
+  // Run data fetching when the page loads or filters change
   useEffect(() => {
     fetchTickets(filterParams, true);
+    // Refresh the data automatically every 60 seconds
     const interval = setInterval(() => fetchTickets(filterParams, false), 60000);
     return () => clearInterval(interval);
   }, [filterParams, fetchTickets]);

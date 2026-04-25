@@ -25,26 +25,37 @@ import {
   Mail
 } from 'lucide-react';
 
+/**
+ * PAGE: CreateTicketPage
+ * This component provides a form for users to report new incidents/issues.
+ */
 export default function CreateTicketPage() {
   const navigate = useNavigate();
   const { refreshTickets } = useOutletContext() || {};
-  const { addToast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const { addToast } = useToast(); // Helper for showing notification popups
+  const [loading, setLoading] = useState(false); // Tracks if the form is currently submitting
+  
+  // FORM DATA STATE: Holds all the input values
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'ELECTRICAL',
-    priority: 'MEDIUM',
-    resourceId: '',
-    location: '',
-    preferredContactName: '',
-    preferredContactEmail: '',
-    preferredContactPhone: '',
-    attachments: []
+    title: '',                 // Summary of the problem
+    description: '',           // Detailed explanation
+    category: 'ELECTRICAL',    // Default category
+    priority: 'MEDIUM',        // Default priority
+    resourceId: '',            // (Optional) ID of a specific asset
+    location: '',              // Where on campus the issue is
+    preferredContactName: '',  // User's name
+    preferredContactEmail: '', // User's email
+    preferredContactPhone: '', // User's phone
+    attachments: []            // List of uploaded files
   });
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [assets, setAssets] = useState([]);
+  
+  const [selectedFiles, setSelectedFiles] = useState([]); // Raw file objects for uploading
+  const [assets, setAssets] = useState([]);               // List of campus resources (from DB)
 
+  /**
+   * INITIAL LOAD: Fetch the list of assets
+   * So the user can select which equipment is broken.
+   */
   useEffect(() => {
     const fetchAssets = async () => {
       try {
@@ -57,10 +68,16 @@ export default function CreateTicketPage() {
     fetchAssets();
   }, [addToast]);
 
+  /**
+   * FORM SUBMISSION HANDLER
+   * 1. Validates that all required fields are filled.
+   * 2. Calls the backend API to create the ticket.
+   * 3. Uploads any selected image attachments.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validation before sending to backend
+    // STEP 1: CLIENT-SIDE VALIDATION (Security & Data Quality)
     if (!formData.title || formData.title.trim().length < 5) {
       addToast('Please enter an issue title (at least 5 characters).', 'error');
       return;
@@ -90,8 +107,9 @@ export default function CreateTicketPage() {
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // Start showing the loading spinner
     try {
+      // STEP 2: CREATE THE TICKET RECORD
       const payload = {
         title: formData.title.trim(),
         description: formData.description.trim(),
@@ -107,6 +125,7 @@ export default function CreateTicketPage() {
 
       const { data: newTicket } = await createTicket(payload);
       
+      // STEP 3: UPLOAD ATTACHMENTS (if any)
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           try {
@@ -130,7 +149,7 @@ export default function CreateTicketPage() {
       addToast(msg, 'error');
       console.error('Ticket submission error:', error.response?.data);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop the loading spinner
     }
   };
 

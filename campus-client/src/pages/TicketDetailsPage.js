@@ -43,16 +43,22 @@ import {
   Phone
 } from 'lucide-react';
 
+/**
+ * PAGE: TicketDetailsPage
+ * This is the most complex page. It shows all details for a single ticket,
+ * including comments, attachments, and controls for technicians/admins.
+ */
 export default function TicketDetailsPage() {
-  const { id } = useParams();
+  const { id } = useParams(); // Get the Ticket ID from the URL (e.g., /tickets/123)
   const navigate = useNavigate();   
-  const { user } = useAuth();
+  const { user } = useAuth(); // Current logged-in user info
   const { addToast } = useToast();
   
-  const [ticket, setTicket] = useState(null);    
+  const [ticket, setTicket] = useState(null);    // Stores the ticket data from the API
   const [loading, setLoading] = useState(true);
-  const [technicians, setTechnicians] = useState([]);
+  const [technicians, setTechnicians] = useState([]); // List of technicians (for Admin assignment)
   
+  // MODAL STATE: Controls the confirmation popups (Assign, Resolve, Delete)
   const [modalState, setModalState] = useState({ 
     isOpen: false, 
     type: '', 
@@ -63,8 +69,8 @@ export default function TicketDetailsPage() {
     inputValue: ''
   });
   
-  const [selectedTech, setSelectedTech] = useState('');
-  const [newComment, setNewComment] = useState('');
+  const [selectedTech, setSelectedTech] = useState(''); // Selected technician ID in the dropdown
+  const [newComment, setNewComment] = useState('');      // Text for the new comment form
   const [commenting, setCommenting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
@@ -73,6 +79,10 @@ export default function TicketDetailsPage() {
     fetchData();
   }, [id]);
 
+  /**
+   * DATA FETCHING
+   * Gets the ticket details and (if admin) the list of technicians.
+   */
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -85,6 +95,7 @@ export default function TicketDetailsPage() {
         setSelectedTech(ticketRes.data.assignedTechnicianId);
       }
       if (user.role === 'ADMIN') {
+        // Filter users to only show technicians in the assignment dropdown
         setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
       }
     } catch (error) {
@@ -142,6 +153,13 @@ export default function TicketDetailsPage() {
     }
   };
 
+  /**
+   * ACTION HANDLER: performAction
+   * This central function handles different button actions after user confirms in the modal.
+   * - Assigning a technician
+   * - Resolving the ticket
+   * - Deleting the ticket
+   */
   const performAction = async () => {
     try {
       if (modalState.type === 'assign') {
@@ -167,25 +185,31 @@ export default function TicketDetailsPage() {
       } else if (modalState.type === 'delete_ticket') {
         await deleteTicket(id);
         addToast('Incident record purged', 'success');
+        navigate('/tickets');
+        return;
       } else if (modalState.type === 'delete_comment') {
         await apiDeleteComment(id, modalState.data);
         addToast('Transmission purged', 'success');
       }
-      fetchData();
-      setModalState({ ...modalState, isOpen: false });
+      fetchData(); // Refresh page data after action
+      setModalState({ ...modalState, isOpen: false }); // Close the modal
     } catch (error) {
       addToast('Action sequence failed', 'error');
     }
   };
 
+  /**
+   * COMMENT HANDLER
+   * Sends the user's comment to the backend.
+   */
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     setCommenting(true);
     try {
       await addComment(id, newComment);
-      setNewComment('');
-      fetchData();
+      setNewComment(''); // Clear the input box
+      fetchData(); // Refresh list to show new comment
       addToast('Personnel transmission logged', 'success');
     } catch (error) {
       addToast('Transmission failure', 'error');
