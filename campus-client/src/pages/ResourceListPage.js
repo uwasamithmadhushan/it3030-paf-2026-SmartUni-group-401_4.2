@@ -9,20 +9,14 @@ import {
   Building2, 
   Search, 
   Plus, 
-  Filter, 
   MapPin, 
   Users, 
   Trash2, 
   Edit3, 
-  ChevronRight,
   ShieldCheck,
-  Zap,
   Layers,
-  Globe,
-  Activity,
   ArrowRight,
   ShieldAlert,
-  Sparkles,
   Clock
 } from 'lucide-react';
 

@@ -12,7 +12,6 @@ import {
   Layers,
   ArrowRight,
   Globe,
-  Clock,
   MapPin,
   Zap
 } from 'lucide-react';

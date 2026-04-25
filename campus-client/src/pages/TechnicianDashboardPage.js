@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getTechnicianDashboardStats, getAssignedTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+import { BarChart, Bar, XAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
 import { 

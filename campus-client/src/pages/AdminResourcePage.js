@@ -3,14 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { createResource, updateResource, getResourceById } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { motion } from 'framer-motion';
+
 import { 
   Building2, 
-  Plus, 
   Save, 
   ArrowLeft, 
-  Info, 
-  Users, 
   Clock, 
   Layers,
   Activity,

@@ -1,23 +1,17 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { getAllUsers, deleteUser, updateUserRole, approveUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, 
   Search, 
   UserPlus, 
   ShieldCheck, 
   Mail, 
   Trash2, 
-  User,
   ShieldAlert,
-  AlertCircle,
-  MoreVertical,
-  ChevronRight,
-  Zap,
   Layers,
   ChevronDown,
   Globe,
@@ -30,7 +24,6 @@ import {
 export default function UserListPage() {
   const { user: currentUser } = useAuth();
   const { addToast } = useToast();
-  const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +35,7 @@ export default function UserListPage() {
 
   useEffect(() => {
     fetchUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUsers = async () => {

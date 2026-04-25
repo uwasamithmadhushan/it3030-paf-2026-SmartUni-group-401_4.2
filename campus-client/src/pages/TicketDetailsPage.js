@@ -8,7 +8,6 @@ import {
   rejectTicket,
   closeTicket,
   reopenTicket,
-  getAllUsers, 
   addComment, 
   updateComment,
   deleteComment as apiDeleteComment,
@@ -20,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   MessageSquare, 
@@ -38,8 +37,6 @@ import {
   XCircle,
   Zap,
   Layers,
-  ShieldCheck,
-  ChevronRight,
   Globe,
   Plus,
   Mail,
@@ -54,8 +51,6 @@ export default function TicketDetailsPage() {
   
   const [ticket, setTicket] = useState(null);    
   const [loading, setLoading] = useState(true);
-  const [technicians, setTechnicians] = useState([]);
-  
   const [modalState, setModalState] = useState({ 
     isOpen: false, 
     type: '', 
@@ -66,7 +61,7 @@ export default function TicketDetailsPage() {
     inputValue: ''
   });
   
-  const [selectedTech, setSelectedTech] = useState('');
+
   const [newComment, setNewComment] = useState('');
   const [commenting, setCommenting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -76,41 +71,19 @@ export default function TicketDetailsPage() {
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ticketRes, usersRes] = await Promise.all([
-        getTicketById(id),
-        user.role === 'ADMIN' ? getAllUsers() : Promise.resolve({ data: [] })
-      ]);
+      const ticketRes = await getTicketById(id);
       setTicket(ticketRes.data);
-      if (ticketRes.data.assignedTechnicianId) {
-        setSelectedTech(ticketRes.data.assignedTechnicianId);
-      }
-      if (user.role === 'ADMIN') {
-        setTechnicians(usersRes.data.filter(u => u.role === 'TECHNICIAN'));
-      }
     } catch (error) {
       addToast('Failed to load incident intelligence', 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAssignAction = () => {
-    if (!selectedTech) return;
-    const techName = technicians.find(t => t.id === selectedTech)?.username;
-    setModalState({
-      isOpen: true,
-      type: 'assign',
-      title: 'Confirm Tactical Dispatch',
-      message: `Initialize dispatch protocol and assign this incident dossier to Specialist ${techName}?`,
-      data: selectedTech,
-      inputLabel: '',
-      inputValue: ''
-    });
   };
 
   const handleStatusAction = (newStatus) => {
@@ -510,10 +483,7 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
 
-              {/* (Admin assign section removed — admin can only delete) */}
-              {
-                </div>
-              )}
+
 
               {/* Specialist Workflow Transition — technician only */}
               {user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id && (

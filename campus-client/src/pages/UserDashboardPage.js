@@ -16,8 +16,7 @@ import {
   Activity,
   Layers,
   ShieldCheck,
-  Building2,
-  MapPin
+  Building2
 } from 'lucide-react';
 
 export default function UserDashboardPage() {

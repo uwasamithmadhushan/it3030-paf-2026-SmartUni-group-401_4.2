@@ -3,12 +3,11 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { createTicket, getAllAssets, uploadAttachment } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Send, 
   Paperclip, 
-  X, 
   AlertTriangle,
   MapPin,
   Tag,

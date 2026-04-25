@@ -5,8 +5,6 @@ import { getAllTickets, getAllAssets, getAllUsers } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { 
   ShieldCheck, 
-  Activity, 
-  Database, 
   Users, 
   Ticket, 
   Building2,
@@ -14,11 +12,9 @@ import {
   ArrowUpRight,
   ChevronRight,
   Bell,
-  Zap,
   Layers,
   Cpu,
   Globe,
-  PieChart,
   Target
 } from 'lucide-react';
 

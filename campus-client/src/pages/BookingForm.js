@@ -12,7 +12,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Users,
-  ChevronRight,
   Zap,
   Layers,
   MapPin,
@@ -57,7 +56,6 @@ export default function BookingForm() {
 
   const [resource, setResource] = useState(null);
   const [loadingResource, setLoadingResource] = useState(true);
-  const [resourceError, setResourceError] = useState('');
   const [allResources, setAllResources] = useState([]);
 
   const defaultStart = nowPlus(60);
@@ -88,7 +86,7 @@ export default function BookingForm() {
         const res = await getAssetById(resourceId);
         setResource(res.data);
       } catch (err) {
-        setResourceError('Resource synchronization failure.');
+        setError('Resource synchronization failure.');
       } finally {
         setLoadingResource(false);
       }

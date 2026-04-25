@@ -1,16 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { updateMe, getMe } from '../services/api';
+import { updateMe } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   Mail, 
   ShieldCheck, 
   Camera, 
-  Save, 
   Lock, 
-  ChevronRight,
   Shield,
   Zap,
   CheckCircle2,
@@ -31,19 +29,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, login, logout } = useAuth();
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [profileData, setProfileData] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data } = await getMe();
-        setProfileData(data);
-      } catch (err) {
-        console.error('Personnel sync failure');
-      }
-    };
-    fetchProfile();
-  }, []);
 
   const initials = user?.username
     ? user.username.slice(0, 2).toUpperCase()

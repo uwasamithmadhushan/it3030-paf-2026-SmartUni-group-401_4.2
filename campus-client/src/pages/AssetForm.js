@@ -5,7 +5,6 @@ import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Building2, 
   ArrowLeft, 
   Clock, 
   MapPin, 
@@ -51,7 +50,6 @@ export default function AssetForm() {
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
   const [loadingAsset, setLoadingAsset] = useState(isEdit);
@@ -86,7 +84,6 @@ export default function AssetForm() {
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setErrors((prev) => ({ ...prev, [e.target.name]: '' }));
     setApiError('');
   };
 

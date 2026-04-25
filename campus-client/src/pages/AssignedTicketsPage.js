@@ -7,7 +7,7 @@ import { useToast } from '../context/ToastContext';
 import TechnicianFilters from '../components/technician/TechnicianFilters';
 import { 
   Wrench, Clock, MapPin, CheckCircle2, 
-  ArrowRight, ShieldCheck, ClipboardList, AlertTriangle
+  ArrowRight, ClipboardList, AlertTriangle
 } from 'lucide-react';
 
 export default function AssignedTicketsPage() {

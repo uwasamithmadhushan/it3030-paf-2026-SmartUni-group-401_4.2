@@ -5,14 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LogIn, 
   User, 
   Lock, 
   Eye, 
   EyeOff, 
   ArrowRight, 
   ShieldCheck,
-  Globe,
   Zap,
   Activity,
   Shield
