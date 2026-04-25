@@ -87,11 +87,11 @@ const JobCard = ({ ticket, onStatusUpdate, onView, index }) => (
       <h3 className="text-xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-3 truncate">{ticket.title}</h3>
       <div className="flex flex-wrap gap-4 items-center mb-6 text-[8px] font-black text-text-muted uppercase tracking-widest">
          <div className="flex items-center gap-1.5"><Clock size={12} className="text-luna-aqua" /> {new Date(ticket.createdAt).toLocaleDateString()}</div>
-         <div className="flex items-center gap-1.5"><MapPin size={12} className="text-luna-aqua" /> {ticket.location || 'Sector Alpha'}</div>
+         <div className="flex items-center gap-1.5"><MapPin size={12} className="text-luna-aqua" /> {ticket.location || 'Location Alpha'}</div>
       </div>
 
       <div className="p-4 rounded-2xl bg-luna-midnight/60 border border-luna-aqua/5 mb-6">
-         <p className="text-[8px] font-black text-text-muted uppercase tracking-widest mb-3">Status Matrix</p>
+         <p className="text-[8px] font-black text-text-muted uppercase tracking-widest mb-3">Status System</p>
          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${

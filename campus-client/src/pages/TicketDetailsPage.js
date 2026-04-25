@@ -101,7 +101,7 @@ export default function TicketDetailsPage() {
       isOpen: true,
       type: 'assign',
       title: 'Confirm Tactical Dispatch',
-      message: `Initialize dispatch protocol and assign this incident dossier to Specialist ${techName}?`,
+      message: `Initialize dispatch procedure and assign this incident record to Specialist ${techName}?`,
       data: selectedTech,
       inputLabel: '',
       inputValue: ''
@@ -227,7 +227,7 @@ export default function TicketDetailsPage() {
     <div className="p-40 text-center flex flex-col items-center gap-8">
       <XCircle size={80} className="text-luna-aqua opacity-20" />
       <h2 className="text-4xl font-black text-white tracking-tighter">Incident Not Found</h2>
-      <button onClick={() => navigate('/tickets')} className="luna-button-outline">Return to Registry</button>
+      <button onClick={() => navigate('/tickets')} className="luna-button-outline">Return to Directory</button>
     </div>
   );
 
@@ -259,7 +259,7 @@ export default function TicketDetailsPage() {
            </div>
            {user.role === 'ADMIN' && (
              <button 
-               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Purge Record', message: 'Permanently remove this incident dossier from the central registry?' })}
+               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Purge Record', message: 'Permanently remove this incident record from the central directory?' })}
                className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20 flex-shrink-0"
              >
                <Trash2 size={20} />
@@ -270,7 +270,7 @@ export default function TicketDetailsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
         
-        {/* Core Intelligence Panel */}
+        {/* Core Information Panel */}
         <div className="xl:col-span-8 space-y-12">
           
           <motion.div 
@@ -307,7 +307,7 @@ export default function TicketDetailsPage() {
 
                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-10 luna-glass rounded-[2.5rem] border-luna-aqua/5 mt-12">
                  <IntelItem icon={<Layers size={16} />} label="Category" value={ticket.category} />
-                 <IntelItem icon={<MapPin size={16} />} label="Sector" value={ticket.location || 'Central Alpha'} />
+                 <IntelItem icon={<MapPin size={16} />} label="Location" value={ticket.location || 'Central Alpha'} />
                  <IntelItem icon={<Globe size={16} />} label="Asset Sync" value={ticket.resourceId?.substring(0, 12) || 'Agnostic'} />
                  <IntelItem icon={<Clock size={16} />} label="Temporal Log" value={new Date(ticket.createdAt).toLocaleDateString()} />
                </div>

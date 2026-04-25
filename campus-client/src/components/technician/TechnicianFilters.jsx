@@ -107,7 +107,7 @@ const TechnicianFilters = ({ onFilterChange, resultsCount }) => {
           >
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="group">
-                <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-3">Operational Sector</label>
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-3">Operational Location</label>
                 <div className="relative">
                   <Activity className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={16} />
                   <select 

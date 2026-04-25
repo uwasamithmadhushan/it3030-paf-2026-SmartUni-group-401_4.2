@@ -33,7 +33,7 @@ const AlertsPanel = ({ tickets }) => {
         )) : (
           <div className="flex flex-col items-center justify-center h-full opacity-20 text-center">
             <AlertTriangle size={48} className="mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]">All Critical Sectors Clear</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em]">All Critical Locations Clear</p>
           </div>
         )}
       </div>

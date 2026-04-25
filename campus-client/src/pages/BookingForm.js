@@ -118,7 +118,7 @@ export default function BookingForm() {
       navigate('/my-bookings');
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data || 'Resource synchronization conflict.';
-      setError(typeof msg === 'string' ? msg : 'Matrix availability collision detected.');
+      setError(typeof msg === 'string' ? msg : 'System availability collision detected.');
     } finally {
       setSubmitting(false);
     }
@@ -306,7 +306,7 @@ export default function BookingForm() {
                 onClick={() => navigate(-1)} 
                 className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] hover:text-white transition-all"
               >
-                Abort Protocol
+                Abort Procedure
               </button>
               <button 
                 type="submit" 
@@ -333,11 +333,11 @@ export default function BookingForm() {
                 Access Policy <Sparkles size={14} />
               </h3>
               <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 opacity-80">
-                All reservations are subject to executive audit and matrix availability synchronization. Verified identity is mandatory.
+                All reservations are subject to executive audit and system availability synchronization. Verified identity is mandatory.
               </p>
               <div className="space-y-6">
                  <PolicyMetric icon={<ShieldCheck size={16} />} label="Identity Verification" />
-                 <PolicyMetric icon={<Globe size={16} />} label="Global Matrix Check" />
+                 <PolicyMetric icon={<Globe size={16} />} label="Global System Check" />
                  <PolicyMetric icon={<Zap size={16} />} label="Instant Sync Hub" />
               </div>
            </div>

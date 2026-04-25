@@ -66,7 +66,7 @@ export default function ResourceListPage() {
       const res = await getAllResources({ ...filters, page: 0, size: 100 });
       setResources(res.data.content);
     } catch (err) {
-      setError('System failure: Unable to synchronize resource matrix.');
+      setError('System failure: Unable to update resource system.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -83,13 +83,13 @@ export default function ResourceListPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Decommission this campus resource? This action is irreversible within current session.')) return;
+    if (!window.confirm('Are you sure you want to delete this resource?')) return;
     setDeleting(id);
     try {
       await deleteResource(id);
       setResources(prev => prev.filter(r => r.id !== id));
     } catch (err) {
-      alert('Security override: Decommissioning protocol failed.');
+      alert('Failed to delete the resource.');
     } finally {
       setDeleting(null);
     }
@@ -109,7 +109,7 @@ export default function ResourceListPage() {
            <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <ShieldCheck size={12} className="text-luna-aqua" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Facilities Management Interface</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Facilities Management</span>
               </div>
            </div>
            <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Resource <span className="text-luna-aqua">Catalogue</span></h1>
@@ -134,7 +134,7 @@ export default function ResourceListPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-8 items-end">
           
           <div className="group">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Strategic Search</label>
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Search</label>
             <div className="relative">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
               <input
@@ -149,7 +149,7 @@ export default function ResourceListPage() {
           </div>
 
           <div className="group">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Classification</label>
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Type</label>
             <div className="relative">
               <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
               <select
@@ -165,7 +165,7 @@ export default function ResourceListPage() {
           </div>
 
           <div className="group">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Physical Building</label>
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Building</label>
             <div className="relative">
               <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
               <input
@@ -180,7 +180,7 @@ export default function ResourceListPage() {
           </div>
 
           <div className="group">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Min Capacity</label>
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] block mb-4 group-focus-within:text-luna-aqua transition-colors">Minimum Capacity</label>
             <div className="relative">
               <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
               <input
@@ -196,7 +196,7 @@ export default function ResourceListPage() {
 
           <div className="flex gap-4">
              <button onClick={() => setFilters({ keyword: '', type: '', building: '', minCapacity: '', status: 'ACTIVE' })} className="luna-button-outline w-full !py-4">
-               Reset Matrix
+               Clear Filters
              </button>
           </div>
 
@@ -250,13 +250,13 @@ export default function ResourceListPage() {
                       <Users size={16} className="text-luna-aqua" />
                       <div>
                         <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">Capacity</p>
-                        <p className="text-sm font-black text-white">{res.capacity} Pax</p>
+                        <p className="text-sm font-black text-white">{res.capacity} People</p>
                       </div>
                    </div>
                    <div className="p-4 rounded-2xl bg-luna-midnight/40 border border-luna-aqua/5 flex items-center gap-4 group/item hover:border-luna-aqua/20 transition-all">
                       <MapPin size={16} className="text-luna-aqua" />
                       <div>
-                        <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">Sector</p>
+                        <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">Location</p>
                         <p className="text-sm font-black text-white truncate">{res.building}</p>
                       </div>
                    </div>
@@ -272,7 +272,7 @@ export default function ResourceListPage() {
                      onClick={() => navigate(`/resources/${res.id}`)}
                      className="flex-1 luna-button-outline !py-3 !text-[9px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 group/btn"
                    >
-                     View Dossier <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                     View Details <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                    </button>
                    
                    {isAdmin && (
@@ -302,7 +302,7 @@ export default function ResourceListPage() {
       {resources.length === 0 && !loading && (
         <div className="py-40 text-center luna-card border-dashed border-luna-aqua/10 opacity-30">
            <Building2 size={64} className="mx-auto text-luna-aqua mb-8" />
-           <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">Registry Archive Empty</h3>
+           <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">No Resources Found</h3>
            <p className="text-base text-text-muted mt-2">No infrastructure resources match current search parameters.</p>
         </div>
       )}
@@ -311,7 +311,7 @@ export default function ResourceListPage() {
       <div className="flex items-center justify-between pt-10 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-luna-aqua animate-pulse" />
-            Node Synchronized: {new Date().toLocaleTimeString()}
+            Last Updated: {new Date().toLocaleTimeString()}
          </div>
          <div>SmartUni Operations Hub v4.2</div>
       </div>

@@ -37,7 +37,7 @@ export default function TechnicianDashboardPage() {
       setStats(statsRes.data);
       setTickets(ticketsRes.data);
     } catch (error) {
-      console.error('Failed to synchronize mission control', error);
+      console.error('Failed to update mission control', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,7 +84,7 @@ export default function TechnicianDashboardPage() {
               </div>
               <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
                 <ShieldCheck size={12} className="text-emerald-400" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em]">Secure Protocol Active</span>
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em]">Secure Procedure Active</span>
               </div>
            </div>
            <h1 className="text-8xl font-black text-white tracking-tighter leading-none mb-4">Operations <span className="text-luna-aqua">Hub</span></h1>
@@ -127,7 +127,7 @@ export default function TechnicianDashboardPage() {
         </div>
       </div>
 
-      {/* Operational Registry Layer */}
+      {/* Operational Directory Layer */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2">
           <RecentTickets tickets={tickets.slice(0, 6)} />
@@ -140,7 +140,7 @@ export default function TechnicianDashboardPage() {
       {/* Performance Pulse Layer */}
       <div className="pt-10">
         <div className="flex items-center gap-6 mb-10">
-          <h3 className="text-xs font-black uppercase tracking-[0.5em] text-text-muted whitespace-nowrap">Efficiency Protocol Delta</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.5em] text-text-muted whitespace-nowrap">Efficiency Procedure Delta</h3>
           <div className="h-[1px] w-full bg-white/5" />
         </div>
         <ProductivityWidget stats={stats} />

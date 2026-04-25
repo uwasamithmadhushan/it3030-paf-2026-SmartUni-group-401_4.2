@@ -44,7 +44,7 @@ export default function NotificationsPage() {
           id: 'sys-1',
           type: 'SYSTEM',
           title: 'Mainframe Synchronization Complete',
-          message: 'All sectors are now reporting healthy operational status.',
+          message: 'All locations are now reporting healthy operational status.',
           time: 'System',
           icon: <CheckCircle2 className="text-emerald-400" />,
           priority: 'LOW'
@@ -126,7 +126,7 @@ export default function NotificationsPage() {
                 <div className="mt-6 flex items-center gap-6">
                   <button className="text-[10px] font-black uppercase tracking-widest text-luna-aqua hover:underline">Acknowledge Broadcast</button>
                   <div className="w-1 h-1 rounded-full bg-white/20" />
-                  <button className="text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-white transition-colors">Sector Protocol Details</button>
+                  <button className="text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-white transition-colors">Location Procedure Details</button>
                 </div>
               </div>
             </motion.div>

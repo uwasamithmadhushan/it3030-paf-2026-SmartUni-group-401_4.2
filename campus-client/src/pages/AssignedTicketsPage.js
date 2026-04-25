@@ -60,7 +60,7 @@ export default function AssignedTicketsPage() {
   };
 
   // Initial load uses full screen spinner for perceived performance
-  if (initialLoad) return <LoadingSpinner fullScreen message="Accessing Assignment Matrix..." />;
+  if (initialLoad) return <LoadingSpinner fullScreen message="Accessing Assignment System..." />;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12 pb-20">

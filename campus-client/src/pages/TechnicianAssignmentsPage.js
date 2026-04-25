@@ -69,7 +69,7 @@ export default function TechnicianAssignmentsPage() {
       addToast('Specialist successfully deployed', 'success');
       fetchData(false);
     } catch (err) {
-      addToast('Deployment protocol failed', 'error');
+      addToast('Deployment procedure failed', 'error');
     } finally {
       setAssigning(null);
     }
@@ -99,7 +99,7 @@ export default function TechnicianAssignmentsPage() {
            <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Mission Dispatch Matrix</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Mission Dispatch System</span>
               </div>
            </div>
            <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Mission <span className="text-luna-aqua">Dispatch</span></h1>
@@ -124,7 +124,7 @@ export default function TechnicianAssignmentsPage() {
         </motion.div>
       </div>
 
-      {/* Advanced Scan Matrix */}
+      {/* Advanced Scan System */}
       <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/5 !p-10">
         <div className="flex flex-col xl:flex-row gap-10 items-end">
           <div className="flex-1 min-w-[320px] group">
@@ -133,7 +133,7 @@ export default function TechnicianAssignmentsPage() {
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={22} />
               <input 
                 type="text" 
-                placeholder="Locate incident dossiers or specialists..." 
+                placeholder="Locate incident records or specialists..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="luna-input !pl-16 !py-5"
@@ -165,7 +165,7 @@ export default function TechnicianAssignmentsPage() {
         </div>
       </div>
 
-      {/* Dispatch Deployment Matrix */}
+      {/* Dispatch Deployment System */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
         <AnimatePresence mode="popLayout">
           {filteredTickets.map((t, idx) => (
@@ -197,7 +197,7 @@ export default function TechnicianAssignmentsPage() {
                       <Clock size={14} className="text-luna-aqua" /> Logged: {new Date(t.createdAt).toLocaleDateString()}
                    </div>
                    <div className="flex items-center gap-2">
-                      <MapPin size={14} className="text-luna-aqua" /> Sector: {t.location || 'Central Nexus'}
+                      <MapPin size={14} className="text-luna-aqua" /> Location: {t.location || 'Central Nexus'}
                    </div>
                 </div>
 
@@ -263,8 +263,8 @@ export default function TechnicianAssignmentsPage() {
              <ClipboardList size={64} />
           </div>
           <div>
-             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Dispatch Registry Silent</h3>
-             <p className="text-base font-medium text-text-muted mt-4">No active incident dossiers currently require specialist deployment synchronization.</p>
+             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Dispatch Directory Silent</h3>
+             <p className="text-base font-medium text-text-muted mt-4">No active incident records currently require specialist deployment synchronization.</p>
           </div>
           <button onClick={() => setSearchTerm('')} className="luna-button-outline !px-12 !py-4">Reset Dispatch Scan</button>
         </div>

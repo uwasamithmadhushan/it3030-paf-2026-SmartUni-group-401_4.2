@@ -50,7 +50,7 @@ export default function ResourceDetailsPage() {
         const res = await getResourceById(id);
         setResource(res.data);
       } catch (err) {
-        setError('Security violation: Unable to access resource dossier.');
+        setError('Security violation: Unable to access resource record.');
       } finally {
         setLoading(false);
       }
@@ -59,16 +59,16 @@ export default function ResourceDetailsPage() {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm('Decommission this facility resource?')) return;
+    if (!window.confirm('Delete this facility resource?')) return;
     try {
       await deleteResource(id);
       navigate('/resources');
     } catch (err) {
-      alert('Security override: Decommissioning protocol failed.');
+      alert('Security override: Deleting procedure failed.');
     }
   };
 
-  if (loading) return <LoadingSpinner fullScreen message="Decoding Resource Matrix..." />;
+  if (loading) return <LoadingSpinner fullScreen message="Decoding Resource System..." />;
   if (error || !resource) return (
     <div className="flex flex-col items-center justify-center py-40">
        <div className="p-10 luna-card border-red-500/20 text-center">
@@ -157,7 +157,7 @@ export default function ResourceDetailsPage() {
                      <p className="text-lg font-black text-white">{resource.floor}</p>
                   </div>
                   <div className="space-y-2">
-                     <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Room Matrix</p>
+                     <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Room System</p>
                      <p className="text-lg font-black text-white">{resource.roomNumber}</p>
                   </div>
                   <div className="space-y-2">
@@ -184,7 +184,7 @@ export default function ResourceDetailsPage() {
                      <Info size={14} className="text-luna-aqua" /> Infrastructure Description
                   </h3>
                   <p className="text-xl font-medium text-text-muted leading-relaxed italic opacity-90 border-l-4 border-luna-aqua/20 pl-8 py-2">
-                     {resource.description || 'No detailed architectural dossier available for this resource.'}
+                     {resource.description || 'No detailed architectural record available for this resource.'}
                   </p>
                </div>
 
@@ -196,24 +196,24 @@ export default function ResourceDetailsPage() {
                   </div>
                   <div className="p-8 rounded-[2.5rem] bg-luna-midnight/60 border border-luna-aqua/5 hover:border-luna-aqua/20 transition-all group">
                      <MapPin size={32} className="text-luna-aqua mb-6 group-hover:scale-110 transition-transform" />
-                     <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-2">Building Sector</h4>
+                     <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-2">Building Location</h4>
                      <p className="text-4xl font-black text-white truncate">{resource.building}</p>
                   </div>
                </div>
 
                <div className="space-y-8">
                   <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] flex items-center gap-4">
-                     <Clock size={14} className="text-luna-aqua" /> Availability Protocol
+                     <Clock size={14} className="text-luna-aqua" /> Availability Procedure
                   </h3>
                   <div className="p-10 rounded-[2.5rem] bg-luna-aqua/5 border border-luna-aqua/10 flex flex-col md:flex-row items-center justify-around gap-8 text-center relative overflow-hidden group">
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-luna-aqua/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                      <div className="space-y-4 relative z-10">
-                        <p className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.5em]">Sector Opening</p>
+                        <p className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.5em]">Location Opening</p>
                         <p className="text-5xl font-black text-white">{resource.availableFrom}</p>
                      </div>
                      <div className="h-16 w-px bg-luna-aqua/10 hidden md:block" />
                      <div className="space-y-4 relative z-10">
-                        <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.5em]">Sector Closing</p>
+                        <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.5em]">Location Closing</p>
                         <p className="text-5xl font-black text-white">{resource.availableTo}</p>
                      </div>
                   </div>
@@ -237,7 +237,7 @@ export default function ResourceDetailsPage() {
       <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
-            Infrastructure Dossier Verified
+            Infrastructure Record Verified
          </div>
          <div className="flex items-center gap-8">
             <span>Node: SMART-UNI-01</span>

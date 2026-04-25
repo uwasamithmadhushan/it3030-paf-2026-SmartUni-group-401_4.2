@@ -52,8 +52,8 @@ export default function UserListPage() {
       const { data } = await getAllUsers();
       setUsers(data);
     } catch (err) {
-      setError(err.response?.status === 403 ? 'Access Denied: Administrative Clearance Required' : 'Failed to synchronize member registry.');
-      addToast('Registry synchronization failed', 'error');
+      setError(err.response?.status === 403 ? 'Access Denied: Administrative Clearance Required' : 'Failed to update member directory.');
+      addToast('Directory synchronization failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function UserListPage() {
       setUsers((prev) => prev.map((u) => u.id === id ? { ...u, approved: true } : u));
       addToast('Identity verified and authorized', 'success');
     } catch (err) {
-      addToast('Authorization protocol failed', 'error');
+      addToast('Authorization procedure failed', 'error');
     }
   };
 
@@ -117,10 +117,10 @@ export default function UserListPage() {
            <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Personnel Management Matrix</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Personnel Management System</span>
               </div>
            </div>
-           <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Personnel <span className="text-luna-aqua">Registry</span></h1>
+           <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Personnel <span className="text-luna-aqua">Directory</span></h1>
            <p className="text-text-muted font-medium mt-4 text-xl">Executive oversight of authenticated campus specialists and personnel.</p>
         </motion.div>
         
@@ -133,7 +133,7 @@ export default function UserListPage() {
              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={22} />
              <input
                type="text"
-               placeholder="Locate identity dossiers..."
+               placeholder="Locate identity records..."
                value={search}
                onChange={(e) => setSearch(setSearch(e.target.value))}
                className="luna-input !pl-16 !py-5"
@@ -255,7 +255,7 @@ export default function UserListPage() {
                     className="flex-1 luna-button-outline !py-4 flex items-center justify-center gap-3 group/edit"
                   >
                     <Edit3 size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Update Dossier</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Update Record</span>
                   </button>
                   <button
                     onClick={() => setDeleteTarget(u)}
@@ -286,10 +286,10 @@ export default function UserListPage() {
              <Layers size={64} />
           </div>
           <div>
-             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Registry Sector Silent</h3>
-             <p className="text-base font-medium text-text-muted mt-4">No matching personnel dossiers identified within current scanning parameters.</p>
+             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Directory Location Silent</h3>
+             <p className="text-base font-medium text-text-muted mt-4">No matching personnel records identified within current scanning parameters.</p>
           </div>
-          <button onClick={() => { setSearch(''); setRoleFilter('ALL'); }} className="luna-button-outline !px-12 !py-4">Reset Registry Scan</button>
+          <button onClick={() => { setSearch(''); setRoleFilter('ALL'); }} className="luna-button-outline !px-12 !py-4">Reset Directory Scan</button>
         </div>
       )}
 
@@ -322,7 +322,7 @@ export default function UserListPage() {
                     onClick={() => setDeleteTarget(null)}
                     className="flex-1 luna-button-outline !py-6 text-xs uppercase tracking-[0.4em]"
                   >
-                    Abort Protocol
+                    Abort Procedure
                   </button>
                   <button
                     onClick={handleDelete}
@@ -345,7 +345,7 @@ export default function UserListPage() {
       <div className="flex items-center justify-between pt-16 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
-            Registry Command Operational
+            Directory Command Operational
          </div>
          <div className="flex items-center gap-8">
             <span>Identity Node: Campus-01</span>

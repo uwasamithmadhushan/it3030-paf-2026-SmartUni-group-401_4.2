@@ -53,7 +53,7 @@ export default function AdminBookings() {
       const res = await getAllBookings(status || '');
       setBookings(res.data);
     } catch {
-      setError('Failed to synchronize global reservation data.');
+      setError('Failed to update global reservation data.');
     } finally {
       setLoading(false);
     }
@@ -138,7 +138,7 @@ export default function AdminBookings() {
           <button
             onClick={() => load(statusFilter)}
             className="w-10 h-10 flex items-center justify-center bg-luna-aqua/10 text-luna-aqua rounded-xl hover:luna-glow transition-all"
-            title="Refresh Registry"
+            title="Refresh Directory"
           >
             <RefreshCw size={18} />
           </button>

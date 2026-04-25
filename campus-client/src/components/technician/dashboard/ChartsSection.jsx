@@ -26,7 +26,7 @@ const ChartsSection = ({ stats }) => {
             <div className="w-2.5 h-2.5 rounded-full bg-luna-aqua luna-glow" /> 
             Operational Velocity Monitor
           </h3>
-          <p className="text-text-muted text-sm max-w-md">Real-time telemetry tracking ticket resolution velocity against incoming incident intake.</p>
+          <p className="text-text-muted text-sm max-w-md">Real-time telemetry tracking ticket resolution time against incoming incident intake.</p>
         </div>
         
         <div className="flex items-center gap-10">

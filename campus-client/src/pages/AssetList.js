@@ -51,7 +51,7 @@ export default function AssetList() {
       const res = await getAllAssets(params);
       setAssets(res.data);
     } catch {
-      setError('Failed to synchronize facility portfolio.');
+      setError('Failed to update facility portfolio.');
     } finally {
       setLoading(false);
     }
@@ -76,19 +76,19 @@ export default function AssetList() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Decommission this facility resource?')) return;
+    if (!window.confirm('Delete this facility resource?')) return;
     setDeleting(id);
     try {
       await deleteAsset(id);
       setAssets((prev) => prev.filter((a) => a.id !== id));
     } catch {
-      alert('Decommissioning failed.');
+      alert('Deleting failed.');
     } finally {
       setDeleting(null);
     }
   };
 
-  if (loading && assets.length === 0) return <LoadingSpinner fullScreen message="Scanning Infrastructure Matrix..." />;
+  if (loading && assets.length === 0) return <LoadingSpinner fullScreen message="Scanning Infrastructure System..." />;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12">
@@ -102,7 +102,7 @@ export default function AssetList() {
            <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Asset Registry</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Asset Directory</span>
               </div>
            </div>
            <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Facility <span className="text-luna-aqua">Portfolio</span></h1>
@@ -121,7 +121,7 @@ export default function AssetList() {
         )}
       </div>
 
-      {/* Advanced Filter Matrix */}
+      {/* Advanced Filter System */}
       <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/5 !p-10">
         <div className="flex flex-col xl:flex-row gap-10 items-end">
           <div className="flex-1 min-w-[280px] group">
@@ -166,7 +166,7 @@ export default function AssetList() {
                 name="location"
                 value={filters.location}
                 onChange={handleFilterChange}
-                placeholder="Sector / Wing..."
+                placeholder="Location / Wing..."
                 className="luna-input !pl-16 !py-4"
               />
             </div>
@@ -234,7 +234,7 @@ export default function AssetList() {
                       <p className="text-lg font-black text-white flex items-center gap-3"><Users size={16} className="text-luna-aqua" /> {asset.capacity}</p>
                    </div>
                    <div className="p-5 rounded-3xl bg-luna-midnight/40 border border-luna-aqua/5 group/metric hover:border-luna-aqua/20 transition-all">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2 group-hover/metric:text-white transition-colors">Sector Hub</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2 group-hover/metric:text-white transition-colors">Location Hub</p>
                       <p className="text-lg font-black text-white truncate flex items-center gap-3"><MapPin size={16} className="text-luna-aqua" /> {asset.location}</p>
                    </div>
                 </div>
@@ -282,7 +282,7 @@ export default function AssetList() {
              <Building2 size={64} />
           </div>
           <div>
-             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Portfolio Registry Empty</h3>
+             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Portfolio Directory Empty</h3>
              <p className="text-base font-medium text-text-muted mt-4">Current synchronization parameters returned zero infrastructure assets.</p>
           </div>
           <button onClick={handleClearFilter} className="luna-button-outline !px-12 !py-4">Reset Archive Filter</button>
@@ -293,7 +293,7 @@ export default function AssetList() {
       <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
-            Portfolio Matrix Synchronized
+            Portfolio System Updated
          </div>
          <div className="flex items-center gap-8">
             <span>Scan Depth: Global</span>

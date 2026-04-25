@@ -51,7 +51,7 @@ export default function CreateTicketPage() {
         const { data } = await getAllResources({ size: 1000 });
         setAssets(data.content || data);
       } catch (err) {
-        addToast('Registry synchronization failed', 'error');
+        addToast('Directory synchronization failed', 'error');
       }
     };
     fetchAssets();
@@ -173,7 +173,7 @@ export default function CreateTicketPage() {
         </button>
         <div className="flex items-center gap-3">
           <ShieldCheck size={16} className="text-luna-aqua" />
-          <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Secure Terminal #401-Sync</span>
+          <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Support Portal</span>
         </div>
       </div>
 
@@ -193,7 +193,7 @@ export default function CreateTicketPage() {
                  <div className="relative z-10">
                    <div className="flex items-center gap-3 mb-6">
                       <Zap className="text-luna-aqua" size={20} />
-                      <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Operational Anomaly</span>
+                      <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.3em]">Issue Report</span>
                    </div>
                    <h1 className="text-5xl font-black text-white tracking-tighter">Report New <span className="text-luna-aqua">Incident</span></h1>
                    <p className="text-text-muted font-medium mt-4 text-lg max-w-xl">Submit a maintenance or facility issue for technician review and support.</p>
@@ -201,7 +201,7 @@ export default function CreateTicketPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-12 space-y-12">
-                 {/* Section: Core Intelligence */}
+                 {/* Section: Core Information */}
                  <div className="space-y-10">
                     <div className="flex items-center gap-4 text-white border-l-4 border-luna-aqua pl-6">
                        <FileText size={20} className="text-luna-aqua" />
@@ -267,7 +267,7 @@ export default function CreateTicketPage() {
                     </div>
                  </div>
 
-                 {/* Section: Logistical Context */}
+                 {/* Section: Location Context */}
                  <div className="space-y-10">
                     <div className="flex items-center gap-4 text-white border-l-4 border-luna-cyan pl-6">
                        <MapPin size={20} className="text-luna-cyan" />
@@ -372,7 +372,7 @@ export default function CreateTicketPage() {
                     </div>
                  </div>
 
-                 {/* Section: Intelligence Narrative */}
+                 {/* Section: Additional Details */}
                  <div className="space-y-10">
                     <div className="flex items-center gap-4 text-white border-l-4 border-white pl-6">
                        <Zap size={20} className="text-white" />
@@ -420,22 +420,22 @@ export default function CreateTicketPage() {
               <div className="w-20 h-20 bg-luna-aqua/5 rounded-[2.5rem] flex items-center justify-center text-luna-aqua mb-10 border border-luna-aqua/20 luna-glow">
                  <ShieldCheck size={36} />
               </div>
-              <h3 className="text-xl font-black text-white tracking-tight mb-4">Submission Protocol</h3>
+              <h3 className="text-xl font-black text-white tracking-tight mb-4">What happens next?</h3>
               <p className="text-sm font-medium text-text-muted mb-10 leading-relaxed border-l-2 border-luna-aqua/20 pl-8">
-                 Every report is encrypted and synchronized with our high-end technician dispatch matrix for optimal resolution velocity.
+                 Your report will be sent to our maintenance team for prompt resolution.
               </p>
               
               <div className="space-y-6">
-                 <ProtocolStep label="Data Encryption" status="Optimal" />
-                 <ProtocolStep label="Identity Sync" status="Verified" />
-                 <ProtocolStep label="Asset Validation" status="Live" />
+                 <ProtocolStep label="Information Secured" status="Optimal" />
+                 <ProtocolStep label="User Verified" status="Verified" />
+                 <ProtocolStep label="Location Checked" status="Live" />
               </div>
            </div>
 
            <div className="luna-card !bg-gradient-to-br from-luna-steel/10 to-transparent border-transparent text-center !p-12">
               <Globe size={48} className="text-luna-aqua mx-auto mb-8 animate-pulse opacity-50" />
-              <h4 className="text-lg font-black text-white uppercase tracking-widest mb-4">Global Network</h4>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-10">Real-time infrastructure monitoring active across all sectors.</p>
+              <h4 className="text-lg font-black text-white uppercase tracking-widest mb-4">Campus Network</h4>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-10">We monitor campus facilities 24/7.</p>
               <div className="w-full h-1 bg-luna-aqua/10 rounded-full overflow-hidden">
                  <motion.div 
                    animate={{ x: ['-100%', '100%'] }} 

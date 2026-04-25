@@ -39,7 +39,7 @@ export default function TechnicianReportsPage() {
       const myTickets = data.filter(t => t.assignedTechnicianId === user?.id);
       setTickets(myTickets);
     } catch (error) {
-      console.error('Failed to synchronize report intelligence');
+      console.error('Failed to update report intelligence');
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ export default function TechnicianReportsPage() {
              className="luna-button !px-8 flex items-center gap-3 shadow-lg shadow-luna-aqua/20"
            >
               <FileDown size={18} />
-              <span>Export Dossier</span>
+              <span>Export Record</span>
            </button>
            <button onClick={() => fetchData()} className="w-12 h-12 luna-glass rounded-2xl flex items-center justify-center text-luna-aqua hover:luna-glow transition-all">
               <RefreshCw size={20} />
@@ -182,7 +182,7 @@ export default function TechnicianReportsPage() {
            {/* Distribution Panel */}
            <div className="xl:col-span-4 luna-card">
               <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10 flex items-center gap-3">
-                <PieChart size={16} className="text-luna-aqua" /> Sector Distribution
+                <PieChart size={16} className="text-luna-aqua" /> Location Distribution
               </h3>
               <div className="space-y-8">
                  {stats.catDist.map((cat, i) => (
@@ -196,13 +196,13 @@ export default function TechnicianReportsPage() {
                  {stats.catDist.length === 0 && (
                    <div className="py-20 text-center opacity-20 italic">
                       <Layers size={40} className="mx-auto mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-widest">No Sector Data</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest">No Location Data</p>
                    </div>
                  )}
               </div>
               <div className="mt-12 p-6 luna-glass rounded-3xl border border-luna-aqua/10">
                  <p className="text-[10px] font-black text-luna-cyan uppercase tracking-widest mb-1">Archive Status</p>
-                 <p className="text-sm font-black text-white">Cloud Archive Synchronized</p>
+                 <p className="text-sm font-black text-white">Cloud Archive Updated</p>
               </div>
            </div>
         </div>
