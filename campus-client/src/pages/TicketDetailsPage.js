@@ -6,6 +6,8 @@ import {
   updateTicketStatus, 
   resolveTicket,
   rejectTicket,
+  closeTicket,
+  reopenTicket,
   getAllUsers, 
   addComment, 
   updateComment,
@@ -214,6 +216,28 @@ export default function TicketDetailsPage() {
       addToast('Transmission purged', 'success');
     } catch (error) {
       addToast('Purge failed', 'error');
+    }
+  };
+
+  const handleOwnerClose = async () => {
+    if (!window.confirm('Confirm the issue is fixed and close this ticket?')) return;
+    try {
+      await closeTicket(id);
+      fetchData();
+      addToast('Ticket closed — issue confirmed as resolved', 'success');
+    } catch (error) {
+      addToast('Failed to close ticket', 'error');
+    }
+  };
+
+  const handleOwnerReopen = async () => {
+    if (!window.confirm('Mark this ticket as not fixed and reopen it?')) return;
+    try {
+      await reopenTicket(id);
+      fetchData();
+      addToast('Ticket reopened — technician will be notified', 'success');
+    } catch (error) {
+      addToast('Failed to reopen ticket', 'error');
     }
   };
 
@@ -502,6 +526,28 @@ export default function TicketDetailsPage() {
                         Archive Record
                       </button>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Ticket Owner Confirmation — shown when ticket is RESOLVED */}
+              {user.role === 'USER' && ticket.createdById === user.id && ticket.status === 'RESOLVED' && (
+                <div className="pt-10 border-t border-luna-aqua/5">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-2">Was your issue resolved?</label>
+                  <p className="text-[9px] text-text-muted mb-6">The technician has marked this ticket as resolved. Please confirm.</p>
+                  <div className="grid grid-cols-1 gap-4">
+                    <button
+                      onClick={handleOwnerClose}
+                      className="w-full luna-button !bg-luna-aqua !text-luna-midnight !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/20"
+                    >
+                      <CheckCircle2 size={18} /> Yes, Issue Fixed
+                    </button>
+                    <button
+                      onClick={handleOwnerReopen}
+                      className="w-full luna-button-outline !py-4 flex items-center justify-center gap-3 !text-red-400 !border-red-500/20 hover:!bg-red-500/10 hover:!border-red-500/40"
+                    >
+                      <XCircle size={18} /> No, Still Not Fixed
+                    </button>
                   </div>
                 </div>
               )}

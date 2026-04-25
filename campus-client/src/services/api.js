@@ -71,6 +71,8 @@ export const updateTicketStatus = (id, data) => api.patch(`/tickets/${id}/status
 export const assignTechnician = (id, data) => api.patch(`/tickets/${id}/assign`, data);
 export const resolveTicket = (id, data) => api.patch(`/tickets/${id}/resolve`, data);
 export const rejectTicket = (id, data) => api.patch(`/tickets/${id}/reject`, data);
+export const closeTicket = (id) => api.patch(`/tickets/${id}/close`);
+export const reopenTicket = (id) => api.patch(`/tickets/${id}/reopen`);
 export const addComment = (id, text) => api.post(`/tickets/${id}/comments`, text, {
   headers: { 'Content-Type': 'text/plain' }
 });

@@ -48,8 +48,8 @@ export default function CreateTicketPage() {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const { data } = await getAllAssets();
-        setAssets(data);
+        const { data } = await getAllAssets({ status: 'ACTIVE' });
+        setAssets(data?.content ?? (Array.isArray(data) ? data : []));
       } catch (err) {
         addToast('Registry synchronization failed', 'error');
       }

@@ -398,6 +398,39 @@ public class IncidentTicketService {
         return mapToResponse(ticketRepository.save(ticket));
     }
 
+    public TicketResponse ownerCloseTicket(String id, String userId) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (!ticket.getCreatedBy().equals(userId)) {
+            throw new AccessDeniedException("Only the ticket owner can confirm resolution");
+        }
+        if (ticket.getStatus() != TicketStatus.RESOLVED) {
+            throw new RuntimeException("Ticket must be RESOLVED before it can be closed");
+        }
+
+        ticket.setStatus(TicketStatus.CLOSED);
+        ticket.setClosedAt(LocalDateTime.now());
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
+    public TicketResponse ownerReopenTicket(String id, String userId) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (!ticket.getCreatedBy().equals(userId)) {
+            throw new AccessDeniedException("Only the ticket owner can reopen a ticket");
+        }
+        if (ticket.getStatus() != TicketStatus.RESOLVED) {
+            throw new RuntimeException("Only RESOLVED tickets can be reopened");
+        }
+
+        ticket.setStatus(TicketStatus.OPEN);
+        ticket.setResolutionNotes(null);
+        ticket.setResolvedAt(null);
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
     private TicketResponse mapToResponse(IncidentTicket ticket) {
         TicketResponse response = new TicketResponse();
         response.setId(ticket.getId());

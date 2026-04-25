@@ -132,6 +132,22 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.rejectTicket(id, request, user.getId()));
     }
 
+    @PatchMapping("/{id}/close")
+    public ResponseEntity<TicketResponse> ownerCloseTicket(
+            @PathVariable String id,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.ownerCloseTicket(id, user.getId()));
+    }
+
+    @PatchMapping("/{id}/reopen")
+    public ResponseEntity<TicketResponse> ownerReopenTicket(
+            @PathVariable String id,
+            Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        return ResponseEntity.ok(ticketService.ownerReopenTicket(id, user.getId()));
+    }
+
     @PostMapping("/{id}/comments")
     public ResponseEntity<TicketResponse> addComment(
             @PathVariable String id,

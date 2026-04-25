@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllTickets, getMyTickets } from '../services/api';
+import { getAllTickets, getMyTickets, getAssignedTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,6 +30,8 @@ export default function TicketListPage() {
       let res;
       if (user.role === 'USER') {
         res = await getMyTickets(params);
+      } else if (user.role === 'TECHNICIAN') {
+        res = await getAssignedTickets(params);
       } else {
         res = await getAllTickets(params);
       }
