@@ -1,0 +1,12 @@
+import React from 'react';
+
+export default function PlaceholderPage({ title }) {
+  return (
+    <div className="max-w-[1600px] mx-auto p-12">
+      <h1 className="text-6xl font-black text-white tracking-tighter">{title}</h1>
+      <div className="mt-20 luna-card flex flex-col items-center justify-center py-40 opacity-20 italic">
+        <p>Modular Module Loading...</p>
+      </div>
+    </div>
+  );
+}

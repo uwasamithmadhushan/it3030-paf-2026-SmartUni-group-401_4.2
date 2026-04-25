@@ -20,7 +20,10 @@ import {
 export default function TicketListPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterParams, setFilterParams] = useState(null);
+  const [filterParams, setFilterParams] = useState(() => {
+    const saved = localStorage.getItem('technician_filters');
+    return saved ? JSON.parse(saved) : { search: '', status: 'ALL', priority: 'ALL', category: 'ALL', sort: 'NEWEST' };
+  });
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -47,9 +50,12 @@ export default function TicketListPage() {
     return () => clearInterval(interval);
   }, [filterParams, fetchTickets]);
 
-  const handleFilterChange = (newFilters) => {
-    setFilterParams(newFilters);
-  };
+  const handleFilterChange = useCallback((newFilters) => {
+    setFilterParams(prev => {
+      if (JSON.stringify(prev) === JSON.stringify(newFilters)) return prev;
+      return newFilters;
+    });
+  }, []);
 
   if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Registry..." />;
 
@@ -91,14 +97,16 @@ export default function TicketListPage() {
       />
 
       {/* Incident Visualization Grid */}
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-8 min-h-[400px] relative">
         <AnimatePresence mode="popLayout">
           {tickets.map((ticket, idx) => (
             <motion.div 
               key={ticket.id} 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.03 }}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+              transition={{ delay: idx * 0.03, duration: 0.3 }}
               onClick={() => navigate(`/tickets/${ticket.id}`)}
               className="luna-card group cursor-pointer relative overflow-hidden !p-0 hover:border-luna-aqua/30"
             >

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe, getMyBookings, getAllTickets } from '../services/api';
+import { getMe, getMyBookings, getMyTickets } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -29,7 +29,7 @@ export default function UserDashboardPage() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -38,14 +38,13 @@ export default function UserDashboardPage() {
       const [userRes, bookingsRes, ticketsRes] = await Promise.all([
         getMe(),
         getMyBookings(),
-        getAllTickets()
+        getMyTickets()  // Only fetch this user's own tickets
       ]);
       setUserData(userRes.data);
       setBookings(bookingsRes.data);
-      // Filter for current user's tickets
-      setTickets(ticketsRes.data.filter(t => t.createdById === userRes.data.id));
+      setTickets(ticketsRes.data);  // Backend already filters by user
     } catch (err) {
-      console.error('Failed to synchronize personal intelligence archive');
+      console.error('Failed to load dashboard data:', err);
     } finally {
       setLoading(false);
     }
@@ -137,7 +136,7 @@ export default function UserDashboardPage() {
             </div>
             
             <div className="divide-y divide-luna-aqua/5">
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="popLayout">
                 {tickets.length > 0 ? (
                   tickets.slice(0, 5).map((t, i) => (
                     <motion.div 
@@ -172,12 +171,16 @@ export default function UserDashboardPage() {
                     </motion.div>
                   ))
                 ) : (
-                  <div className="py-24 text-center opacity-20 flex flex-col items-center gap-6">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="py-24 text-center opacity-20 flex flex-col items-center gap-6"
+                  >
                     <div className="w-20 h-20 luna-glass rounded-[2rem] flex items-center justify-center text-text-muted">
                       <ShieldCheck size={40} />
                     </div>
                     <p className="text-[10px] font-black uppercase tracking-widest italic leading-relaxed">No priority incidents recorded.<br/>Personal environment is stable.</p>
-                  </div>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
@@ -241,10 +244,14 @@ export default function UserDashboardPage() {
                     </motion.div>
                   ))
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center opacity-20 py-20">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex-1 flex flex-col items-center justify-center text-center opacity-20 py-20"
+                  >
                     <Calendar size={48} className="mb-6" />
                     <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">No temporal access<br/>reservations recorded</p>
-                  </div>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
