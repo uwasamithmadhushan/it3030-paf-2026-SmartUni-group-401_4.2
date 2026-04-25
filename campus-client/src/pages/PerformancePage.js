@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Target, Zap, Clock, ShieldCheck, TrendingUp, Award, Cpu } from 'lucide-react';
+import { Activity, Target, Zap, Clock, TrendingUp, Award, Cpu } from 'lucide-react';
 import { getTechnicianDashboardStats } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 // Reuse StatCard and Chart logic
 import StatCard from '../components/technician/dashboard/StatCard';
 import { 
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, AreaChart, Area, XAxis, CartesianGrid, Tooltip,
   BarChart, Bar, Cell
 } from 'recharts';
 

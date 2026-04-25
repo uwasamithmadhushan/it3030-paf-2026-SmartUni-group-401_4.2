@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllTickets, getMyTickets } from '../services/api';
+import { getAllTickets, getMyTickets, getAssignedTickets } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,67 +12,47 @@ import {
   Layers,
   ArrowRight,
   Globe,
-  Clock,
   MapPin,
   Zap
 } from 'lucide-react';
 
-/**
- * PAGE: TicketListPage
- * This component displays the list of incident tickets.
- * It works for both users (seeing their own tickets) and admins/technicians (seeing all tickets).
- */
 export default function TicketListPage() {
-  const [tickets, setTickets] = useState([]); // State to store the list of tickets
-  const [loading, setLoading] = useState(true); // State to show/hide the loading spinner
-  
-  // State to manage filtering (Search, Status, Priority, etc.)
-  const [filterParams, setFilterParams] = useState(() => {
-    const saved = localStorage.getItem('technician_filters');
-    return saved ? JSON.parse(saved) : { search: '', status: 'ALL', priority: 'ALL', category: 'ALL', sort: 'NEWEST' };
-  });
-  
-  const { user } = useAuth(); // Get information about the logged-in user
-  const navigate = useNavigate(); // Helper for page navigation
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterParams, setFilterParams] = useState(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  /**
-   * DATA FETCHING FUNCTION
-   * Connects to the backend API to get the latest tickets.
-   */
   const fetchTickets = useCallback(async (params = filterParams, showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
       let res;
-      // If user is a regular user, only get their tickets. Otherwise, get all.
       if (user.role === 'USER') {
         res = await getMyTickets(params);
+      } else if (user.role === 'TECHNICIAN') {
+        res = await getAssignedTickets(params);
       } else {
         res = await getAllTickets(params);
       }
-      setTickets(res.data); // Update the list in our state
+      setTickets(res.data);
     } catch (err) {
-      console.error('Failed to update incident archive');
+      console.error('Failed to synchronize incident archive');
     } finally {
       if (showLoading) setLoading(false);
     }
   }, [user.role, filterParams]);
 
-  // Run data fetching when the page loads or filters change
   useEffect(() => {
     fetchTickets(filterParams, true);
-    // Refresh the data automatically every 60 seconds
     const interval = setInterval(() => fetchTickets(filterParams, false), 60000);
     return () => clearInterval(interval);
   }, [filterParams, fetchTickets]);
 
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilterParams(prev => {
-      if (JSON.stringify(prev) === JSON.stringify(newFilters)) return prev;
-      return newFilters;
-    });
-  }, []);
+  const handleFilterChange = (newFilters) => {
+    setFilterParams(newFilters);
+  };
 
-  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Directory..." />;
+  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Registry..." />;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12 pb-20">
@@ -89,7 +69,7 @@ export default function TicketListPage() {
                 <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Intelligence Feed</span>
               </div>
            </div>
-           <h1 className="text-6xl font-black text-white tracking-tighter">Support <span className="text-luna-aqua">System</span></h1>
+           <h1 className="text-6xl font-black text-white tracking-tighter">Raise a <span className="text-luna-aqua">Ticket</span></h1>
            <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity incident monitoring and operational resource tracking.</p>
         </motion.div>
         
@@ -112,16 +92,14 @@ export default function TicketListPage() {
       />
 
       {/* Incident Visualization Grid */}
-      <div className="grid grid-cols-1 gap-8 min-h-[400px] relative">
+      <div className="grid grid-cols-1 gap-8">
         <AnimatePresence mode="popLayout">
           {tickets.map((ticket, idx) => (
             <motion.div 
               key={ticket.id} 
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-              transition={{ delay: idx * 0.03, duration: 0.3 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03 }}
               onClick={() => navigate(`/tickets/${ticket.id}`)}
               className="luna-card group cursor-pointer relative overflow-hidden !p-0 hover:border-luna-aqua/30"
             >
@@ -141,7 +119,7 @@ export default function TicketListPage() {
                     <div className="flex flex-wrap items-center gap-8 mt-5 text-text-muted font-black text-[10px] uppercase tracking-[0.2em]">
                        <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Calendar size={14} className="text-luna-aqua" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
                        <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Layers size={14} className="text-luna-aqua" /> {ticket.category}</span>
-                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><MapPin size={14} className="text-luna-aqua" /> {ticket.location || 'Location Alpha'}</span>
+                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><MapPin size={14} className="text-luna-aqua" /> {ticket.location || 'Sector Alpha'}</span>
                     </div>
                   </div>
                 </div>
@@ -178,7 +156,7 @@ export default function TicketListPage() {
               <Plus size={64} />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-white/20 tracking-tighter italic uppercase">Directory Sync Failed</h3>
+              <h3 className="text-3xl font-black text-white/20 tracking-tighter italic uppercase">Registry Sync Failed</h3>
               <p className="text-base font-medium text-text-muted mt-4">No incident entries detected for current synchronization parameters.</p>
             </div>
           </div>
@@ -189,7 +167,7 @@ export default function TicketListPage() {
       <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
-            Central Hub Updated
+            Central Hub Synchronized
          </div>
          <div className="flex items-center gap-8">
             <span>Operational Integrity: 99.9%</span>

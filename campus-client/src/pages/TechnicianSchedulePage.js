@@ -10,14 +10,9 @@ import {
   ChevronRight, 
   Clock, 
   MapPin, 
-  Zap, 
-  CheckCircle2, 
   Calendar as CalendarIcon,
   Navigation,
-  Activity,
-  Layers,
-  Search,
-  MoreVertical
+  Activity
 } from 'lucide-react';
 
 export default function TechnicianSchedulePage() {

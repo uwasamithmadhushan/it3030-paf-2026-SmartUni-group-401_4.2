@@ -2,23 +2,19 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAllAssets, deleteAsset } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, 
   Search, 
   Plus, 
-  Filter, 
   MapPin, 
   Users, 
   Trash2, 
   Edit3, 
-  ChevronRight,
-  ShieldCheck,
-  Zap,
   Layers,
   Globe,
-  Activity,
   ArrowRight,
   ShieldAlert,
   Sparkles
@@ -36,29 +32,30 @@ const TYPE_LABELS = {
 export default function AssetList() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isAdmin = user?.role === 'ADMIN';
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(null);
 
-  const [filters, setFilters] = useState({ type: '', capacity: '', location: '' });
+  const [filters, setFilters] = useState({ type: '', minCapacity: '', building: '' });
 
   const fetchAssets = useCallback(async (params) => {
     setLoading(true);
     setError('');
     try {
       const res = await getAllAssets(params);
-      setAssets(res.data);
+      setAssets(res.data?.content ?? res.data);
     } catch {
-      setError('Failed to update facility portfolio.');
+      setError('Failed to synchronize facility portfolio.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAssets({});
+    fetchAssets({ status: 'ACTIVE' });
   }, [fetchAssets]);
 
   const handleFilterChange = (e) => {
@@ -66,29 +63,35 @@ export default function AssetList() {
   };
 
   const handleApplyFilter = () => {
-    fetchAssets(filters);
+    const params = { status: 'ACTIVE' };
+    if (filters.type) params.type = filters.type;
+    if (filters.minCapacity) params.minCapacity = filters.minCapacity;
+    if (filters.building) params.building = filters.building;
+    fetchAssets(params);
   };
 
   const handleClearFilter = () => {
-    const empty = { type: '', capacity: '', location: '' };
+    const empty = { type: '', minCapacity: '', building: '' };
     setFilters(empty);
-    fetchAssets({});
+    fetchAssets({ status: 'ACTIVE' });
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this facility resource?')) return;
+    if (!window.confirm('Decommission this facility resource?')) return;
     setDeleting(id);
     try {
       await deleteAsset(id);
       setAssets((prev) => prev.filter((a) => a.id !== id));
-    } catch {
-      alert('Deleting failed.');
+      showToast('Facility resource decommissioned.', 'success');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Decommissioning failed.';
+      showToast(msg, 'error');
     } finally {
       setDeleting(null);
     }
   };
 
-  if (loading && assets.length === 0) return <LoadingSpinner fullScreen message="Scanning Infrastructure System..." />;
+  if (loading && assets.length === 0) return <LoadingSpinner fullScreen message="Scanning Infrastructure Matrix..." />;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12">
@@ -102,7 +105,7 @@ export default function AssetList() {
            <div className="flex items-center gap-3 mb-4">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Asset Directory</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Asset Registry</span>
               </div>
            </div>
            <h1 className="text-6xl font-black text-white tracking-tighter leading-none">Facility <span className="text-luna-aqua">Portfolio</span></h1>
@@ -121,7 +124,7 @@ export default function AssetList() {
         )}
       </div>
 
-      {/* Advanced Filter System */}
+      {/* Advanced Filter Matrix */}
       <div className="luna-card !bg-luna-midnight/40 border-luna-aqua/5 !p-10">
         <div className="flex flex-col xl:flex-row gap-10 items-end">
           <div className="flex-1 min-w-[280px] group">
@@ -148,8 +151,8 @@ export default function AssetList() {
                <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
                <input
                  type="number"
-                 name="capacity"
-                 value={filters.capacity}
+                 name="minCapacity"
+                 value={filters.minCapacity}
                  onChange={handleFilterChange}
                  placeholder="Pers. Count"
                  className="luna-input !pl-16 !py-4"
@@ -163,10 +166,10 @@ export default function AssetList() {
               <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
               <input
                 type="text"
-                name="location"
-                value={filters.location}
+                name="building"
+                value={filters.building}
                 onChange={handleFilterChange}
-                placeholder="Location / Wing..."
+                placeholder="Building / Wing..."
                 className="luna-input !pl-16 !py-4"
               />
             </div>
@@ -213,10 +216,10 @@ export default function AssetList() {
                  <div className="absolute inset-0 bg-gradient-to-t from-luna-midnight to-transparent" />
                  <div className="absolute top-8 left-10 flex items-center gap-4">
                     <div className="w-16 h-16 rounded-[1.5rem] bg-luna-midnight/80 border border-luna-aqua/10 flex items-center justify-center text-4xl group-hover:luna-glow group-hover:rotate-6 transition-all duration-500 shadow-2xl shadow-luna-aqua/10">
-                       {asset.type === 'LECTURE_HALL' ? '🏛️' : asset.type === 'LAB' ? '🧪' : asset.type === 'MEETING_ROOM' ? '💼' : '🛠️'}
+                       {asset.resourceType === 'LECTURE_HALL' ? '🏛️' : asset.resourceType === 'LAB' ? '🧪' : asset.resourceType === 'MEETING_ROOM' ? '💼' : '🛠️'}
                     </div>
                     <div>
-                       <span className={`luna-badge !px-3 !py-1 ${asset.status === 'AVAILABLE' ? 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                       <span className={`luna-badge !px-3 !py-1 ${asset.status === 'ACTIVE' ? 'bg-luna-aqua/10 text-luna-aqua border-luna-aqua/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
                           {asset.status}
                        </span>
                     </div>
@@ -225,8 +228,8 @@ export default function AssetList() {
               </div>
 
               <div className="p-10 flex-1 flex flex-col">
-                <h3 className="text-3xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-2">{asset.name}</h3>
-                <p className="text-[10px] font-black text-luna-cyan uppercase tracking-[0.4em] mb-10">{TYPE_LABELS[asset.type] || asset.type}</p>
+                <h3 className="text-3xl font-black text-white group-hover:text-luna-aqua transition-colors tracking-tighter mb-2">{asset.resourceName}</h3>
+                <p className="text-[10px] font-black text-luna-cyan uppercase tracking-[0.4em] mb-10">{TYPE_LABELS[asset.resourceType] || asset.resourceType}</p>
 
                 <div className="grid grid-cols-2 gap-6 mb-12">
                    <div className="p-5 rounded-3xl bg-luna-midnight/40 border border-luna-aqua/5 group/metric hover:border-luna-aqua/20 transition-all">
@@ -234,8 +237,8 @@ export default function AssetList() {
                       <p className="text-lg font-black text-white flex items-center gap-3"><Users size={16} className="text-luna-aqua" /> {asset.capacity}</p>
                    </div>
                    <div className="p-5 rounded-3xl bg-luna-midnight/40 border border-luna-aqua/5 group/metric hover:border-luna-aqua/20 transition-all">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2 group-hover/metric:text-white transition-colors">Location Hub</p>
-                      <p className="text-lg font-black text-white truncate flex items-center gap-3"><MapPin size={16} className="text-luna-aqua" /> {asset.location}</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2 group-hover/metric:text-white transition-colors">Building</p>
+                      <p className="text-lg font-black text-white truncate flex items-center gap-3"><MapPin size={16} className="text-luna-aqua" /> {asset.building}</p>
                    </div>
                 </div>
 
@@ -256,14 +259,14 @@ export default function AssetList() {
                         <Trash2 size={20} />
                       </button>
                     </>
-                  ) : (
+                  ) : user?.role === 'USER' ? (
                     <button
-                      onClick={() => navigate('/bookings/new', { state: { assetId: asset.id, assetName: asset.name } })}
+                      onClick={() => navigate(`/bookings/new?resourceId=${asset.id}`)}
                       className="w-full luna-button !py-4 flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] group/res"
                     >
-                      Initialize Reservation <ArrowRight size={20} className="group-hover/res:translate-x-2 transition-transform" />
+                      Reserve <ArrowRight size={20} className="group-hover/res:translate-x-2 transition-transform" />
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
               
@@ -282,7 +285,7 @@ export default function AssetList() {
              <Building2 size={64} />
           </div>
           <div>
-             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Portfolio Directory Empty</h3>
+             <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Portfolio Registry Empty</h3>
              <p className="text-base font-medium text-text-muted mt-4">Current synchronization parameters returned zero infrastructure assets.</p>
           </div>
           <button onClick={handleClearFilter} className="luna-button-outline !px-12 !py-4">Reset Archive Filter</button>
@@ -293,7 +296,7 @@ export default function AssetList() {
       <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
-            Portfolio System Updated
+            Portfolio Matrix Synchronized
          </div>
          <div className="flex items-center gap-8">
             <span>Scan Depth: Global</span>

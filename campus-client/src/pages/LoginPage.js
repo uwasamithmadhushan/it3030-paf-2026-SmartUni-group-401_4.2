@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { loginUser, loginWithGoogle } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LogIn, 
   User, 
   Lock, 
   Eye, 
   EyeOff, 
   ArrowRight, 
   ShieldCheck,
-  Globe,
   Zap,
   Activity,
   Shield
@@ -20,7 +18,6 @@ import {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
 
   const [form, setForm] = useState({ username: '', password: '' });
@@ -122,7 +119,7 @@ export default function LoginPage() {
              <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Secure Gateway Active</span>
           </div>
           <h1 className="text-5xl font-black text-white tracking-tighter mb-4 leading-none">
-            Smart<span className="text-luna-aqua">Uni</span> <span className="text-white/20">Nexus</span>
+            Smart<span className="text-luna-aqua">Uni</span> 
           </h1>
           <p className="text-text-muted font-medium text-lg uppercase tracking-widest opacity-60">High-End Identity Access</p>
         </div>
@@ -145,7 +142,7 @@ export default function LoginPage() {
           <div className="space-y-8">
             <div className="group">
               <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-2 mb-4 block group-focus-within:text-luna-aqua transition-all">
-                Access Identifier
+                Username
               </label>
               <div className="relative">
                 <User className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
@@ -163,7 +160,7 @@ export default function LoginPage() {
 
             <div className="group">
               <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-2 mb-4 block group-focus-within:text-luna-aqua transition-all">
-                Security Token
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
@@ -192,7 +189,7 @@ export default function LoginPage() {
                 <div className="w-5 h-5 rounded-md border border-luna-aqua/20 bg-luna-midnight flex items-center justify-center group-hover:border-luna-aqua transition-all">
                    <div className="w-2.5 h-2.5 rounded-sm bg-luna-aqua opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest group-hover:text-white transition-all">Persistence Mode</span>
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest group-hover:text-white transition-all">Remember Me</span>
              </label>
              <button type="button" className="text-[10px] font-black text-luna-aqua uppercase tracking-widest hover:text-white transition-all">Token Recovery</button>
           </div>
@@ -207,7 +204,7 @@ export default function LoginPage() {
               animate={{ x: loading ? 20 : 0 }}
               className="relative z-10 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em]"
             >
-              {loading ? 'Verifying Identity...' : 'Initiate Session'}
+              {loading ? 'Logging in...' : 'Login'}
               {!loading && <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
@@ -226,7 +223,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-sm font-medium text-text-muted mt-14">
-          New to the Nexus?{' '}
+          New to the SmartUni?{' '}
           <Link to="/register" className="text-luna-aqua font-black hover:text-white transition-colors underline underline-offset-8 decoration-luna-aqua/30 tracking-tight">
             Register Operator Identity
           </Link>
