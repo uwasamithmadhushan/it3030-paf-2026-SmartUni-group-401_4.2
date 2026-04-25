@@ -23,7 +23,6 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
   };
 
   const navItems = [

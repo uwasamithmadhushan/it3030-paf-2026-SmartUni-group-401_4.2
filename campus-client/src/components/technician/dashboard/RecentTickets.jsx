@@ -10,7 +10,7 @@ const RecentTickets = ({ tickets }) => {
     <div className="luna-card !p-0 overflow-hidden">
       <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/2">
         <h3 className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-luna-aqua" /> Deployment Registry
+          <div className="w-2 h-2 rounded-full bg-luna-aqua" /> Deployment Directory
         </h3>
         <button 
           onClick={() => navigate('/assignments')}

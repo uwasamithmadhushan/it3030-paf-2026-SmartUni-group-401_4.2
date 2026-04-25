@@ -126,7 +126,7 @@ export default function AssetForm() {
             <div className="flex items-center gap-3 mb-3">
               <div className="px-3 py-1 rounded-full bg-luna-aqua/10 border border-luna-aqua/20 flex items-center gap-2">
                 <Globe size={12} className="text-luna-aqua animate-pulse" />
-                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Infrastructure Registry</span>
+                <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.4em]">Infrastructure Directory</span>
               </div>
             </div>
             <h1 className="text-5xl font-black text-white tracking-tighter leading-none">
@@ -196,10 +196,10 @@ export default function AssetForm() {
                   </div>
                </div>
                <div className="group">
-                  <label className="luna-label !ml-2">Physical Hub Sector</label>
+                  <label className="luna-label !ml-2">Physical Hub Location</label>
                   <div className="relative">
                     <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" size={20} />
-                    <input type="text" name="location" value={form.location} onChange={handleChange} placeholder="Sector / Wing..." className="luna-input !pl-16 !py-5" required />
+                    <input type="text" name="location" value={form.location} onChange={handleChange} placeholder="Location / Wing..." className="luna-input !pl-16 !py-5" required />
                   </div>
                </div>
                <div className="group">
@@ -217,7 +217,7 @@ export default function AssetForm() {
             <div className="pt-12 border-t border-luna-aqua/5">
                <div className="flex items-center justify-between mb-10">
                   <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-4">
-                    <Clock size={24} className="text-luna-aqua" /> Temporal Availability Matrix
+                    <Clock size={24} className="text-luna-aqua" /> Temporal Availability System
                   </h3>
                   <button 
                     type="button" 
@@ -266,7 +266,7 @@ export default function AssetForm() {
                 onClick={() => navigate('/facilities')} 
                 className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] hover:text-white transition-all"
               >
-                Abort Protocol
+                Abort Procedure
               </button>
               <button 
                 type="submit" 
@@ -293,11 +293,11 @@ export default function AssetForm() {
                Operational Integrity <ShieldCheck size={14} />
              </h3>
              <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 opacity-80">
-               Infrastructure nodes are synchronized across the global matrix. Classification accuracy is paramount for strategic resource allocation.
+               Infrastructure nodes are synchronized across the global system. Classification accuracy is paramount for strategic resource allocation.
              </p>
              <div className="space-y-6">
-                <NodeStatus icon={<Globe size={16} />} label="Global Registry Sync" />
-                <NodeStatus icon={<Activity size={16} />} label="Instant Matrix Push" />
+                <NodeStatus icon={<Globe size={16} />} label="Global Directory Sync" />
+                <NodeStatus icon={<Activity size={16} />} label="Instant System Push" />
                 <NodeStatus icon={<ShieldCheck size={16} />} label="RBAC Policy Enforced" />
              </div>
           </div>

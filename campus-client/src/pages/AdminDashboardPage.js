@@ -47,7 +47,7 @@ export default function AdminDashboardPage() {
       setAssets(assetsRes.data);
       setUsers(usersRes.data);
     } catch (err) {
-      console.error('Failed to synchronize executive intelligence archive');
+      console.error('Failed to update executive intelligence archive');
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
   if (loading) return <LoadingSpinner fullScreen message="Accessing Executive Mission Control..." />;
 
   const stats = [
-    { title: "Infrastructure", value: assets.length, label: "Global Asset Registry", icon: Building2, trend: "+2.4%", color: "text-luna-aqua" },
+    { title: "Infrastructure", value: assets.length, label: "Global Asset Directory", icon: Building2, trend: "+2.4%", color: "text-luna-aqua" },
     { title: "Personnel", value: users.length, label: "Authenticated Specialists", icon: Users, trend: "+12.1%", color: "text-luna-cyan" },
     { title: "Active Incidents", value: tickets.filter(t => t.status === 'OPEN').length, label: "Immediate Priority", icon: Ticket, trend: "Stable", color: "text-red-400" },
     { title: "Resolution Rate", value: tickets.length > 0 ? Math.round((tickets.filter(t => t.status === 'RESOLVED').length / tickets.length) * 100) : 0 + "%", label: "System Efficiency", icon: ShieldCheck, trend: "94.2%", color: "text-luna-aqua" },
@@ -80,7 +80,7 @@ export default function AdminDashboardPage() {
         
         <div className="flex items-center gap-4">
            <button onClick={() => navigate('/admin/users')} className="luna-button-outline !px-8">
-             Personnel Registry
+             Personnel Directory
            </button>
            <button onClick={() => navigate('/tickets')} className="luna-button !px-8 flex items-center gap-3 shadow-lg shadow-luna-aqua/20">
              Incident Queue <ArrowUpRight size={18} />
@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
               {tickets.filter(t => t.status === 'OPEN').length === 0 && (
                 <div className="py-20 text-center opacity-20 italic">
                    <ShieldCheck size={48} className="mx-auto mb-4" />
-                   <p className="text-[10px] font-black uppercase tracking-widest">Incident Registry Clear</p>
+                   <p className="text-[10px] font-black uppercase tracking-widest">Incident Directory Clear</p>
                 </div>
               )}
             </div>
