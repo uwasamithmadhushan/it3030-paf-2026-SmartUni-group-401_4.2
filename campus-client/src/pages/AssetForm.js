@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAssetById, createAsset, updateAsset } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -46,6 +47,7 @@ const EMPTY_FORM = {
 export default function AssetForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { showToast } = useToast();
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -93,8 +95,13 @@ export default function AssetForm() {
     setSubmitting(true);
     try {
       const payload = { ...form, capacity: Number(form.capacity) };
-      if (isEdit) await updateAsset(id, payload);
-      else await createAsset(payload);
+      if (isEdit) {
+        await updateAsset(id, payload);
+        showToast('Facility updated successfully.', 'success');
+      } else {
+        await createAsset(payload);
+        showToast('Facility created successfully.', 'success');
+      }
       navigate('/facilities');
     } catch (err) {
       setApiError(err.response?.data?.message || 'Failed to save facility.');

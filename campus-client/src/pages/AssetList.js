@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAllAssets, deleteAsset } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -36,6 +37,7 @@ const TYPE_LABELS = {
 export default function AssetList() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isAdmin = user?.role === 'ADMIN';
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function AssetList() {
   }, []);
 
   useEffect(() => {
-    fetchAssets({});
+    fetchAssets({ status: 'ACTIVE' });
   }, [fetchAssets]);
 
   const handleFilterChange = (e) => {
@@ -66,7 +68,7 @@ export default function AssetList() {
   };
 
   const handleApplyFilter = () => {
-    const params = {};
+    const params = { status: 'ACTIVE' };
     if (filters.type) params.type = filters.type;
     if (filters.minCapacity) params.minCapacity = filters.minCapacity;
     if (filters.building) params.building = filters.building;
@@ -76,7 +78,7 @@ export default function AssetList() {
   const handleClearFilter = () => {
     const empty = { type: '', minCapacity: '', building: '' };
     setFilters(empty);
-    fetchAssets({});
+    fetchAssets({ status: 'ACTIVE' });
   };
 
   const handleDelete = async (id) => {
@@ -85,8 +87,10 @@ export default function AssetList() {
     try {
       await deleteAsset(id);
       setAssets((prev) => prev.filter((a) => a.id !== id));
-    } catch {
-      alert('Decommissioning failed.');
+      showToast('Facility resource decommissioned.', 'success');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Decommissioning failed.';
+      showToast(msg, 'error');
     } finally {
       setDeleting(null);
     }

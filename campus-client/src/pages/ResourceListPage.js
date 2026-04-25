@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAllResources, deleteResource } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -44,6 +45,7 @@ const STATUS_STYLES = {
 export default function ResourceListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isAdmin = user?.role === 'ADMIN';
   
   const [resources, setResources] = useState([]);
@@ -64,7 +66,7 @@ export default function ResourceListPage() {
     setError('');
     try {
       const res = await getAllResources({ ...filters, page: 0, size: 100 });
-      setResources(res.data.content);
+      setResources(res.data?.content ?? res.data);
     } catch (err) {
       setError('System failure: Unable to synchronize resource matrix.');
       console.error(err);
@@ -88,8 +90,10 @@ export default function ResourceListPage() {
     try {
       await deleteResource(id);
       setResources(prev => prev.filter(r => r.id !== id));
+      showToast('Resource decommissioned successfully.', 'success');
     } catch (err) {
-      alert('Security override: Decommissioning protocol failed.');
+      const msg = err.response?.data?.message || 'Decommissioning failed.';
+      showToast(msg, 'error');
     } finally {
       setDeleting(null);
     }

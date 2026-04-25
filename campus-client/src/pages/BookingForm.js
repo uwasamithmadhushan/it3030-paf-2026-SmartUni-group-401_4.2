@@ -71,6 +71,7 @@ export default function BookingForm() {
     expectedAttendees: 1,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -142,7 +143,8 @@ export default function BookingForm() {
         purpose: form.purpose,
         expectedAttendees: form.expectedAttendees,
       });
-      navigate('/my-bookings');
+      setSubmitted(true);
+      setTimeout(() => navigate('/bookings'), 2500);
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data || 'Resource synchronization conflict.';
       setError(typeof msg === 'string' ? msg : 'Matrix availability collision detected.');
@@ -152,6 +154,31 @@ export default function BookingForm() {
   };
 
   if (loadingResource) return <LoadingSpinner fullScreen message="Accessing Availability Archive..." />;
+
+  if (submitted) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center gap-10">
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        className="w-32 h-32 rounded-full bg-luna-aqua/10 border border-luna-aqua/30 flex items-center justify-center luna-glow shadow-2xl shadow-luna-aqua/20"
+      >
+        <CheckCircle2 size={56} className="text-luna-aqua" />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <h2 className="text-4xl font-black text-white tracking-tighter mb-3">Booking <span className="text-luna-aqua">Confirmed!</span></h2>
+        <p className="text-text-muted font-medium text-lg">Your reservation has been successfully submitted.</p>
+        {resource && (
+          <p className="text-luna-aqua font-black text-sm mt-4 uppercase tracking-widest">{resource.resourceName}</p>
+        )}
+        <p className="text-text-muted text-xs mt-6 opacity-60">Redirecting to your bookings...</p>
+      </motion.div>
+    </div>
+  );
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-12 pb-20">
