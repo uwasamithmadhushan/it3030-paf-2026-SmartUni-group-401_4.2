@@ -98,7 +98,7 @@ export default function PerformancePage() {
 
         <div className="xl:col-span-1 luna-card flex flex-col">
            <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-12 flex items-center gap-3">
-             <Cpu size={16} className="text-luna-cyan" /> Sector Impact
+             <Cpu size={16} className="text-luna-cyan" /> Location Impact
            </h3>
            <div className="flex-1 h-[300px] min-h-[300px] min-w-0 relative">
               <ResponsiveContainer width="100%" height="100%">

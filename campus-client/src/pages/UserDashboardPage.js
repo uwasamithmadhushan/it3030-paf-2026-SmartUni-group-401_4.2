@@ -198,7 +198,7 @@ export default function UserDashboardPage() {
                 <h2 className="text-4xl font-black text-white tracking-tighter mb-6">Campus <span className="text-luna-aqua">Asset Sync</span></h2>
                 <p className="text-text-muted text-lg font-medium leading-relaxed mb-10 border-l-2 border-luna-aqua/20 pl-8">
                    Explore and reserve state-of-the-art campus facilities. 
-                   From high-performance labs to collaborative studios, synchronize your access with the central registry.
+                   From high-performance labs to collaborative studios, update your access with the central directory.
                 </p>
                 <button onClick={() => navigate('/facilities')} className="luna-button !px-10 shadow-lg shadow-luna-aqua/20">Explore Infrastructure</button>
              </div>
@@ -212,7 +212,7 @@ export default function UserDashboardPage() {
               <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
                 <Layers size={24} className="text-luna-aqua" /> Reservations
               </h3>
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Temporal access registry</p>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Temporal access directory</p>
             </div>
             
             <div className="flex-1 space-y-8">

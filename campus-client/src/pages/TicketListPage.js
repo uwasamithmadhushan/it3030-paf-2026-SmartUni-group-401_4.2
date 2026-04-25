@@ -38,7 +38,7 @@ export default function TicketListPage() {
       }
       setTickets(res.data);
     } catch (err) {
-      console.error('Failed to synchronize incident archive');
+      console.error('Failed to update incident archive');
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -57,7 +57,7 @@ export default function TicketListPage() {
     });
   }, []);
 
-  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Registry..." />;
+  if (loading && tickets.length === 0) return <LoadingSpinner fullScreen message="Synchronizing Global Directory..." />;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12 pb-20">
@@ -74,7 +74,7 @@ export default function TicketListPage() {
                 <span className="text-[10px] font-black text-luna-aqua uppercase tracking-[0.2em]">Global Intelligence Feed</span>
               </div>
            </div>
-           <h1 className="text-6xl font-black text-white tracking-tighter">Support <span className="text-luna-aqua">Matrix</span></h1>
+           <h1 className="text-6xl font-black text-white tracking-tighter">Support <span className="text-luna-aqua">System</span></h1>
            <p className="text-text-muted font-medium mt-4 text-xl">High-fidelity incident monitoring and operational resource tracking.</p>
         </motion.div>
         
@@ -126,7 +126,7 @@ export default function TicketListPage() {
                     <div className="flex flex-wrap items-center gap-8 mt-5 text-text-muted font-black text-[10px] uppercase tracking-[0.2em]">
                        <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Calendar size={14} className="text-luna-aqua" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
                        <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Layers size={14} className="text-luna-aqua" /> {ticket.category}</span>
-                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><MapPin size={14} className="text-luna-aqua" /> {ticket.location || 'Sector Alpha'}</span>
+                       <span className="flex items-center gap-2 group-hover:text-white transition-colors"><MapPin size={14} className="text-luna-aqua" /> {ticket.location || 'Location Alpha'}</span>
                     </div>
                   </div>
                 </div>
@@ -163,7 +163,7 @@ export default function TicketListPage() {
               <Plus size={64} />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-white/20 tracking-tighter italic uppercase">Registry Sync Failed</h3>
+              <h3 className="text-3xl font-black text-white/20 tracking-tighter italic uppercase">Directory Sync Failed</h3>
               <p className="text-base font-medium text-text-muted mt-4">No incident entries detected for current synchronization parameters.</p>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function TicketListPage() {
       <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">
          <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-luna-aqua animate-pulse" />
-            Central Hub Synchronized
+            Central Hub Updated
          </div>
          <div className="flex items-center gap-8">
             <span>Operational Integrity: 99.9%</span>

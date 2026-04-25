@@ -41,7 +41,7 @@ export default function TechnicianSchedulePage() {
       const myTickets = data.filter(t => t.assignedTechnicianId === user?.id);
       setTickets(myTickets);
     } catch (error) {
-      console.error('Failed to synchronize schedule intelligence');
+      console.error('Failed to update schedule intelligence');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function TechnicianSchedulePage() {
         <div className="xl:col-span-8 luna-card">
            <div className="flex items-center justify-between mb-10">
               <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
-                <CalendarIcon size={16} className="text-luna-aqua" /> Maintenance Registry
+                <CalendarIcon size={16} className="text-luna-aqua" /> Maintenance Directory
               </h3>
               <div className="flex items-center gap-6 luna-glass px-4 py-2 rounded-2xl">
                  <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center text-luna-aqua hover:luna-glow transition-all">
@@ -237,9 +237,9 @@ export default function TechnicianSchedulePage() {
            <div className="luna-card !bg-gradient-to-br from-luna-navy to-luna-midnight border-luna-aqua/20 relative overflow-hidden group">
               <div className="relative z-10">
                  <h3 className="text-xs font-black text-luna-aqua uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                   <Navigation size={16} /> Sector Planning
+                   <Navigation size={16} /> Location Planning
                  </h3>
-                 <p className="text-sm font-medium text-text-muted leading-relaxed mb-8">Optimize your maintenance route between campus sectors to maximize operational efficiency.</p>
+                 <p className="text-sm font-medium text-text-muted leading-relaxed mb-8">Optimize your maintenance route between campus locations to maximize operational efficiency.</p>
                  <button className="w-full luna-button group-hover:luna-glow">Execute Route Analysis</button>
               </div>
               <div className="absolute -right-12 -bottom-12 text-luna-aqua/10 group-hover:text-luna-aqua/20 transition-colors">

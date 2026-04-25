@@ -80,7 +80,7 @@ const QueueCard = ({ ticket, onClaim, onView, index }) => (
           {ticket.status === 'OPEN' && !ticket.assignedTo && (
             <span className="luna-badge !bg-amber-500/10 !text-amber-400 !border-amber-500/20 animate-pulse">UNASSIGNED</span>
           )}
-          <span className="text-[8px] font-black text-text-muted uppercase tracking-[0.4em]">{ticket.category} Sector</span>
+          <span className="text-[8px] font-black text-text-muted uppercase tracking-[0.4em]">{ticket.category} Location</span>
        </div>
     </div>
 

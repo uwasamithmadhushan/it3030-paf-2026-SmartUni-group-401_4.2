@@ -29,7 +29,9 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.clear(); // Purge everything: token, notifications, etc.
+    sessionStorage.clear();
     setUser(null);
+    window.location.href = '/login';
   };
 
   return (
