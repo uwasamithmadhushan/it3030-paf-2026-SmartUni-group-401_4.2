@@ -105,7 +105,19 @@ export default function CreateTicketPage() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'resourceId') {
+      const selected = assets.find(a => a.id === value);
+      setFormData(prev => ({
+        ...prev,
+        resourceId: value,
+        location: selected
+          ? `${selected.resourceName} — ${selected.building}, ${selected.floor}, Room ${selected.roomNumber}`
+          : ''
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   if (loading) return <LoadingSpinner fullScreen message="Transmitting Incident Intelligence..." />;
@@ -229,34 +241,36 @@ export default function CreateTicketPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="group">
-                          <label className="luna-label">Sector Resource Mapping</label>
+                          <label className="luna-label">Sector Resource Mapping <span className="text-red-400">*</span></label>
                           <div className="relative">
                             <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
                             <select
+                              required
                               name="resourceId"
                               value={formData.resourceId}
                               onChange={handleChange}
                               className="luna-input !pl-16 appearance-none cursor-pointer"
                             >
-                              <option value="">Sector Agnostic</option>
+                              <option value="">-- Select a Resource --</option>
                               {assets.map(asset => (
-                                <option key={asset.id} value={asset.id}>{asset.name} - {asset.location}</option>
+                                <option key={asset.id} value={asset.id}>
+                                  {asset.resourceName} — {asset.building}, {asset.floor}, Room {asset.roomNumber}
+                                </option>
                               ))}
                             </select>
                           </div>
                        </div>
                        
                        <div className="group">
-                          <label className="luna-label">Precise Sector Mapping</label>
+                          <label className="luna-label">Resource Location <span className="text-[9px] text-text-muted font-normal">(auto-filled)</span></label>
                           <div className="relative">
-                            <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-cyan transition-colors" size={20} />
+                            <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted" size={20} />
                             <input
-                              required
+                              readOnly
                               name="location"
                               value={formData.location}
-                              onChange={handleChange}
-                              placeholder="Precise coordinates (e.g. Lab 404)..."
-                              className="luna-input !pl-16"
+                              placeholder="Select a resource to auto-fill location..."
+                              className="luna-input !pl-16 !bg-luna-midnight/40 cursor-not-allowed opacity-70"
                             />
                           </div>
                        </div>

@@ -12,7 +12,8 @@ import {
   addComment, 
   updateComment,
   deleteComment as apiDeleteComment,
-  deleteTicket, 
+  deleteTicket,
+  updateTicket,
   uploadAttachment 
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -70,6 +71,8 @@ export default function TicketDetailsPage() {
   const [commenting, setCommenting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     fetchData();
@@ -219,6 +222,32 @@ export default function TicketDetailsPage() {
     }
   };
 
+  const handleStartEdit = () => {
+    setEditFormData({
+      title: ticket.title,
+      description: ticket.description,
+      category: ticket.category,
+      priority: ticket.priority,
+      location: ticket.location || '',
+      preferredContactName: ticket.preferredContactName || '',
+      preferredContactEmail: ticket.preferredContactEmail || '',
+      preferredContactPhone: ticket.preferredContactPhone || '',
+      resourceId: ticket.resourceId || '',
+    });
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateTicket(id, editFormData);
+      setIsEditing(false);
+      fetchData();
+      addToast('Ticket updated successfully', 'success');
+    } catch (error) {
+      addToast('Failed to update ticket', 'error');
+    }
+  };
+
   const handleOwnerClose = async () => {
     if (!window.confirm('Confirm the issue is fixed and close this ticket?')) return;
     try {
@@ -291,12 +320,20 @@ export default function TicketDetailsPage() {
               {React.cloneElement(getPriorityStyles(ticket.priority).icon, { size: 16 })}
               <span className={`text-[10px] font-black uppercase tracking-widest ${getPriorityStyles(ticket.priority).text}`}>{ticket.priority} Priority Delta</span>
            </div>
-           {user.role === 'ADMIN' && (
+           {(user.role === 'ADMIN' || user.role === 'TECHNICIAN' || (user.role === 'USER' && ticket.createdById === user.id)) && (
              <button 
-               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Purge Record', message: 'Permanently remove this incident dossier from the central registry?' })}
-               className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20 flex-shrink-0"
+               onClick={() => setModalState({ isOpen: true, type: 'delete_ticket', title: 'Delete Ticket', message: 'Permanently delete this ticket? This action cannot be undone.' })}
+               className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20 flex-shrink-0 flex items-center justify-center"
              >
                <Trash2 size={20} />
+             </button>
+           )}
+           {user.role === 'USER' && ticket.createdById === user.id && ticket.status === 'OPEN' && (
+             <button
+               onClick={handleStartEdit}
+               className="w-12 h-12 rounded-2xl bg-luna-aqua/10 text-luna-aqua border border-luna-aqua/20 hover:bg-luna-aqua hover:text-luna-midnight transition-all shadow-lg hover:shadow-luna-aqua/20 flex-shrink-0 flex items-center justify-center"
+             >
+               <Edit2 size={20} />
              </button>
            )}
         </div>
@@ -473,36 +510,13 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
 
-              {/* Admin Dispatch Override */}
-              {user.role === 'ADMIN' && (
-                <div className="space-y-6 pt-10 border-t border-luna-aqua/5">
-                  <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block">Dispatch Specialist Override</label>
-                  <div className="relative group">
-                     <select 
-                       value={selectedTech}
-                       onChange={(e) => setSelectedTech(e.target.value)}
-                       className="luna-input !py-4 !pl-12 appearance-none cursor-pointer"
-                     >
-                       <option value="">Awaiting Specialist Selection...</option>
-                       {technicians.map(t => (
-                         <option key={t.id} value={t.id} className="bg-luna-midnight text-white">{t.username}</option>
-                       ))}
-                     </select>
-                     <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-luna-aqua transition-colors" />
-                  </div>
-                  <button 
-                    onClick={handleAssignAction}
-                    disabled={!selectedTech || selectedTech === ticket.assignedTechnicianId}
-                    className={`w-full luna-button !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/10 ${selectedTech === ticket.assignedTechnicianId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {selectedTech === ticket.assignedTechnicianId ? 'Assigned' : 'Confirm Dispatch'} 
-                    {selectedTech !== ticket.assignedTechnicianId && <ChevronRight size={16} />}
-                  </button>
+              {/* (Admin assign section removed — admin can only delete) */}
+              {
                 </div>
               )}
 
-              {/* Specialist Workflow Transition */}
-              {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id)) && (
+              {/* Specialist Workflow Transition — technician only */}
+              {user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id && (
                 <div className="pt-10 border-t border-luna-aqua/5">
                   <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-6">Workflow Synchronization</label>
                   <div className="grid grid-cols-1 gap-4">
@@ -526,6 +540,46 @@ export default function TicketDetailsPage() {
                         Archive Record
                       </button>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Ticket Owner Edit — shown when ticket is OPEN */}
+              {user.role === 'USER' && ticket.createdById === user.id && ticket.status === 'OPEN' && isEditing && (
+                <div className="pt-10 border-t border-luna-aqua/5">
+                  <label className="text-[9px] font-black text-luna-aqua uppercase tracking-[0.3em] block mb-6">Edit Ticket Details</label>
+                  <div className="space-y-4">
+                    <input
+                      value={editFormData.title || ''}
+                      onChange={e => setEditFormData(p => ({ ...p, title: e.target.value }))}
+                      placeholder="Title"
+                      className="luna-input !py-3 !px-4 text-sm w-full"
+                    />
+                    <textarea
+                      value={editFormData.description || ''}
+                      onChange={e => setEditFormData(p => ({ ...p, description: e.target.value }))}
+                      placeholder="Description"
+                      rows={4}
+                      className="luna-input !py-3 !px-4 text-sm w-full resize-none"
+                    />
+                    <select
+                      value={editFormData.priority || 'MEDIUM'}
+                      onChange={e => setEditFormData(p => ({ ...p, priority: e.target.value }))}
+                      className="luna-input !py-3 !px-4 text-sm w-full appearance-none"
+                    >
+                      <option value="LOW">Low Priority</option>
+                      <option value="MEDIUM">Medium Priority</option>
+                      <option value="HIGH">High Priority</option>
+                      <option value="URGENT">Urgent Priority</option>
+                    </select>
+                    <div className="flex gap-3 pt-2">
+                      <button onClick={handleSaveEdit} className="flex-1 luna-button !py-3 text-xs flex items-center justify-center gap-2">
+                        <CheckCircle2 size={16} /> Save Changes
+                      </button>
+                      <button onClick={() => setIsEditing(false)} className="flex-1 luna-button-outline !py-3 text-xs flex items-center justify-center gap-2 !text-text-muted !border-luna-aqua/10">
+                        <XCircle size={16} /> Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

@@ -94,7 +94,8 @@ public class IncidentTicketService {
         IncidentTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
         
-        if (user.getRole() != UserRole.ADMIN && !ticket.getCreatedBy().equals(user.getId())) {
+        boolean isAdminOrTechnician = user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.TECHNICIAN;
+        if (!isAdminOrTechnician && !ticket.getCreatedBy().equals(user.getId())) {
             throw new AccessDeniedException("You don't have permission to delete this ticket");
         }
         
