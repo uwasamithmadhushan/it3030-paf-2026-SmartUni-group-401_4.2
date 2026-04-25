@@ -51,5 +51,5 @@ build/
 # OS
 .DS_Store
 Thumbs.db
-
-uploads/
+uploads/*
+!uploads/.gitkeep
