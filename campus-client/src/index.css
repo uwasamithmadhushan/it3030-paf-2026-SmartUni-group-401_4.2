@@ -30,7 +30,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -106,9 +105,14 @@ body {
   }
 
   .luna-card {
-    @apply luna-glass-dark p-8 rounded-[2.5rem] transition-all duration-300 hover:border-luna-aqua/20;
+    @apply luna-glass-dark p-8 rounded-[2.5rem];
+    transition: border-color 0.3s ease;
     contain: layout style;
     transform: translateZ(0);
+  }
+
+  .luna-card:hover {
+    @apply border-luna-aqua/20;
   }
 
   .luna-sidebar {
