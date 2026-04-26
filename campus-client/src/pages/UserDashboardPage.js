@@ -84,7 +84,7 @@ export default function UserDashboardPage() {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-4"
         >
-           <button onClick={() => navigate('/facilities')} className="luna-button-outline !px-8">
+           <button onClick={() => navigate('/resources')} className="luna-button-outline !px-8">
              Browse Assets
            </button>
            <button onClick={() => navigate('/tickets/new')} className="luna-button !px-8 flex items-center gap-3 shadow-lg shadow-luna-aqua/20">
