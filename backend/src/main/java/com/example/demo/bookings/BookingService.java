@@ -6,6 +6,7 @@ import com.example.demo.models.ResourceStatus;
 import com.example.demo.models.User;
 import com.example.demo.repositories.ResourceRepository;
 import com.example.demo.repositories.UserRepository;
+import com.example.demo.services.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -146,11 +148,37 @@ public class BookingService {
         booking.setStatus(request.getStatus());
         booking.setRejectionReason(request.getReason());
 
+        BookingResponse response;
         // saveBooking re-checks availability; pass booking.getId() to exclude itself
         if (request.getStatus() == BookingStatus.APPROVED) {
-            return toResponse(saveBooking(booking, booking.getId()));
+            response = toResponse(saveBooking(booking, booking.getId()));
+        } else {
+            response = toResponse(bookingRepository.save(booking));
         }
-        return toResponse(bookingRepository.save(booking));
+
+        // Send email notification asynchronously
+        userRepository.findById(booking.getUserId()).ifPresent(user -> {
+            Resource resource = resourceRepository.findById(booking.getResourceId()).orElse(null);
+            String resourceName = resource != null ? resource.getResourceName() : "Resource";
+            String location = resource != null
+                ? resource.getBuilding() + ", Floor " + resource.getFloor() + ", Room " + resource.getRoomNumber()
+                : null;
+            if (request.getStatus() == BookingStatus.APPROVED) {
+                emailService.sendBookingApprovedEmail(
+                    user.getEmail(), user.getUsername(),
+                    resourceName, location,
+                    booking.getStartTime(), booking.getEndTime(),
+                    booking.getPurpose());
+            } else {
+                emailService.sendBookingRejectedEmail(
+                    user.getEmail(), user.getUsername(),
+                    resourceName,
+                    booking.getStartTime(), booking.getEndTime(),
+                    request.getReason());
+            }
+        });
+
+        return response;
     }
 
     // ── cancel (owner) ───────────────────────────────────────────────────────

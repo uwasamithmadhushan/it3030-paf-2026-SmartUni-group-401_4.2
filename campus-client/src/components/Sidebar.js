@@ -11,7 +11,9 @@ import {
   ShieldAlert,
   Bell,
   Activity,
-  User
+  User,
+  BookOpen,
+  ClipboardList
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
@@ -28,8 +30,11 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   if (user?.role === 'ADMIN') {
     navItems.push({ to: '/resources', label: 'Resource Catalogue', icon: <Building2 size={20} /> });
     navItems.push({ to: '/tickets', label: 'Incident Queue', icon: <Ticket size={20} /> });
+    navItems.push({ to: '/admin/bookings', label: 'Bookings', icon: <BookOpen size={20} /> });
+    navItems.push({ to: '/admin/assignments', label: 'Assignments', icon: <ClipboardList size={20} /> });
     navItems.push({ to: '/admin/users', label: 'User Control', icon: <Users size={20} /> });
     navItems.push({ to: '/notifications', label: 'Notifications', icon: <Bell size={20} /> });
+    navItems.push({ to: '/profile', label: 'My Profile', icon: <User size={20} /> });
   } else if (user?.role === 'TECHNICIAN') {
     navItems.push(
       { to: '/assignments', label: 'My Jobs', icon: <ShieldAlert size={20} /> },
@@ -43,6 +48,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     // USER role
     navItems.push({ to: '/resources', label: 'Resource Catalogue', icon: <Building2 size={20} /> });
     navItems.push({ to: '/tickets', label: 'My Requests', icon: <Ticket size={20} /> });
+    navItems.push({ to: '/profile', label: 'My Profile', icon: <User size={20} /> });
   }
 
   // Only show reservations for non-technicians

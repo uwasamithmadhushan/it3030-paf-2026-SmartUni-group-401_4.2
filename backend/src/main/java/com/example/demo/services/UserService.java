@@ -79,4 +79,21 @@ public class UserService {
         userRepository.save(target);
         return new UserProfileResponse(target.getId(), target.getUsername(), target.getEmail(), target.getRole(), true);
     }
+
+    public UserProfileResponse updateUserRole(String id, UserRole newRole, String requestingUsername) {
+        User requester = userRepository.findByUsername(requestingUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + requestingUsername));
+        if (requester.getId().equals(id)) {
+            throw new IllegalArgumentException("Admins cannot change their own role");
+        }
+        User target = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        target.setRole(newRole);
+        // When promoting to ADMIN, auto-approve
+        if (newRole == UserRole.ADMIN) {
+            target.setApproved(true);
+        }
+        userRepository.save(target);
+        return new UserProfileResponse(target.getId(), target.getUsername(), target.getEmail(), target.getRole(), target.getApproved());
+    }
 }

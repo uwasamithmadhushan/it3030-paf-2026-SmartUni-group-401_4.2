@@ -9,7 +9,6 @@ import {
   Clock, 
   Building2, 
   ArrowLeft, 
-  CheckCircle2, 
   AlertCircle, 
   Users,
   Zap,
@@ -162,17 +161,21 @@ export default function BookingForm() {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-        className="w-32 h-32 rounded-full bg-luna-aqua/10 border border-luna-aqua/30 flex items-center justify-center luna-glow shadow-2xl shadow-luna-aqua/20"
+        className="w-32 h-32 rounded-full bg-luna-cyan/10 border border-luna-cyan/30 flex items-center justify-center shadow-2xl shadow-luna-cyan/20"
       >
-        <CheckCircle2 size={56} className="text-luna-aqua" />
+        <Clock size={56} className="text-luna-cyan" />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-4xl font-black text-white tracking-tighter mb-3">Booking <span className="text-luna-aqua">Confirmed!</span></h2>
-        <p className="text-text-muted font-medium text-lg">Your reservation has been successfully submitted.</p>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-luna-cyan/10 border border-luna-cyan/20 mb-6">
+          <div className="w-1.5 h-1.5 rounded-full bg-luna-cyan animate-pulse" />
+          <span className="text-[10px] font-black text-luna-cyan uppercase tracking-widest">Pending Admin Approval</span>
+        </div>
+        <h2 className="text-4xl font-black text-white tracking-tighter mb-3">Request <span className="text-luna-cyan">Submitted!</span></h2>
+        <p className="text-text-muted font-medium text-lg">Your booking request is awaiting admin review and approval.</p>
         {resource && (
           <p className="text-luna-aqua font-black text-sm mt-4 uppercase tracking-widest">{resource.resourceName}</p>
         )}
