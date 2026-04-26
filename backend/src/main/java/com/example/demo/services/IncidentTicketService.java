@@ -338,8 +338,24 @@ public class IncidentTicketService {
         if (ticket.getStatus() == TicketStatus.OPEN) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
-        
-        return mapToResponse(ticketRepository.save(ticket));
+
+        IncidentTicket saved = ticketRepository.save(ticket);
+
+        // Notify the assigned technician by email
+        String reporterName = ticket.getCreatedBy() != null
+                ? userRepository.findById(ticket.getCreatedBy())
+                        .map(u -> u.getName() != null ? u.getName() : u.getUsername())
+                        .orElse("Unknown")
+                : "Unknown";
+        emailService.sendTicketAssignedEmail(
+                tech.getEmail(),
+                tech.getName() != null ? tech.getName() : tech.getUsername(),
+                ticket.getTicketCode(), ticket.getTitle(),
+                ticket.getLocation(),
+                ticket.getPriority() != null ? ticket.getPriority().name() : "NORMAL",
+                reporterName);
+
+        return mapToResponse(saved);
     }
 
     public TicketResponse updateStatus(String id, StatusUpdateRequest request, String technicianId) {

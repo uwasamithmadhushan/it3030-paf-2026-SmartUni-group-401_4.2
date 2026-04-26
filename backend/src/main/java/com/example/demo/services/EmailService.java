@@ -51,6 +51,16 @@ public class EmailService {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Async
+    public void sendTicketAssignedEmail(String toEmail, String technicianName,
+                                         String ticketCode, String title,
+                                         String location, String priority,
+                                         String reporterName) {
+        String subject = "📋 New Ticket Assigned – " + ticketCode;
+        String body = buildTicketAssignedHtml(technicianName, ticketCode, title, location, priority, reporterName);
+        send(toEmail, subject, body);
+    }
+
+    @Async
     public void sendTicketResolvedEmail(String toEmail, String username,
                                          String ticketCode, String title,
                                          String location, String resolutionNotes) {
@@ -222,6 +232,40 @@ public class EmailService {
     }
 
     // ─── shared helpers ───────────────────────────────────────────────────────
+
+    private String buildTicketAssignedHtml(String technicianName, String ticketCode,
+                                            String title, String location,
+                                            String priority, String reporterName) {
+        return "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='" +
+               "margin:0;padding:0;background:#0a0f1e;font-family:Arial,sans-serif;'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0' style='background:#0a0f1e;padding:40px 0;'>" +
+               "<tr><td align='center'>" +
+               "<table width='600' cellpadding='0' cellspacing='0' style='" +
+               "background:#0d1426;border-radius:16px;border:1px solid #00e5ff22;overflow:hidden;'>" +
+               "<tr><td style='background:linear-gradient(135deg,#00e5ff15,#0d1426);padding:40px 40px 30px;" +
+               "border-bottom:1px solid #00e5ff22;text-align:center;'>" +
+               "<div style='width:64px;height:64px;background:#00e5ff15;border:2px solid #00e5ff44;" +
+               "border-radius:50%;margin:0 auto 16px;font-size:28px;line-height:64px;text-align:center;'>📋</div>" +
+               "<h1 style='color:#00e5ff;font-size:24px;margin:0 0 8px;font-weight:700;'>Ticket Assigned to You</h1>" +
+               "<p style='color:#94a3b8;margin:0;font-size:14px;'>A new incident has been dispatched to you</p>" +
+               "</td></tr>" +
+               "<tr><td style='padding:32px 40px;'>" +
+               "<p style='color:#e2e8f0;font-size:16px;margin:0 0 24px;'>Hi <strong style='color:#00e5ff;'>" +
+               escHtml(technicianName) + "</strong>,</p>" +
+               "<p style='color:#94a3b8;font-size:14px;margin:0 0 24px;line-height:1.6;'>" +
+               "You have been assigned a new maintenance ticket. Please review the details below and begin working at your earliest convenience.</p>" +
+               "<div style='background:#0a0f1e;border:1px solid #00e5ff22;border-radius:12px;padding:24px;margin-bottom:24px;'>" +
+               detailRow("🎫", "Ticket", ticketCode) +
+               detailRow("📋", "Issue", title) +
+               (location != null && !location.isBlank() ? detailRow("📍", "Location", location) : "") +
+               detailRow("⚡", "Priority", priority) +
+               (reporterName != null && !reporterName.isBlank() ? detailRow("👤", "Reported By", reporterName) : "") +
+               "</div>" +
+               "<p style='color:#94a3b8;font-size:13px;margin:0;'>Log in to the Smart Campus portal to view full details and update the ticket status.</p>" +
+               "</td></tr>" +
+               footer() +
+               "</table></td></tr></table></body></html>";
+    }
 
     private String detailRow(String icon, String label, String value) {
         return "<div style='display:flex;align-items:flex-start;margin-bottom:12px;'>" +

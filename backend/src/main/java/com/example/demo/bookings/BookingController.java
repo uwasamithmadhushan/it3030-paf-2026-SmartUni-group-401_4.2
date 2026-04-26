@@ -69,6 +69,18 @@ public class BookingController {
     }
 
     /**
+     * PUT /api/bookings/{id}
+     * Booking owner can update their own PENDING booking.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<BookingResponse> updateBooking(
+            @PathVariable String id,
+            @Valid @RequestBody BookingRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(bookingService.updateBooking(id, request, userDetails.getUsername()));
+    }
+
+    /**
      * PUT /api/bookings/{id}/status
      * Admin only — approve or reject a PENDING booking.
      */
