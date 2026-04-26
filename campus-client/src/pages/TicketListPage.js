@@ -30,8 +30,10 @@ export default function TicketListPage() {
       if (user.role === 'USER') {
         res = await getMyTickets(params);
       } else if (user.role === 'TECHNICIAN') {
+        // Technicians only see tickets assigned to them
         res = await getAssignedTickets(params);
       } else {
+        // ADMIN sees all tickets
         res = await getAllTickets(params);
       }
       setTickets(res.data);
@@ -191,6 +193,7 @@ const getStatusStyles = (status) => {
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
+    case 'CRITICAL': return { text: 'text-purple-400' };
     case 'URGENT': return { text: 'text-red-400' };
     case 'HIGH': return { text: 'text-luna-aqua' };
     case 'MEDIUM': return { text: 'text-luna-cyan' };

@@ -34,14 +34,14 @@ export default function AdminDashboardPage() {
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const [ticketsRes, assetsRes, usersRes] = await Promise.all([
+      const [ticketsRes, assetsRes, usersRes] = await Promise.allSettled([
         getAllTickets(),
         getAllAssets({ page: 0, size: 1000 }),
         getAllUsers()
       ]);
-      setTickets(ticketsRes.data);
-      setAssets(assetsRes.data?.content ?? assetsRes.data ?? []);
-      setUsers(usersRes.data);
+      if (ticketsRes.status === 'fulfilled') setTickets(ticketsRes.value.data);
+      if (assetsRes.status === 'fulfilled') setAssets(assetsRes.value.data?.content ?? assetsRes.value.data ?? []);
+      if (usersRes.status === 'fulfilled') setUsers(usersRes.value.data);
     } catch (err) {
       console.error('Failed to update executive intelligence archive');
     } finally {

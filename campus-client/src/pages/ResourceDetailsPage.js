@@ -37,6 +37,8 @@ export default function ResourceDetailsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
+  const isTechnician = user?.role === 'TECHNICIAN';
+  const isUser = user?.role === 'USER';
 
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -218,6 +220,7 @@ export default function ResourceDetailsPage() {
                </div>
 
                <div className="pt-10">
+                  {isUser && (
                   <button 
                      onClick={() => navigate('/bookings/new', { state: { resourceId: id, resourceName: resource.resourceName } })}
                      className="w-full luna-button !py-6 text-sm font-black uppercase tracking-[0.4em] shadow-2xl shadow-luna-aqua/30 flex items-center justify-center gap-6 group"
@@ -225,6 +228,7 @@ export default function ResourceDetailsPage() {
                      <CalendarCheck size={24} className="group-hover:scale-110 transition-transform" />
                      Initialize Resource Reservation
                   </button>
+                  )}
                </div>
             </motion.div>
          </div>
