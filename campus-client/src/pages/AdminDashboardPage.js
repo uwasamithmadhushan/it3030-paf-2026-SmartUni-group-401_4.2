@@ -36,11 +36,11 @@ export default function AdminDashboardPage() {
     try {
       const [ticketsRes, assetsRes, usersRes] = await Promise.all([
         getAllTickets(),
-        getAllAssets(),
+        getAllAssets({ page: 0, size: 1000 }),
         getAllUsers()
       ]);
       setTickets(ticketsRes.data);
-      setAssets(assetsRes.data);
+      setAssets(assetsRes.data?.content ?? assetsRes.data ?? []);
       setUsers(usersRes.data);
     } catch (err) {
       console.error('Failed to update executive intelligence archive');

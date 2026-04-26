@@ -128,7 +128,7 @@ export default function UserListPage() {
                type="text"
                placeholder="Locate identity dossiers..."
                value={search}
-               onChange={(e) => setSearch(setSearch(e.target.value))}
+               onChange={(e) => setSearch(e.target.value)}
                className="luna-input !pl-16 !py-5"
              />
            </div>

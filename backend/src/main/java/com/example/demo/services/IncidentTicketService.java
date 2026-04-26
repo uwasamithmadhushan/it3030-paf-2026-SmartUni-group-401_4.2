@@ -32,6 +32,7 @@ public class IncidentTicketService {
     private final IncidentTicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final MongoTemplate mongoTemplate;
+    private final EmailService emailService;
     private final Path root = Paths.get("uploads");
 
     private String generateTicketCode() {
@@ -378,7 +379,18 @@ public class IncidentTicketService {
         TechnicianUpdate update = new TechnicianUpdate(technicianId, "Resolved: " + request.getResolutionNotes(), LocalDateTime.now());
         ticket.getUpdates().add(update);
 
-        return mapToResponse(ticketRepository.save(ticket));
+        IncidentTicket saved = ticketRepository.save(ticket);
+
+        // Send resolved email to ticket creator asynchronously
+        if (ticket.getCreatedBy() != null) {
+            userRepository.findById(ticket.getCreatedBy()).ifPresent(user ->
+                emailService.sendTicketResolvedEmail(
+                    user.getEmail(), user.getUsername(),
+                    ticket.getTicketCode(), ticket.getTitle(),
+                    ticket.getLocation(), request.getResolutionNotes()));
+        }
+
+        return mapToResponse(saved);
     }
 
     public TicketResponse rejectTicket(String id, RejectRequest request, String technicianId) {
@@ -461,8 +473,10 @@ public class IncidentTicketService {
         response.setResolvedAt(ticket.getResolvedAt());
         response.setClosedAt(ticket.getClosedAt());
 
-        userRepository.findById(ticket.getCreatedBy())
-                .ifPresent(u -> response.setCreatedByUsername(u.getUsername()));
+        if (ticket.getCreatedBy() != null) {
+            userRepository.findById(ticket.getCreatedBy())
+                    .ifPresent(u -> response.setCreatedByUsername(u.getUsername()));
+        }
 
         if (ticket.getAssignedTechnician() != null) {
             userRepository.findById(ticket.getAssignedTechnician())

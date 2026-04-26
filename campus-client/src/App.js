@@ -96,7 +96,6 @@ const AppRoutes = () => {
           <Route path="/schedule" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><TechnicianSchedulePage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN']}><NotificationsPage /></ProtectedRoute>} />
           <Route path="/performance" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><PerformancePage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><ProfilePage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'USER']}><PlaceholderPage title="System Configuration" /></ProtectedRoute>} />
           
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
