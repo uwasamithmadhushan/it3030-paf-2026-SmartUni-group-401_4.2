@@ -181,6 +181,31 @@ public class BookingService {
         return response;
     }
 
+    // ── update (owner, PENDING only) ─────────────────────────────────────────
+
+    public BookingResponse updateBooking(String id, BookingRequest request, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found: " + id));
+
+        if (!booking.getUserId().equals(user.getId())) {
+            throw new IllegalArgumentException("You can only update your own bookings");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new IllegalArgumentException("Only PENDING bookings can be updated");
+        }
+
+        booking.setStartTime(request.getStartTime());
+        booking.setEndTime(request.getEndTime());
+        booking.setPurpose(request.getPurpose());
+        booking.setExpectedAttendees(request.getExpectedAttendees());
+
+        return toResponse(saveBooking(booking, booking.getId()));
+    }
+
     // ── cancel (owner) ───────────────────────────────────────────────────────
 
     public BookingResponse cancelBooking(String id, String username) {

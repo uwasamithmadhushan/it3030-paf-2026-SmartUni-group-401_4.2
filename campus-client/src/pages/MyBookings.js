@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getMyBookings, cancelBooking } from '../services/api';
+import { getMyBookings, cancelBooking, updateBooking } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -15,7 +15,9 @@ import {
   ChevronRight,
   Zap,
   Users,
-  Globe
+  Globe,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 const STATUS_STYLES = {
@@ -40,6 +42,9 @@ export default function MyBookings() {
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null });
+  const [editModal, setEditModal] = useState({ isOpen: false, booking: null });
+  const [editForm, setEditForm] = useState({ startTime: '', endTime: '', purpose: '', expectedAttendees: 1 });
+  const [updating, setUpdating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,6 +74,43 @@ export default function MyBookings() {
     } finally {
       setCancelling(null);
       setConfirmModal({ isOpen: false, bookingId: null });
+    }
+  };
+
+  function toInputValue(iso) {
+    const d = new Date(iso);
+    d.setSeconds(0, 0);
+    return d.toISOString().slice(0, 16);
+  }
+
+  const openEditModal = (booking) => {
+    setEditForm({
+      startTime: toInputValue(booking.startTime),
+      endTime: toInputValue(booking.endTime),
+      purpose: booking.purpose,
+      expectedAttendees: booking.expectedAttendees,
+    });
+    setEditModal({ isOpen: true, booking });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const res = await updateBooking(editModal.booking.id, {
+        resourceId: editModal.booking.resourceId,
+        startTime: editForm.startTime,
+        endTime: editForm.endTime,
+        purpose: editForm.purpose,
+        expectedAttendees: Number(editForm.expectedAttendees),
+      });
+      setBookings((prev) => prev.map((b) => b.id === res.data.id ? res.data : b));
+      addToast('Reservation updated successfully', 'success');
+      setEditModal({ isOpen: false, booking: null });
+    } catch (err) {
+      addToast(err?.message || err?.response?.data?.message || 'Update failed', 'error');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -176,20 +218,20 @@ export default function MyBookings() {
               </div>
 
               <div className="p-10 bg-luna-midnight/40 xl:border-l xl:border-luna-aqua/10 flex flex-col sm:flex-row xl:flex-col justify-center gap-6 min-w-[280px]">
-                {(b.status === 'PENDING' || b.status === 'APPROVED') && (
+                {b.status === 'PENDING' && (
                   <button
-                    onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id })}
-                    disabled={cancelling === b.id}
-                    className="w-full px-8 py-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 shadow-lg hover:shadow-red-500/20"
+                    onClick={() => openEditModal(b)}
+                    className="w-full px-8 py-4 bg-luna-aqua/10 text-luna-aqua border border-luna-aqua/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-luna-aqua hover:text-luna-midnight transition-all flex items-center justify-center gap-3"
                   >
-                    {cancelling === b.id ? 'Abort Procedure...' : 'Revoke Request'}
+                    <Pencil size={16} /> Update
                   </button>
                 )}
-                <button 
-                  onClick={() => navigate(`/facilities/${b.assetId || b.facilityId}`)}
-                  className="w-full px-8 py-4 bg-luna-aqua/5 text-luna-aqua border border-luna-aqua/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-luna-aqua hover:text-luna-midnight transition-all flex items-center justify-center gap-3"
+                <button
+                  onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id })}
+                  disabled={cancelling === b.id || b.status === 'CANCELLED'}
+                  className="w-full px-8 py-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 shadow-lg hover:shadow-red-500/20 flex items-center justify-center gap-3"
                 >
-                  Resource Intel <ChevronRight size={16} />
+                  <Trash2 size={16} /> {cancelling === b.id ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
 
@@ -224,11 +266,93 @@ export default function MyBookings() {
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal({ isOpen: false, bookingId: null })}
         onConfirm={() => handleCancel(confirmModal.bookingId)}
-        title="Revoke Temporal Reservation"
-        message="Are you sure you want to release this campus resource back into the global pool? This action will immediately update the availability archive and notify synchronized nodes."
-        confirmText="Confirm Revocation"
+        title="Delete Reservation"
+        message="Are you sure you want to delete this reservation? This will cancel it and release the resource back to the pool."
+        confirmText="Confirm Delete"
         type="danger"
       />
+
+      {/* Edit / Update Modal */}
+      <AnimatePresence>
+        {editModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setEditModal({ isOpen: false, booking: null })}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="luna-card w-full max-w-lg !p-10 space-y-8"
+            >
+              <h2 className="text-3xl font-black text-white tracking-tighter">Update <span className="text-luna-aqua">Reservation</span></h2>
+              <form onSubmit={handleUpdate} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Start Time</label>
+                  <input
+                    type="datetime-local"
+                    value={editForm.startTime}
+                    onChange={(e) => setEditForm((f) => ({ ...f, startTime: e.target.value }))}
+                    required
+                    className="w-full bg-luna-midnight border border-luna-aqua/20 rounded-2xl px-5 py-3 text-white text-sm focus:outline-none focus:border-luna-aqua"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">End Time</label>
+                  <input
+                    type="datetime-local"
+                    value={editForm.endTime}
+                    onChange={(e) => setEditForm((f) => ({ ...f, endTime: e.target.value }))}
+                    required
+                    className="w-full bg-luna-midnight border border-luna-aqua/20 rounded-2xl px-5 py-3 text-white text-sm focus:outline-none focus:border-luna-aqua"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Purpose</label>
+                  <textarea
+                    value={editForm.purpose}
+                    onChange={(e) => setEditForm((f) => ({ ...f, purpose: e.target.value }))}
+                    required
+                    rows={3}
+                    className="w-full bg-luna-midnight border border-luna-aqua/20 rounded-2xl px-5 py-3 text-white text-sm focus:outline-none focus:border-luna-aqua resize-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Expected Attendees</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editForm.expectedAttendees}
+                    onChange={(e) => setEditForm((f) => ({ ...f, expectedAttendees: e.target.value }))}
+                    required
+                    className="w-full bg-luna-midnight border border-luna-aqua/20 rounded-2xl px-5 py-3 text-white text-sm focus:outline-none focus:border-luna-aqua"
+                  />
+                </div>
+                <div className="flex gap-4 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditModal({ isOpen: false, booking: null })}
+                    className="flex-1 px-6 py-3 bg-luna-navy border border-luna-aqua/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-white transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updating}
+                    className="flex-1 luna-button !py-3 disabled:opacity-50"
+                  >
+                    {updating ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer Status Feed */}
       <div className="flex items-center justify-between pt-12 border-t border-luna-aqua/10 text-[9px] font-black text-text-muted uppercase tracking-[0.5em]">

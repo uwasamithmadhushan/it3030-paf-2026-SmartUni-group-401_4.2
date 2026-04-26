@@ -13,7 +13,8 @@ import {
   deleteComment as apiDeleteComment,
   deleteTicket,
   updateTicket,
-  uploadAttachment 
+  uploadAttachment,
+  getAllUsers
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -68,6 +69,9 @@ export default function TicketDetailsPage() {
   const [editingCommentText, setEditingCommentText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
+  const [technicians, setTechnicians] = useState([]);
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -79,10 +83,29 @@ export default function TicketDetailsPage() {
     try {
       const ticketRes = await getTicketById(id);
       setTicket(ticketRes.data);
+      if (user?.role === 'ADMIN') {
+        const usersRes = await getAllUsers();
+        setTechnicians((usersRes.data || []).filter(u => u.role === 'TECHNICIAN'));
+      }
     } catch (error) {
       addToast('Failed to load incident intelligence', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!selectedTechnicianId) return;
+    setAssigning(true);
+    try {
+      await assignTechnician(id, { technicianId: selectedTechnicianId });
+      addToast('Technician assigned successfully', 'success');
+      setSelectedTechnicianId('');
+      fetchData();
+    } catch (err) {
+      addToast('Assignment failed', 'error');
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -481,29 +504,52 @@ export default function TicketDetailsPage() {
                     <span className="text-[9px] text-luna-cyan font-black uppercase tracking-widest mt-1 block">Field Personnel</span>
                   </div>
                 </div>
+
+                {/* Admin assignment control */}
+                {user.role === 'ADMIN' && ticket.status !== 'CLOSED' && ticket.status !== 'REJECTED' && (
+                  <div className="mt-4 space-y-3">
+                    <select
+                      value={selectedTechnicianId}
+                      onChange={e => setSelectedTechnicianId(e.target.value)}
+                      className="w-full px-4 py-3 text-sm rounded-2xl bg-luna-midnight/60 border border-luna-aqua/20 text-white focus:border-luna-aqua/60 focus:outline-none appearance-none"
+                    >
+                      <option value="">— Select Technician —</option>
+                      {technicians.map(t => (
+                        <option key={t.id} value={t.id}>{t.name || t.username}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAssign}
+                      disabled={!selectedTechnicianId || assigning}
+                      className="w-full luna-button !py-3 text-xs flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <User size={14} /> {assigning ? 'Assigning...' : ticket.assignedTechnicianId ? 'Reassign Specialist' : 'Assign Specialist'}
+                    </button>
+                  </div>
+                )}
               </div>
 
 
 
-              {/* Specialist Workflow Transition — technician only */}
-              {user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id && (
+              {/* Specialist Workflow Transition — only assigned technician or admin can act */}
+              {(user.role === 'ADMIN' || (user.role === 'TECHNICIAN' && ticket.assignedTechnicianId === user.id)) && (
                 <div className="pt-10 border-t border-luna-aqua/5">
                   <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] block mb-6">Workflow Synchronization</label>
                   <div className="grid grid-cols-1 gap-4">
-                    {ticket.status === 'OPEN' && (
+                    {(ticket.status === 'OPEN' || ticket.status === 'IN_PROGRESS') && (
                       <>
-                        <button onClick={() => handleStatusAction('IN_PROGRESS')} className="w-full luna-button !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/10">
-                          <Activity size={18} /> Initiate Progress
+                        <button onClick={() => handleStatusAction('RESOLVED')} className="w-full luna-button !bg-luna-cyan !text-luna-midnight !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-cyan/20">
+                          <CheckCircle2 size={18} /> Mark as Fixed
                         </button>
+                        {ticket.status === 'OPEN' && (
+                          <button onClick={() => handleStatusAction('IN_PROGRESS')} className="w-full luna-button !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-aqua/10">
+                            <Activity size={18} /> Start Working
+                          </button>
+                        )}
                         <button onClick={() => handleStatusAction('REJECTED')} className="w-full luna-button-outline !py-4 flex items-center justify-center gap-3 !text-red-400 !border-red-500/20 hover:!bg-red-500/10 hover:!border-red-500/40">
                           <XCircle size={18} /> Reject Incident
                         </button>
                       </>
-                    )}
-                    {ticket.status === 'IN_PROGRESS' && (
-                      <button onClick={() => handleStatusAction('RESOLVED')} className="w-full luna-button !bg-luna-cyan !text-luna-midnight !py-4 flex items-center justify-center gap-3 shadow-lg shadow-luna-cyan/20">
-                        <CheckCircle2 size={18} /> Signal Resolution
-                      </button>
                     )}
                     {ticket.status === 'RESOLVED' && (
                       <button onClick={() => handleStatusAction('CLOSED')} className="w-full luna-button-outline !py-4 flex items-center justify-center gap-3">
@@ -541,6 +587,7 @@ export default function TicketDetailsPage() {
                       <option value="MEDIUM">Medium Priority</option>
                       <option value="HIGH">High Priority</option>
                       <option value="URGENT">Urgent Priority</option>
+                      <option value="CRITICAL">Critical Priority</option>
                     </select>
                     <div className="flex gap-3 pt-2">
                       <button onClick={handleSaveEdit} className="flex-1 luna-button !py-3 text-xs flex items-center justify-center gap-2">
@@ -655,6 +702,7 @@ const getStatusStyles = (status) => {
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
+    case 'CRITICAL': return { text: 'text-purple-400', icon: <ShieldAlert className="text-purple-400 luna-glow" /> };
     case 'URGENT': return { text: 'text-red-400', icon: <ShieldAlert className="text-red-500 luna-glow" /> };
     case 'HIGH': return { text: 'text-luna-aqua', icon: <Zap className="text-luna-aqua luna-glow" /> };
     case 'MEDIUM': return { text: 'text-luna-cyan', icon: <Activity className="text-luna-cyan" /> };

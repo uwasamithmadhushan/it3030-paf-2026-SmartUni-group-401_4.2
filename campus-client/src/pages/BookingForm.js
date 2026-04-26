@@ -146,8 +146,8 @@ export default function BookingForm() {
       setSubmitted(true);
       setTimeout(() => navigate('/bookings'), 2500);
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data || 'Resource synchronization conflict.';
-      setError(typeof msg === 'string' ? msg : 'System availability collision detected.');
+      const msg = err.message || err.response?.data?.message || err.response?.data || 'This time slot is already booked. Please choose a different time.';
+      setError(typeof msg === 'string' ? msg : 'This time slot is already booked. Please choose a different time.');
     } finally {
       setSubmitting(false);
     }

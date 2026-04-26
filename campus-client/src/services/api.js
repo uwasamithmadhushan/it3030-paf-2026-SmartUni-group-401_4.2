@@ -20,8 +20,8 @@ api.interceptors.response.use(
       error.config?.url?.includes('/bookings')
     ) {
       const message =
-        error.response.data?.error ||
         error.response.data?.message ||
+        error.response.data?.error ||
         'This time slot is already booked. Please choose a different time.';
       return Promise.reject(new Error(message));
     }
@@ -93,6 +93,7 @@ export const getMyBookings = () => api.get('/bookings/my');
 export const getAllBookings = (status) => api.get('/bookings', { params: { status } });
 export const createBooking = (data) => api.post('/bookings', data);
 export const getBookingById = (id) => api.get(`/bookings/${id}`);
+export const updateBooking = (id, data) => api.put(`/bookings/${id}`, data);
 export const updateBookingStatus = (id, data) => api.put(`/bookings/${id}/status`, data);
 export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
 

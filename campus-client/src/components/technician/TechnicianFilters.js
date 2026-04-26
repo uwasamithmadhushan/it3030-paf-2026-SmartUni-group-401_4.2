@@ -96,8 +96,8 @@ export default function TechnicianFilters({ onFilterChange, resultsCount = 0 }) 
               className="luna-input !pl-16 !py-4 appearance-none cursor-pointer"
             >
               <option value="ALL">All priorities</option>
-              <option value="URGENT">Urgent</option>
               <option value="CRITICAL">Critical</option>
+              <option value="URGENT">Urgent</option>
               <option value="HIGH">High</option>
               <option value="MEDIUM">Medium</option>
               <option value="LOW">Low</option>
