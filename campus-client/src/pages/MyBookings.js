@@ -139,10 +139,22 @@ export default function MyBookings() {
               className="luna-card group flex flex-col xl:flex-row xl:items-center justify-between gap-12 !p-0 overflow-hidden hover:border-luna-aqua/30 transition-all"
             >
               <div className="p-10 flex-1 min-w-0">
-                <div className="flex items-center gap-5 mb-6">
+                <div className="flex items-center flex-wrap gap-4 mb-6">
                   <span className={`luna-badge !px-4 !py-1 ${STATUS_STYLES[b.status] || 'bg-luna-navy/40 text-text-muted'}`}>
                     {b.status.replace('_', ' ')}
                   </span>
+                  {b.status === 'PENDING' && (
+                    <span className="flex items-center gap-1.5 text-[10px] font-black text-luna-cyan uppercase tracking-widest">
+                      <Clock size={12} className="animate-pulse" />
+                      Awaiting Admin Approval
+                    </span>
+                  )}
+                  {b.status === 'REJECTED' && b.rejectionReason && (
+                    <span className="flex items-center gap-1.5 text-[10px] font-black text-red-400 uppercase tracking-widest">
+                      <AlertCircle size={12} />
+                      Rejected: {b.rejectionReason}
+                    </span>
+                  )}
                   <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">RES-#{b.id.substring(0, 12)}</span>
                 </div>
                 
@@ -181,13 +193,6 @@ export default function MyBookings() {
                 </button>
               </div>
 
-              {b.status === 'REJECTED' && b.rejectionReason && (
-                <div className="absolute top-10 right-10 flex items-center gap-3 px-5 py-2 bg-red-500/10 border border-red-500/20 rounded-2xl">
-                  <AlertCircle size={16} className="text-red-400" />
-                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest leading-none">Rejection Reason: {b.rejectionReason}</p>
-                </div>
-              )}
-              
               {/* Animated Progress Indicator */}
               <div className="absolute bottom-0 left-0 h-1 bg-luna-aqua/5 w-full">
                 <motion.div 

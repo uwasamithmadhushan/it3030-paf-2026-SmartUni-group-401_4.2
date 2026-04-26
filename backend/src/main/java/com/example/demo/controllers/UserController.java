@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.UpdateProfileRequest;
 import com.example.demo.dto.UserProfileResponse;
+import com.example.demo.models.UserRole;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -70,5 +71,15 @@ public class UserController {
             @AuthenticationPrincipal UserDetails userDetails) {
         UserProfileResponse approved = userService.approveUser(id, userDetails.getUsername());
         return ResponseEntity.ok(approved);
+    }
+
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserProfileResponse> updateUserRole(@PathVariable String id,
+            @RequestBody java.util.Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserRole newRole = UserRole.valueOf(body.get("role"));
+        UserProfileResponse updated = userService.updateUserRole(id, newRole, userDetails.getUsername());
+        return ResponseEntity.ok(updated);
     }
 }

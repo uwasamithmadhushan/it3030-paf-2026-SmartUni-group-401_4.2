@@ -36,11 +36,11 @@ export default function AdminDashboardPage() {
     try {
       const [ticketsRes, assetsRes, usersRes] = await Promise.all([
         getAllTickets(),
-        getAllAssets(),
+        getAllAssets({ page: 0, size: 1000 }),
         getAllUsers()
       ]);
       setTickets(ticketsRes.data);
-      setAssets(assetsRes.data);
+      setAssets(assetsRes.data?.content ?? assetsRes.data ?? []);
       setUsers(usersRes.data);
     } catch (err) {
       console.error('Failed to update executive intelligence archive');
@@ -80,6 +80,9 @@ export default function AdminDashboardPage() {
            </button>
            <button onClick={() => navigate('/tickets')} className="luna-button !px-8 flex items-center gap-3 shadow-lg shadow-luna-aqua/20">
              Incident Queue <ArrowUpRight size={18} />
+           </button>
+           <button onClick={() => navigate('/admin/bookings')} className="luna-button-outline !px-8">
+             Bookings
            </button>
         </div>
       </div>
@@ -133,7 +136,7 @@ export default function AdminDashboardPage() {
                 Maintain peak system performance through real-time executive oversight.
               </p>
               <div className="flex flex-wrap gap-6 pt-4">
-                <button onClick={() => navigate('/facilities')} className="luna-button !px-10">
+                <button onClick={() => navigate('/resources')} className="luna-button !px-10">
                   Infrastructure Directory
                 </button>
                 <button onClick={() => navigate('/tickets')} className="luna-button-outline !px-10">
